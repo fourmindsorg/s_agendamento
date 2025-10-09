@@ -1,0 +1,875 @@
+{% extends 'base.html' %}
+
+{% block title %}Alterar Status - Agendamento {{ agendamento.cliente.nome }} - Sistema de Agendamentos{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Header personalizado */
+  .status-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+  }
+  
+  .status-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color) !important;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .status-subtitle {
+    color: var(--text-muted-color) !important;
+    margin: 8px 0 0 0;
+    font-size: 1rem;
+  }
+  
+  /* Ações no Header */
+  .header-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  @media (max-width: 768px) {
+    .header-actions {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-top: 15px;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+    
+    .status-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* Cards styling */
+  .status-card-container {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .status-card-container .card-header {
+    border: none;
+    padding: 20px 25px;
+    font-weight: 600;
+  }
+
+  .status-card-container .card-body {
+    padding: 25px;
+  }
+
+  /* Status atual card */
+  .current-status-card {
+    background: var(--gradient-bg);
+    color: white !important;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+  }
+
+  .current-status-card * {
+    color: white !important;
+  }
+
+  .status-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Status options */
+  .status-options {
+    display: grid;
+    gap: 15px;
+  }
+
+  .status-option {
+    position: relative;
+  }
+
+  .btn-check {
+    position: absolute;
+    clip: rect(0, 0, 0, 0);
+    pointer-events: none;
+  }
+
+  .status-card {
+    transition: all 0.3s ease;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 20px;
+    background: var(--surface-color) !important;
+    color: var(--text-color) !important;
+    text-decoration: none;
+    display: block;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .status-card:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    color: var(--text-color) !important;
+    text-decoration: none;
+  }
+
+  .btn-check:checked + .status-card {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    box-shadow: 0 8px 25px var(--shadow-color);
+  }
+
+  .btn-check:checked + .status-card * {
+    color: white !important;
+  }
+
+  .btn-check:checked + .status-card .status-description {
+    color: rgba(255,255,255,0.9) !important;
+  }
+
+  .status-icon-small {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-color);
+    transition: all 0.3s ease;
+  }
+
+  .btn-check:checked + .status-card .status-icon-small {
+    background: rgba(255,255,255,0.2);
+    color: white !important;
+  }
+
+  .status-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .status-description {
+    font-size: 0.9rem;
+    color: var(--text-muted-color) !important;
+    margin: 0;
+  }
+
+  .current-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--info-color) !important;
+    color: white !important;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .btn-check:checked + .status-card .current-badge {
+    background: rgba(255,255,255,0.2) !important;
+  }
+
+  /* Form controls */
+  .form-control {
+    border-radius: 10px !important;
+    border: 2px solid var(--border-color) !important;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+    background-color: var(--surface-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.2rem var(--shadow-color) !important;
+    background-color: var(--surface-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--text-color) !important;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Buttons */
+  .btn-custom {
+    background: var(--gradient-bg);
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--shadow-color);
+    color: white !important;
+  }
+
+  /* Info items */
+  .info-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .info-item:last-child {
+    border-bottom: none;
+  }
+
+  .info-item i {
+    width: 20px;
+    margin-right: 10px;
+    margin-top: 2px;
+  }
+
+  .info-item strong {
+    color: var(--text-color) !important;
+    margin-right: 8px;
+  }
+
+  /* Avatar */
+  .avatar-sm {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+    font-weight: bold;
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-radius: 50%;
+  }
+
+  /* Status flow */
+  .status-flow {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .flow-item {
+    margin: 15px 0;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+  }
+
+  .flow-item.active {
+    opacity: 1;
+    color: var(--primary-color) !important;
+    transform: scale(1.1);
+  }
+
+  .flow-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--light-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 18px;
+    color: var(--text-muted-color);
+    transition: all 0.3s ease;
+  }
+
+  .flow-item.active .flow-icon {
+    background: var(--gradient-bg);
+    color: white !important;
+    box-shadow: 0 4px 15px var(--shadow-color);
+  }
+
+  .flow-arrow {
+    color: var(--text-muted-color);
+    font-size: 24px;
+    margin: 8px 0;
+    transition: all 0.3s ease;
+  }
+
+  .flow-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color) !important;
+  }
+
+  /* Alerts */
+  .alert {
+    border-radius: 10px;
+    border: none;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .status-icon {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+    }
+
+    .status-card {
+      padding: 15px;
+    }
+
+    .status-icon-small {
+      width: 35px;
+      height: 35px;
+      font-size: 18px;
+    }
+
+    .flow-icon {
+      width: 35px;
+      height: 35px;
+      font-size: 14px;
+    }
+  }
+
+  /* Animations */
+  .status-card-container {
+    animation: slideInUp 0.5s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Character counter */
+  .char-counter {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    text-align: right;
+  }
+
+  /* Status specific colors */
+  .status-agendado { border-left: 4px solid var(--secondary-color); }
+  .status-confirmado { border-left: 4px solid var(--primary-color); }
+  .status-em_andamento { border-left: 4px solid var(--warning-color); }
+  .status-concluido { border-left: 4px solid var(--success-color); }
+  .status-cancelado { border-left: 4px solid var(--danger-color); }
+  .status-nao_compareceu { border-left: 4px solid var(--dark-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header do Status -->
+<div class="status-header">
+  <h1 class="status-title">
+    <i class="fas fa-flag"></i>
+    Alterar Status do Agendamento
+  </h1>
+  <p class="status-subtitle">
+    Agendamento #{{ agendamento.pk }} - {{ agendamento.data_agendamento|date:"d/m/Y" }}
+    <span class="text-primary">• {{ agendamento.cliente.nome }}</span>
+  </p>
+  
+  <!-- Ações no Header -->
+  <div class="header-actions">
+    <a href="{% url 'agendamentos:agendamento_detail' agendamento.pk %}" class="btn btn-outline-primary">
+      <i class="fas fa-eye"></i>Ver Detalhes
+    </a>
+    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i>Voltar
+    </a>
+  </div>
+</div>
+
+<!-- Status Atual -->
+<div class="current-status-card">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center">
+        <div class="status-icon me-3">
+          {% if agendamento.status == 'agendado' %}
+            <i class="fas fa-clock"></i>
+          {% elif agendamento.status == 'confirmado' %}
+            <i class="fas fa-check"></i>
+          {% elif agendamento.status == 'em_andamento' %}
+            <i class="fas fa-play"></i>
+          {% elif agendamento.status == 'concluido' %}
+            <i class="fas fa-check-circle"></i>
+          {% elif agendamento.status == 'cancelado' %}
+            <i class="fas fa-times"></i>
+          {% elif agendamento.status == 'nao_compareceu' %}
+            <i class="fas fa-user-times"></i>
+          {% endif %}
+        </div>
+        <div>
+          <h3 class="mb-1">Status Atual: {{ agendamento.get_status_display }}</h3>
+          <p class="mb-0 opacity-75">
+            {{ agendamento.cliente.nome }} • {{ agendamento.servico.nome }}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      <span class="badge bg-white text-dark fs-6 px-3 py-2">
+        {{ agendamento.get_status_display|upper }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Formulário de Status -->
+  <div class="col-lg-8">
+    <div class="card status-card-container">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+          <i class="fas fa-edit me-2"></i>Selecionar Novo Status
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <!-- Seletor de Status -->
+          <div class="mb-4">
+            <label for="{{ form.status.id_for_label }}" class="form-label">
+              <i class="fas fa-flag"></i>
+              Novo Status *
+            </label>
+            <div class="status-options">
+              {% for choice in form.status.field.choices %}
+                <div class="status-option">
+                  <input type="radio" 
+                         class="btn-check" 
+                         name="{{ form.status.name }}" 
+                         id="status_{{ choice.0 }}" 
+                         value="{{ choice.0 }}">
+                  <label class="status-card status-{{ choice.0 }}" for="status_{{ choice.0 }}">
+                    <div class="d-flex align-items-center">
+                      <div class="status-icon-small me-3">
+                        {% if choice.0 == 'agendado' %}
+                          <i class="fas fa-clock"></i>
+                        {% elif choice.0 == 'confirmado' %}
+                          <i class="fas fa-check"></i>
+                        {% elif choice.0 == 'em_andamento' %}
+                          <i class="fas fa-play"></i>
+                        {% elif choice.0 == 'concluido' %}
+                          <i class="fas fa-check-circle"></i>
+                        {% elif choice.0 == 'cancelado' %}
+                          <i class="fas fa-times"></i>
+                        {% elif choice.0 == 'nao_compareceu' %}
+                          <i class="fas fa-user-times"></i>
+                        {% endif %}
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="status-title">{{ choice.1 }}</div>
+                        <div class="status-description">
+                          {% if choice.0 == 'agendado' %}
+                            Agendamento criado, aguardando confirmação
+                          {% elif choice.0 == 'confirmado' %}
+                            Cliente confirmou presença
+                          {% elif choice.0 == 'em_andamento' %}
+                            Atendimento em progresso
+                          {% elif choice.0 == 'concluido' %}
+                            Atendimento finalizado com sucesso
+                          {% elif choice.0 == 'cancelado' %}
+                            Agendamento cancelado
+                          {% elif choice.0 == 'nao_compareceu' %}
+                            Cliente não compareceu
+                          {% endif %}
+                        </div>
+                      </div>
+                      {% if choice.0 == agendamento.status %}
+                      <div class="current-badge">
+                        Atual
+                      </div>
+                      {% endif %}
+                    </div>
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+            {% if form.status.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.status.errors %}
+                  <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Observações sobre a mudança -->
+          <div class="mb-4">
+            <label for="observacoes_status" class="form-label">
+              <i class="fas fa-sticky-note"></i>
+              Observações sobre a Mudança
+            </label>
+            <textarea class="form-control" 
+                      id="observacoes_status" 
+                      name="observacoes_status" 
+                      rows="3"
+                      maxlength="500"
+                      placeholder="Adicione observações sobre a mudança de status (opcional)"></textarea>
+            <div class="form-text d-flex justify-content-between">
+              <span>
+                <i class="fas fa-info-circle me-1"></i>
+                Estas observações serão anexadas ao histórico do agendamento
+              </span>
+              <span class="char-counter" id="char-counter">0/500</span>
+            </div>
+          </div>
+
+          <!-- Alertas baseados no status selecionado -->
+          <div id="status-alerts">
+            <!-- Alertas serão inseridos aqui via JavaScript -->
+          </div>
+
+          <!-- Erros Gerais -->
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Botões de Ação -->
+          <div class="d-flex gap-3 justify-content-end mt-4 pt-3 border-top">
+            <a href="{% url 'agendamentos:agendamento_detail' agendamento.pk %}" class="btn btn-outline-secondary">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-custom" id="btn-salvar">
+              <i class="fas fa-save me-2"></i>Alterar Status
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações Laterais -->
+  <div class="col-lg-4">
+    <!-- Resumo do Agendamento -->
+    <div class="card status-card-container">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+          <i class="fas fa-calendar-check me-2"></i>Resumo do Agendamento
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <div class="d-flex align-items-center w-100">
+            <div class="avatar-sm d-flex align-items-center justify-content-center me-3">
+              {{ agendamento.cliente.nome|first|upper }}
+            </div>
+            <div>
+              <strong>{{ agendamento.cliente.nome }}</strong>
+              <br><small class="text-muted">{{ agendamento.cliente.telefone }}</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <i class="fas fa-cog text-info"></i>
+          <div>
+            <strong>Serviço:</strong> {{ agendamento.servico.nome }}
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <i class="fas fa-calendar text-primary"></i>
+          <div>
+            <strong>Data:</strong> {{ agendamento.data_agendamento|date:"d/m/Y" }}
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <i class="fas fa-clock text-warning"></i>
+          <div>
+            <strong>Horário:</strong> {{ agendamento.hora_inicio }} às {{ agendamento.hora_fim }}
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <i class="fas fa-dollar-sign text-success"></i>
+          <div>
+            <strong>Valor:</strong> R$ {{ agendamento.valor_cobrado|default:agendamento.servico.preco|floatformat:2 }}
+          </div>
+        </div>
+        
+        {% if agendamento.observacoes %}
+        <div class="info-item">
+          <i class="fas fa-sticky-note text-muted"></i>
+          <div>
+            <strong>Observações:</strong>
+            <p class="text-muted small mt-1 mb-0">{{ agendamento.observacoes }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="card status-card-container">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <i class="fas fa-bolt me-2"></i>Ações Rápidas
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="tel:{{ agendamento.cliente.telefone }}" class="btn btn-outline-primary">
+            <i class="fas fa-phone me-2"></i>Ligar para Cliente
+          </a>
+          <a href="https://wa.me/55{{ agendamento.cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-' }}" 
+             target="_blank" class="btn btn-outline-success">
+            <i class="fab fa-whatsapp me-2"></i>WhatsApp
+          </a>
+          {% if agendamento.pode_editar %}
+          <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-outline-warning">
+            <i class="fas fa-edit me-2"></i>Editar Agendamento
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Fluxo de Status -->
+    <div class="card status-card-container">
+      <div class="card-header bg-dark text-white">
+        <h6 class="mb-0">
+          <i class="fas fa-route me-2"></i>Fluxo de Status
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="status-flow">
+          <div class="flow-item {% if agendamento.status == 'agendado' %}active{% endif %}">
+            <div class="flow-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="flow-text">Agendado</div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item {% if agendamento.status == 'confirmado' %}active{% endif %}">
+            <div class="flow-icon">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="flow-text">Confirmado</div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item {% if agendamento.status == 'em_andamento' %}active{% endif %}">
+            <div class="flow-icon">
+              <i class="fas fa-play"></i>
+            </div>
+            <div class="flow-text">Em Andamento</div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item {% if agendamento.status == 'concluido' %}active{% endif %}">
+            <div class="flow-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="flow-text">Concluído</div>
+          </div>
+        </div>
+        <hr>
+        <div class="text-center">
+          <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Status alternativos: Cancelado, Não Compareceu
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusRadios = document.querySelectorAll('input[name="{{ form.status.name }}"]');
+    const alertsContainer = document.getElementById('status-alerts');
+    const btnSalvar = document.getElementById('btn-salvar');
+    const observacoesInput = document.getElementById('observacoes_status');
+    const charCounter = document.getElementById('char-counter');
+    
+    // Alertas para cada status
+    const statusAlerts = {
+        'confirmado': {
+            type: 'info',
+            icon: 'info-circle',
+            message: 'O cliente será notificado sobre a confirmação do agendamento.'
+        },
+        'em_andamento': {
+            type: 'warning',
+            icon: 'exclamation-triangle',
+            message: 'Marque como "Em Andamento" apenas quando o atendimento realmente iniciar.'
+        },
+        'concluido': {
+            type: 'success',
+            icon: 'check-circle',
+            message: 'Ao marcar como concluído, o agendamento será finalizado e contabilizado.'
+        },
+        'cancelado': {
+            type: 'danger',
+            icon: 'times-circle',
+            message: 'Agendamentos cancelados não podem ser revertidos facilmente.'
+        },
+        'nao_compareceu': {
+            type: 'warning',
+            icon: 'user-times',
+            message: 'Use esta opção quando o cliente não comparecer sem aviso prévio.'
+        }
+    };
+    
+    // Função para mostrar alerta baseado no status
+    function showStatusAlert(status) {
+        alertsContainer.innerHTML = '';
+        
+        if (statusAlerts[status]) {
+            const alert = statusAlerts[status];
+            alertsContainer.innerHTML = `
+                <div class="alert alert-${alert.type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${alert.icon} me-2"></i>
+                    ${alert.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    }
+    
+    // Função para atualizar texto e cor do botão
+    function updateButtonText(status) {
+        const statusConfig = {
+            'agendado': { text: 'Marcar como Agendado', class: 'btn-secondary' },
+            'confirmado': { text: 'Confirmar Agendamento', class: 'btn-primary' },
+            'em_andamento': { text: 'Iniciar Atendimento', class: 'btn-warning' },
+            'concluido': { text: 'Finalizar Atendimento', class: 'btn-success' },
+            'cancelado': { text: 'Cancelar Agendamento', class: 'btn-danger' },
+            'nao_compareceu': { text: 'Marcar Falta', class: 'btn-dark' }
+        };
+        
+        const config = statusConfig[status] || { text: 'Alterar Status', class: 'btn-custom' };
+        
+        // Remover classes de cor antigas
+        btnSalvar.className = btnSalvar.className.replace(/btn-(primary|secondary|success|warning|danger|dark|custom)/g, '');
+        btnSalvar.classList.add(config.class);
+        btnSalvar.innerHTML = `<i class="fas fa-save me-2"></i>${config.text}`;
+    }
+    
+    // Event listeners para mudança de status
+    statusRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                showStatusAlert(this.value);
+                updateButtonText(this.value);
+                
+                // Animar a seleção
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                label.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    label.style.transform = 'scale(1)';
+                }, 200);
+            }
+        });
+    });
+    
+    // Contador de caracteres
+    if (observacoesInput && charCounter) {
+        observacoesInput.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            const maxLength = 500;
+            
+            charCounter.textContent = `${currentLength}/${maxLength}`;
+            
+            if (currentLength > maxLength * 0.9) {
+                charCounter.className = 'char-counter text-warning';
+            } else if (currentLength > maxLength) {
+                charCounter.className = 'char-counter text-danger';
+                this.classList.add('is-invalid');
+            } else {
+                charCounter.className = 'char-counter text-muted';
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Mostrar alerta inicial se houver status selecionado
+    const checkedRadio = document.querySelector('input[name="{{ form.status.name }}"]:checked');
+    if (checkedRadio) {
+        showStatusAlert(checkedRadio.value);
+        updateButtonText(checkedRadio.value);
+    }
+    
+    // Confirmação antes de submeter para status críticos
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const selectedStatus = document.querySelector('input[name="{{ form.status.name }}"]:checked');
+        
+        if (selectedStatus) {
+            const criticalStatuses = ['cancelado', 'nao_compareceu', 'concluido'];
+            
+            if (criticalStatuses.includes(selectedStatus.value)) {
+                const confirmMessages = {
+                    'cancelado': 'Tem certeza que deseja cancelar este agendamento?',
+                    'nao_compareceu': 'Confirma que o cliente não compareceu?',
+                    'concluido': 'Confirma que o atendimento foi concluído com sucesso?'
+                };
+                
+                if (!confirm(confirmMessages[selectedStatus.value])) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        }
+    });
+    
+    // Auto-scroll para o status atual
+    const currentStatus = '{{ agendamento.status }}';
+    const currentRadio = document.getElementById(`status_${currentStatus}`);
+    if (currentRadio) {
+        setTimeout(() => {
+            currentRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
+    
+    // Animação de entrada escalonada
+    const cards = document.querySelectorAll('.status-card-container');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+});
+</script>
+{% endblock %}
