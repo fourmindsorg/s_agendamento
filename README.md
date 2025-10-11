@@ -42,7 +42,7 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 
 ### **1. Clonar o Repositório**
 ```bash
-git clone https://github.com/ViniciusMocelin/sistema-de-agendamento.git
+git clone https://github.com/fourmindsorg/s_agendamento.git
 cd sistema-de-agendamento
 ```
 

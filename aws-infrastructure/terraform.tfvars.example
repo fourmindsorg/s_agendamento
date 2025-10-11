@@ -15,7 +15,7 @@ db_username = "postgres"
 db_password = "senha_segura_postgre"
 
 # Domínio (opcional)
-domain_name = ""
+domain_name = "fourmindstech.com.br"
 
 # Configurações da instância EC2
 instance_type = "t2.micro"
@@ -43,7 +43,7 @@ enable_waf = false
 enable_cloudfront = false
 
 # Email para notificações
-notification_email = "carlosmedeiroscode@gmail.com"
+notification_email = "fourmindsorg@gmail.com"
 
 # Tags adicionais
 tags = {

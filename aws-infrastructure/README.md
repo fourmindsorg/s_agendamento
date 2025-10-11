@@ -55,8 +55,8 @@ db_password = "sua_senha_super_segura_aqui"
 
 ```hcl
 # terraform.tfvars
-domain_name = "meusite.com"
-notification_email = "admin@meusite.com"
+domain_name = "fourmindstech.com.br"
+notification_email = "fourmindsorg@gmail.com"
 instance_type = "t2.micro"
 db_instance_class = "db.t3.micro"
 ```
@@ -138,7 +138,7 @@ sudo tail -f /var/log/nginx/django_error.log
 sudo apt install certbot python3-certbot-nginx
 
 # Obter certificado SSL
-sudo certbot --nginx -d seu-dominio.com
+sudo certbot --nginx -d fourmindstech.com.br -d www.fourmindstech.com.br
 
 # Configurar renovao automtica
 sudo crontab -e
@@ -257,10 +257,9 @@ sudo tail -f /var/log/user-data.log
 
 ##  Suporte
 
-Para dvidas ou problemas:
--  Email: suporte@sistema-agendamento.com
--  WhatsApp: (11) 99999-9999
--  Documentao: https://docs.sistema-agendamento.com
+Para dúvidas ou problemas:
+-  Email: fourmindsorg@gmail.com
+-  Website: http://fourmindstech.com.br
 
 ---
 
