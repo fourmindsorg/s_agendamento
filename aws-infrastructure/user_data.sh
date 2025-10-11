@@ -57,7 +57,7 @@ chown -R django:django /home/django
 cat > /etc/nginx/sites-available/django << EOF
 server {
     listen 80;
-    server_name _;
+    server_name fourmindstech.com.br www.fourmindstech.com.br _;
 
     # Logs
     access_log /var/log/nginx/django_access.log;
@@ -80,34 +80,40 @@ server {
         application/atom+xml
         image/svg+xml;
 
-    # Static files
-    location /static/ {
+    # Página principal do domínio
+    location = / {
+        return 301 /agendamento/;
+    }
+
+    # Static files para sistema de agendamento
+    location /agendamento/static/ {
         alias /home/django/sistema-de-agendamento/staticfiles/;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
-    # Media files
-    location /media/ {
+    # Media files para sistema de agendamento
+    location /agendamento/media/ {
         alias /home/django/sistema-de-agendamento/media/;
         expires 1y;
         add_header Cache-Control "public";
     }
 
-    # Django application
-    location / {
-        proxy_pass http://127.0.0.1:8000;
+    # Django application - Sistema de Agendamento
+    location /agendamento/ {
+        proxy_pass http://127.0.0.1:8000/agendamento/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Script-Name /agendamento;
         proxy_connect_timeout 30s;
         proxy_send_timeout 30s;
         proxy_read_timeout 30s;
     }
 
     # Health check endpoint
-    location /health/ {
+    location /agendamento/health/ {
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
@@ -233,10 +239,8 @@ cat > /home/django/setup_django.sh << 'EOF'
 # Mudar para usuário django
 cd /home/django
 
-# Clonar repositório (substitua pela URL real)
-# git clone https://github.com/seu-usuario/sistema-de-agendamento.git sistema-de-agendamento
-# Clonar repositório do GitHub
-git clone https://github.com/ViniciusMocelin/sistema-de-agendamento.git sistema-de-agendamento
+# Clonar repositório do GitHub - 4Minds
+git clone https://github.com/fourmindsorg/s_agendamento.git sistema-de-agendamento
 cd sistema-de-agendamento
 
 # Criar ambiente virtual
@@ -267,7 +271,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '0.0.0.0',
-    '13.223.47.98',
+    'fourmindstech.com.br',
+    'www.fourmindstech.com.br',
 ]
 
 # Adicionar hosts da variável de ambiente
@@ -287,13 +292,16 @@ DATABASES = {
     }
 }
 
+# Configuração para subpath /agendamento
+FORCE_SCRIPT_NAME = '/agendamento'
+
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_URL = '/agendamento/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Media files
-MEDIA_URL = '/media/'
+MEDIA_URL = '/agendamento/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Security settings para produção

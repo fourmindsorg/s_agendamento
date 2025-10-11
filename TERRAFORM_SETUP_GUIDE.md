@@ -16,7 +16,7 @@ Este guia mostra como configurar a infraestrutura na AWS usando os arquivos Terr
 - [X] Terraform v1.0+
 - [X] Git
 - [X] Chave SSH (para acesso à EC2)
-git@github.com:ViniciusMocelin/sistema-de-agendamento.git
+- [X] Repositório: https://github.com/fourmindsorg/s_agendamento
 
 ## Passo 1: Configurar AWS CLI
 
@@ -138,8 +138,8 @@ environment = "prod"
 db_password = "senha_segura_postgre"
 
 # Configurações opcionais
-domain_name = "meusite.com"  # Deixe vazio se não tiver domínio
-notification_email = "carlosmedeiroscode@gmail.com"
+domain_name = "fourmindstech.com.br"
+notification_email = "fourmindsorg@gmail.com"
 ```
 
 ## Passo 5: Inicializar Terraform
@@ -217,7 +217,7 @@ terraform output
 
 **Saída esperada:**
 ```
-ec2_public_ip = "13.223.47.98"
+ec2_public_ip = "fourmindstech.com.br"
 rds_endpoint = "sistema-agendamento-postgres.abc123.us-east-1.rds.amazonaws.com"
 s3_bucket_name = "sistema-agendamento-static-files-xyz12345"
 ```
@@ -241,7 +241,7 @@ terraform output ec2_public_ip
 ### 2. Conectar via SSH
 ```bash
 # Conectar na instância
-ssh -i ~/.ssh/id_rsa ubuntu@13.223.47.98
+ssh -i ~/.ssh/id_rsa ubuntu@fourmindstech.com.br
 ```
 ============================================================
 
@@ -313,7 +313,7 @@ terraform import aws_instance.web_server i-1234567890abcdef0
 ### 1. Configurar Domínio Personalizado
 ```bash
 # Editar terraform.tfvars
-domain_name = "meusite.com"
+domain_name = "fourmindstech.com.br"
 
 # Aplicar mudanças
 terraform plan
@@ -329,7 +329,7 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_INSTANCIA]
 sudo apt install certbot python3-certbot-nginx
 
 # Obter certificado SSL
-sudo certbot --nginx -d meusite.com
+sudo certbot --nginx -d fourmindstech.com.br -d www.fourmindstech.com.br
 ```
 
 ### 3. Configurar Backup
@@ -445,9 +445,8 @@ terraform show
 ## Suporte
 
 Para dúvidas ou problemas:
-- Email: suporte@sistema-agendamento.com
-- WhatsApp: (11) 99999-9999
-- Documentação: https://docs.sistema-agendamento.com
+- Email: fourmindsorg@gmail.com
+- Website: http://fourmindstech.com.br
 
 ---
 

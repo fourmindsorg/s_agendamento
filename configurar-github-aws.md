@@ -9,7 +9,7 @@ Error: Credentials could not be loaded, please check your action inputs: Could n
 ## 🔧 **SOLUÇÃO: Configurar GitHub Secrets**
 
 ### **PASSO 1: Acessar o GitHub Repository**
-1. Vá para: https://github.com/ViniciusMocelin/sistema-de-agendamento
+1. Vá para: https://github.com/fourmindsorg/s_agendamento
 2. Clique em **Settings** (Configurações)
 3. No menu lateral, clique em **Secrets and variables** → **Actions**
 
