@@ -144,11 +144,11 @@ STATICFILES_FINDERS = [
 ]
 
 # Forçar Django a servir arquivos estáticos em produção
-if not DEBUG:
-    # Adicionar URL para servir arquivos estáticos
-    from django.conf.urls.static import static
-    from django.conf import settings
+# if not DEBUG:
+#     # Adicionar URL para servir arquivos estáticos
+#     from django.conf.urls.static import static
+#     from django.conf import settings
 
-    # Esta configuração será aplicada no urls.py
-    STATIC_URL = "/static/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+#     # Esta configuração será aplicada no urls.py
+#     STATIC_URL = "/static/"
+#     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
