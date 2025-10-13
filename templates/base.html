@@ -5,22 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Agendamentos{% endblock %}</title>
-    
-    <!-- CSS -->
-     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-       {% comment %} boostrap {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-
+     
     <!-- Font Awesome (Local) -->
     <link rel="stylesheet" href="{% static 'css/fontawesome/all.min.css' %}">
-
+    
     <!-- Google Fonts (Local) -->
     <link rel="stylesheet" href="{% static 'fonts/inter.css' %}">
-
+    
+    <!-- CSS -->
+    {% comment %} boostrap {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    
     {% comment %} plot {% endcomment %}
     <script src="{% static 'js/vendor/plotly.min.js' %}"></script>
     
-
     {% block extra_css %}{% endblock %}
     
 <style>
