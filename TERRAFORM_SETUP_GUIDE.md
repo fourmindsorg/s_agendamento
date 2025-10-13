@@ -16,7 +16,7 @@ Este guia mostra como configurar a infraestrutura na AWS usando os arquivos Terr
 - [X] Terraform v1.0+
 - [X] Git
 - [X] Chave SSH (para acesso à EC2)
-- [X] Repositório: https://github.com/fourmindsorg/s_agendamento
+git@github.com:fourmindsorg/s_agendamento.git
 
 ## Passo 1: Configurar AWS CLI
 
@@ -138,7 +138,7 @@ environment = "prod"
 db_password = "senha_segura_postgre"
 
 # Configurações opcionais
-domain_name = "fourmindstech.com.br"
+domain_name = "fourmindtech.com.br"  # Deixe vazio se não tiver domínio
 notification_email = "fourmindsorg@gmail.com"
 ```
 
@@ -269,10 +269,10 @@ echo "Aplicação disponível em: http://$EC2_IP"
 
 ### 2. Acessar no Navegador
 - Abra o navegador
-- Acesse: `http://[IP_DA_INSTANCIA]`
-- Admin: `http://[IP_DA_INSTANCIA]/admin/`
+- Acesse: `http://fourmindtech.com.br`
+- Admin: `http://fourmindtech.com.br/admin/`
 - Usuário: `admin`
-- Senha: `admin123`
+- Senha: `@4mindsPassword`
 
 ## Comandos Úteis do Terraform
 
@@ -313,7 +313,7 @@ terraform import aws_instance.web_server i-1234567890abcdef0
 ### 1. Configurar Domínio Personalizado
 ```bash
 # Editar terraform.tfvars
-domain_name = "fourmindstech.com.br"
+domain_name = "meusite.com"
 
 # Aplicar mudanças
 terraform plan
@@ -329,7 +329,7 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_INSTANCIA]
 sudo apt install certbot python3-certbot-nginx
 
 # Obter certificado SSL
-sudo certbot --nginx -d fourmindstech.com.br -d www.fourmindstech.com.br
+sudo certbot --nginx -d meusite.com
 ```
 
 ### 3. Configurar Backup
@@ -446,7 +446,8 @@ terraform show
 
 Para dúvidas ou problemas:
 - Email: fourmindsorg@gmail.com
-- Website: http://fourmindstech.com.br
+- WhatsApp: (31) 98676-6866
+- Documentação: https://docs.sistema-agendamento.com
 
 ---
 

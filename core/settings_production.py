@@ -27,7 +27,6 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "0.0.0.0",
     "fourmindstech.com.br",
-    "www.fourmindstech.com.br",
 ]
 
 # Adicionar hosts da variável de ambiente
@@ -49,11 +48,8 @@ DATABASES = {
     }
 }
 
-# Configuração para subpath /agendamento
-FORCE_SCRIPT_NAME = os.environ.get("FORCE_SCRIPT_NAME", "/agendamento")
-
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = f"{FORCE_SCRIPT_NAME}/static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Verificar se o diretório static existe antes de adicionar
@@ -64,7 +60,7 @@ else:
     STATICFILES_DIRS = []
 
 # Media files
-MEDIA_URL = f"{FORCE_SCRIPT_NAME}/media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Security settings para produção
@@ -82,25 +78,23 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Session settings
 SESSION_COOKIE_SECURE = os.environ.get("HTTPS_REDIRECT", "False").lower() == "true"
 CSRF_COOKIE_SECURE = os.environ.get("HTTPS_REDIRECT", "False").lower() == "true"
-SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN", None)
-CSRF_COOKIE_DOMAIN = os.environ.get("CSRF_COOKIE_DOMAIN", None)
+
+# CSRF Trusted Origins - Necessário para forms POST funcionarem
 CSRF_TRUSTED_ORIGINS = [
-    "http://fourmindstech.com.br",
     "https://fourmindstech.com.br",
-    "http://www.fourmindstech.com.br",
     "https://www.fourmindstech.com.br",
+    "http://fourmindstech.com.br",  # Temporário durante transição HTTP->HTTPS
 ]
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "fourmindsorg@gmail.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("SMTP_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.environ.get(
-    "DEFAULT_FROM_EMAIL",
-    "4Minds - Sistema de Agendamentos <noreply@fourmindstech.com.br>",
+    "DEFAULT_FROM_EMAIL", "Sistema de Agendamentos <noreply@agendamentos.com>"
 )
 
 # Logging

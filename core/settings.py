@@ -8,18 +8,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-66zn5&gupp_qti161gwv@t5z1@h=vq5^o%mjf+*3e!l*ut&v(a"
+# NUNCA use esta chave em produção! Use variável de ambiente.
+import os
+
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "dev-key-only-for-local-testing-NEVER-IN-PRODUCTION"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0",
-    "fourmindstech.com.br",
-    "www.fourmindstech.com.br",
-]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "fourmindstech.com.br"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -102,14 +101,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-# Configuração para subpath /agendamento
-FORCE_SCRIPT_NAME = "/agendamento"
 
-STATIC_URL = "/agendamento/static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-MEDIA_URL = "/agendamento/media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
@@ -121,13 +118,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CONFIGURAÇÕES PERSONALIZADAS
 # ========================================
 
-# URLs de redirecionamento (com subpath /agendamento)
-LOGIN_URL = "/agendamento/auth/login/"
-LOGIN_REDIRECT_URL = "/agendamento/dashboard/"
-LOGOUT_REDIRECT_URL = "/agendamento/auth/login/"
+# URLs de redirecionamento
+LOGIN_URL = "/auth/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"  # ou onde quiser redirecionar após login
+LOGOUT_REDIRECT_URL = "/auth/login/"
 
 # Configuração adicional para logout
-LOGOUT_URL = "/agendamento/auth/logout/"
+LOGOUT_URL = "/auth/logout/"
 
 # Configurações de Mensagens Bootstrap
 from django.contrib.messages import constants as messages
@@ -147,7 +144,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = ""
 EMAIL_HOST_PASSWORD = ""
-DEFAULT_FROM_EMAIL = "4Minds - Sistema de Agendamentos <noreply@fourmindstech.com.br>"
+DEFAULT_FROM_EMAIL = "Sistema de Agendamentos <noreply@agendamentos.com>"
 
 # Configurações de Sessão
 SESSION_COOKIE_AGE = 86400  # 24 horas
@@ -165,6 +162,6 @@ TIME_FORMAT = "H:i"
 USE_L10N = True
 
 # Configurações do Admin
-ADMIN_SITE_HEADER = "4Minds - Sistema de Agendamentos - Administração"
-ADMIN_SITE_TITLE = "4Minds Agendamentos"
+ADMIN_SITE_HEADER = "Sistema de Agendamentos - Administração"
+ADMIN_SITE_TITLE = "Agendamentos Admin"
 ADMIN_INDEX_TITLE = "Painel Administrativo"

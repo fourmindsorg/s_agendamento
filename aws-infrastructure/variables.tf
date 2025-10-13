@@ -29,9 +29,9 @@ variable "db_password" {
 }
 
 variable "domain_name" {
-  description = "Domínio do site (opcional)"
+  description = "Domínio do site (ex: fourmindstech.com.br)"
   type        = string
-  default     = ""
+  default     = "fourmindstech.com.br"
 }
 
 variable "instance_type" {
@@ -41,9 +41,9 @@ variable "instance_type" {
 }
 
 variable "db_instance_class" {
-  description = "Classe da instância RDS"
+  description = "Classe da instância RDS - FREE TIER: db.t4g.micro (ARM)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.micro"
 }
 
 variable "allocated_storage" {
@@ -53,9 +53,9 @@ variable "allocated_storage" {
 }
 
 variable "max_allocated_storage" {
-  description = "Armazenamento máximo para RDS (GB)"
+  description = "Armazenamento máximo para RDS (GB) - FREE TIER: keep at 20GB"
   type        = number
-  default     = 100
+  default     = 20
 }
 
 variable "backup_retention_period" {
@@ -119,9 +119,9 @@ variable "notification_email" {
 }
 
 variable "log_retention_days" {
-  description = "Dias de retenção de logs"
+  description = "Dias de retenção de logs - FREE TIER: 7 days recommended"
   type        = number
-  default     = 14
+  default     = 7
 }
 
 variable "enable_monitoring" {

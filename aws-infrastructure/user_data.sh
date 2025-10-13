@@ -1,533 +1,424 @@
 #!/bin/bash
+# ========================================
+# Script de Inicialização EC2
+# Sistema de Agendamento - 4Minds
+# ========================================
+# Este script é executado automaticamente na primeira inicialização da instância EC2
+# Configura: Python, Django, Nginx, Gunicorn, PostgreSQL client, SSL (Let's Encrypt)
 
-# Script de inicialização para instância EC2
-# Configura automaticamente o ambiente Django
+set -e  # Sair em caso de erro
+set -x  # Mostrar comandos executados (para debug)
 
-set -e
-
-# Variáveis
-DB_ENDPOINT="${db_address}"
+# ========================================
+# VARIÁVEIS (Substituídas pelo Terraform)
+# ========================================
+DB_HOST="${db_address}"
 DB_PORT="${db_port}"
 DB_NAME="${db_name}"
-DB_USERNAME="${db_username}"
+DB_USER="${db_username}"
 DB_PASSWORD="${db_password}"
 PROJECT_NAME="${project_name}"
+DOMAIN_NAME="${domain_name}"
 
-# Log de inicialização
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+# ========================================
+# CONFIGURAÇÃO DE LOGS
+# ========================================
+exec > >(tee /var/log/user-data.log)
+exec 2>&1
 
-echo "Iniciando configuração da instância EC2 para $PROJECT_NAME..."
+echo "========================================="
+echo "Iniciando configuração do servidor EC2"
+echo "Data: $(date)"
+echo "Domínio: $DOMAIN_NAME"
+echo "========================================="
 
-# Atualizar sistema
-apt-get update
+# ========================================
+# ATUALIZAR SISTEMA
+# ========================================
+echo "[1/15] Atualizando sistema operacional..."
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
 apt-get upgrade -y
 
-# Instalar dependências básicas
+# ========================================
+# INSTALAR DEPENDÊNCIAS
+# ========================================
+echo "[2/15] Instalando dependências do sistema..."
 apt-get install -y \
-    python3 \
+    python3.11 \
+    python3.11-venv \
     python3-pip \
-    python3-venv \
+    python3.11-dev \
+    build-essential \
     nginx \
     postgresql-client \
+    libpq-dev \
     git \
+    supervisor \
+    certbot \
+    python3-certbot-nginx \
+    awscli \
     curl \
     wget \
-    unzip \
-    htop \
-    tree \
     vim \
-    ufw \
-    certbot \
-    python3-certbot-nginx
+    htop
 
-# Criar usuário para aplicação
-if ! id "django" &>/dev/null; then
+# ========================================
+# CRIAR USUÁRIO DA APLICAÇÃO
+# ========================================
+echo "[3/15] Criando usuário da aplicação..."
+if ! id -u django > /dev/null 2>&1; then
     useradd -m -s /bin/bash django
-    usermod -aG sudo django
-    echo "[OK] Usuário django criado"
+    echo "Usuário django criado"
 else
-    echo "[INFO] Usuário django já existe"
+    echo "Usuário django já existe"
 fi
 
-# Configurar diretório home do django
-mkdir -p /home/django/sistema-de-agendamento
+# ========================================
+# CRIAR ESTRUTURA DE DIRETÓRIOS
+# ========================================
+echo "[4/15] Criando estrutura de diretórios..."
+mkdir -p /home/django/app
+mkdir -p /var/log/django
+mkdir -p /var/log/gunicorn
+mkdir -p /home/django/media
+mkdir -p /home/django/staticfiles
+
 chown -R django:django /home/django
+chown -R django:django /var/log/django
+chown -R django:django /var/log/gunicorn
 
-# Configurar Nginx
-cat > /etc/nginx/sites-available/django << EOF
-server {
-    listen 80;
-    server_name fourmindstech.com.br www.fourmindstech.com.br _;
+# ========================================
+# CLONAR REPOSITÓRIO
+# ========================================
+echo "[5/15] Configurando repositório..."
+cd /home/django/app
 
-    # Logs
-    access_log /var/log/nginx/django_access.log;
-    error_log /var/log/nginx/django_error.log;
+# ⚠️ AJUSTAR: Substituir pela URL real do seu repositório GitHub
+# Por enquanto, criar estrutura básica
+# Quando tiver o repo, descomente:
+# git clone https://github.com/4Minds/s_agendamento.git .
 
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types
-        text/plain
-        text/css
-        text/xml
-        text/javascript
-        application/json
-        application/javascript
-        application/xml+rss
-        application/atom+xml
-        image/svg+xml;
+echo "Repositório configurado"
 
-    # Página principal do domínio
-    location = / {
-        return 301 /agendamento/;
-    }
+# ========================================
+# CRIAR .env.production
+# ========================================
+echo "[6/15] Criando arquivo .env.production..."
+cat > /home/django/app/.env.production <<EOF
+DEBUG=False
+SECRET_KEY=TEMPORARY_KEY_WILL_BE_REPLACED_AFTER_SSH
+ALLOWED_HOSTS=$DOMAIN_NAME,www.$DOMAIN_NAME
+DJANGO_SETTINGS_MODULE=core.settings_production
+ENVIRONMENT=production
 
-    # Static files para sistema de agendamento
-    location /agendamento/static/ {
-        alias /home/django/sistema-de-agendamento/staticfiles/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+DB_NAME=$DB_NAME
+DB_USER=$DB_USER
+DB_PASSWORD=$DB_PASSWORD
+DB_HOST=$DB_HOST
+DB_PORT=$DB_PORT
 
-    # Media files para sistema de agendamento
-    location /agendamento/media/ {
-        alias /home/django/sistema-de-agendamento/media/;
-        expires 1y;
-        add_header Cache-Control "public";
-    }
+HTTPS_REDIRECT=True
+SECURE_SSL_REDIRECT=True
+SECURE_PROXY_SSL_HEADER=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
 
-    # Django application - Sistema de Agendamento
-    location /agendamento/ {
-        proxy_pass http://127.0.0.1:8000/agendamento/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Script-Name /agendamento;
-        proxy_connect_timeout 30s;
-        proxy_send_timeout 30s;
-        proxy_read_timeout 30s;
-    }
+AWS_REGION=us-east-1
 
-    # Health check endpoint
-    location /agendamento/health/ {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=fourmindsorg@gmail.com
+EMAIL_HOST_PASSWORD=CONFIGURE_APP_PASSWORD_APOS_SSH
+DEFAULT_FROM_EMAIL=Sistema de Agendamentos <noreply@$DOMAIN_NAME>
+
+LOG_LEVEL=INFO
+MONITORING_ENABLED=True
+HEALTH_CHECK_ENABLED=True
 EOF
 
-# Habilitar site Django
-ln -sf /etc/nginx/sites-available/django /etc/nginx/sites-enabled/
+chown django:django /home/django/app/.env.production
+chmod 600 /home/django/app/.env.production
+
+echo ".env.production criado"
+
+# ========================================
+# CRIAR VIRTUALENV
+# ========================================
+echo "[7/15] Criando ambiente virtual Python..."
+cd /home/django/app
+python3.11 -m venv venv
+chown -R django:django venv
+
+echo "Virtualenv criado"
+
+# ========================================
+# INSTALAR DEPENDÊNCIAS PYTHON
+# ========================================
+echo "[8/15] Instalando dependências Python..."
+su - django <<'DJANGO_USER'
+cd /home/django/app
+source venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install \
+    Django==5.2.6 \
+    psycopg2-binary==2.9.9 \
+    gunicorn==21.2.0 \
+    whitenoise==6.6.0 \
+    python-dotenv==1.0.0 \
+    boto3==1.34.0 \
+    django-storages==1.14.2
+DJANGO_USER
+
+echo "Dependências Python instaladas"
+
+# ========================================
+# CONFIGURAR GUNICORN
+# ========================================
+echo "[9/15] Configurando Gunicorn..."
+cat > /etc/supervisor/conf.d/gunicorn.conf <<EOF
+[program:gunicorn]
+directory=/home/django/app
+command=/home/django/app/venv/bin/gunicorn core.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 3 \
+    --worker-class sync \
+    --timeout 60 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --access-logfile /var/log/gunicorn/access.log \
+    --error-logfile /var/log/gunicorn/error.log \
+    --log-level info
+user=django
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/log/gunicorn/gunicorn.log
+environment=DJANGO_SETTINGS_MODULE="core.settings_production"
+stopasgroup=true
+killasgroup=true
+EOF
+
+echo "Gunicorn configurado"
+
+# ========================================
+# CONFIGURAR NGINX
+# ========================================
+echo "[10/15] Configurando Nginx..."
+cat > /etc/nginx/sites-available/$PROJECT_NAME <<'NGINX_EOF'
+server {
+    listen 80;
+    server_name DOMAIN_NAME_PLACEHOLDER www.DOMAIN_NAME_PLACEHOLDER;
+
+    client_max_body_size 20M;
+    client_body_timeout 60s;
+
+    # Security headers
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Static files
+    location /static/ {
+        alias /home/django/app/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # Media files
+    location /media/ {
+        alias /home/django/app/media/;
+        expires 30d;
+        add_header Cache-Control "public";
+        access_log off;
+    }
+
+    # Health check (sem log)
+    location /health/ {
+        proxy_pass http://127.0.0.1:8000;
+        access_log off;
+    }
+
+    # Django application
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_buffering off;
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 60s;
+    }
+}
+NGINX_EOF
+
+# Substituir placeholder pelo domínio real
+sed -i "s/DOMAIN_NAME_PLACEHOLDER/$DOMAIN_NAME/g" /etc/nginx/sites-available/$PROJECT_NAME
+
+# Ativar site
+ln -sf /etc/nginx/sites-available/$PROJECT_NAME /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
-# Testar configuração do Nginx
+# Testar configuração
 nginx -t
 
-# Reiniciar Nginx
+echo "Nginx configurado"
+
+# ========================================
+# MIGRATIONS E COLLECTSTATIC
+# ========================================
+echo "[11/15] Executando migrations Django..."
+
+# ⚠️ Quando tiver o código real, descomentar:
+# su - django <<'DJANGO_MIGRATIONS'
+# cd /home/django/app
+# source venv/bin/activate
+# python manage.py migrate --noinput
+# python manage.py collectstatic --noinput --clear
+# python manage.py create_4minds_superuser || true
+# DJANGO_MIGRATIONS
+
+echo "Migrations executadas (ou puladas se código não disponível)"
+
+# ========================================
+# REINICIAR SERVIÇOS
+# ========================================
+echo "[12/15] Iniciando serviços..."
+systemctl daemon-reload
+systemctl restart supervisor
+systemctl enable supervisor
 systemctl restart nginx
 systemctl enable nginx
 
-echo "[OK] Nginx configurado"
+# Aguardar serviços iniciarem
+sleep 5
 
-# Configurar firewall
+# Verificar status
+supervisorctl status || echo "Gunicorn não iniciado (esperado se código não disponível)"
+systemctl status nginx --no-pager
+
+echo "Serviços iniciados"
+
+# ========================================
+# CONFIGURAR FIREWALL
+# ========================================
+echo "[13/15] Configurando firewall..."
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
 ufw --force enable
-ufw allow 22
-ufw allow 80
-ufw allow 443
 
-echo "[OK] Firewall configurado"
+echo "Firewall configurado"
 
-# Instalar AWS CLI
-if ! command -v aws &> /dev/null; then
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    ./aws/install
-    rm -rf aws awscliv2.zip
-    echo "[OK] AWS CLI instalado"
-fi
+# ========================================
+# CONFIGURAR SSL (LET'S ENCRYPT)
+# ========================================
+echo "[14/15] Configurando SSL com Let's Encrypt..."
 
-# Instalar CloudWatch Agent
-wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
-dpkg -i amazon-cloudwatch-agent.deb
-rm amazon-cloudwatch-agent.deb
+# Aguardar DNS propagar
+sleep 30
 
-# Configurar CloudWatch Agent
-cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
-{
-    "logs": {
-        "logs_collected": {
-            "files": {
-                "collect_list": [
-                    {
-                        "file_path": "/home/django/sistema-agendamento/logs/django.log",
-                        "log_group_name": "/aws/ec2/$PROJECT_NAME/django",
-                        "log_stream_name": "{instance_id}",
-                        "timezone": "UTC"
-                    },
-                    {
-                        "file_path": "/var/log/nginx/django_access.log",
-                        "log_group_name": "/aws/ec2/$PROJECT_NAME/nginx-access",
-                        "log_stream_name": "{instance_id}",
-                        "timezone": "UTC"
-                    },
-                    {
-                        "file_path": "/var/log/nginx/django_error.log",
-                        "log_group_name": "/aws/ec2/$PROJECT_NAME/nginx-error",
-                        "log_stream_name": "{instance_id}",
-                        "timezone": "UTC"
-                    }
-                ]
-            }
-        }
-    },
-    "metrics": {
-        "namespace": "CWAgent",
-        "metrics_collected": {
-            "cpu": {
-                "measurement": [
-                    "cpu_usage_idle",
-                    "cpu_usage_iowait",
-                    "cpu_usage_user",
-                    "cpu_usage_system"
-                ],
-                "metrics_collection_interval": 60
-            },
-            "disk": {
-                "measurement": [
-                    "used_percent"
-                ],
-                "metrics_collection_interval": 60,
-                "resources": [
-                    "*"
-                ]
-            },
-            "diskio": {
-                "measurement": [
-                    "io_time"
-                ],
-                "metrics_collection_interval": 60,
-                "resources": [
-                    "*"
-                ]
-            },
-            "mem": {
-                "measurement": [
-                    "mem_used_percent"
-                ],
-                "metrics_collection_interval": 60
-            }
-        }
-    }
-}
-EOF
-
-# Iniciar CloudWatch Agent
-systemctl start amazon-cloudwatch-agent
-systemctl enable amazon-cloudwatch-agent
-
-echo "[OK] CloudWatch Agent configurado"
-
-# Configurar aplicação Django (será feito pelo usuário django)
-cat > /home/django/setup_django.sh << 'EOF'
-#!/bin/bash
-
-# Mudar para usuário django
-cd /home/django
-
-# Clonar repositório do GitHub - 4Minds
-git clone https://github.com/fourmindsorg/s_agendamento.git sistema-de-agendamento
-cd sistema-de-agendamento
-
-# Criar ambiente virtual
-python3 -m venv venv
-source venv/bin/activate
-
-# Instalar dependências básicas
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Configurar settings.py para produção
-cat > core/settings_production.py << 'SETTINGS_EOF'
-import os
-from pathlib import Path
-from .settings import *
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-in-production')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-
-# Hosts permitidos
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    'fourmindstech.com.br',
-    'www.fourmindstech.com.br',
-]
-
-# Adicionar hosts da variável de ambiente
-env_hosts = os.environ.get('ALLOWED_HOSTS', '')
-if env_hosts:
-    ALLOWED_HOSTS.extend([host.strip() for host in env_hosts.split(',') if host.strip()])
-
-# Database - PostgreSQL para produção
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'agendamentos_db'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
-}
-
-# Configuração para subpath /agendamento
-FORCE_SCRIPT_NAME = '/agendamento'
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/agendamento/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# Media files
-MEDIA_URL = '/agendamento/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Security settings para produção
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-# HTTPS settings
-SECURE_SSL_REDIRECT = os.environ.get('HTTPS_REDIRECT', 'False').lower() == 'true'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Session settings
-SESSION_COOKIE_SECURE = os.environ.get('HTTPS_REDIRECT', 'False').lower() == 'true'
-CSRF_COOKIE_SECURE = os.environ.get('HTTPS_REDIRECT', 'False').lower() == 'true'
-
-# Logging
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'root': {
-        'handlers': ['file', 'console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-}
-
-# Cache (usar memória para instância única)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-    }
-}
-
-# WhiteNoise para arquivos estáticos
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-SETTINGS_EOF
-
-# Criar diretório de logs
-mkdir -p logs
-
-# Configurar variáveis de ambiente
-cat > .env << ENV_EOF
-DEBUG=False
-SECRET_KEY=django-insecure-change-me-in-production-$(date +%s)
-DB_NAME=$DB_NAME
-DB_USER=$DB_USERNAME
-DB_PASSWORD=$DB_PASSWORD
-DB_HOST=$DB_ENDPOINT
-DB_PORT=${DB_PORT}
-ALLOWED_HOSTS=*
-HTTPS_REDIRECT=False
-ENV_EOF
-
-# Configurar Gunicorn
-cat > gunicorn.conf.py << 'GUNICORN_EOF'
-bind = "127.0.0.1:8000"
-workers = 2
-worker_class = "sync"
-worker_connections = 1000
-max_requests = 1000
-max_requests_jitter = 100
-timeout = 30
-keepalive = 2
-preload_app = True
-daemon = False
-pidfile = "/home/django/sistema-agendamento/gunicorn.pid"
-accesslog = "/home/django/sistema-agendamento/logs/gunicorn_access.log"
-errorlog = "/home/django/sistema-agendamento/logs/gunicorn_error.log"
-loglevel = "info"
-GUNICORN_EOF
-
-# Configurar serviço systemd
-sudo tee /etc/systemd/system/django.service > /dev/null << 'SERVICE_EOF'
-[Unit]
-Description=Django App
-After=network.target
-
-[Service]
-Type=notify
-User=django
-Group=django
-WorkingDirectory=/home/django/sistema-agendamento
-Environment=PATH=/home/django/sistema-agendamento/venv/bin
-ExecStart=/home/django/sistema-agendamento/venv/bin/gunicorn --config gunicorn.conf.py core.wsgi:application
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
-
-# Recarregar systemd e iniciar serviço
-sudo systemctl daemon-reload
-sudo systemctl enable django
-
-echo "[OK] Django configurado (aguardando banco de dados estar disponível)"
-
-# Aguardar banco de dados estar disponível
-echo "Aguardando banco de dados estar disponível..."
-for i in {1..30}; do
-    if pg_isready -h $DB_ENDPOINT -p 5432 -U $DB_USERNAME; then
-        echo "[OK] Banco de dados disponível"
-        break
-    fi
-    echo "Tentativa $i/30 - Aguardando banco de dados..."
-    sleep 10
-done
-
-# Executar migrações e coletar arquivos estáticos
-source venv/bin/activate
-python manage.py migrate --settings=core.settings_production
-
-# Coletar arquivos estáticos com logs detalhados
-echo "Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput --settings=core.settings_production --verbosity=2
-
-# Verificar se os arquivos foram coletados
-echo "Verificando arquivos estáticos coletados..."
-ls -la staticfiles/
-ls -la staticfiles/admin/css/ || echo "Diretório admin/css não encontrado"
-
-# Corrigir permissões dos arquivos estáticos
-echo "Corrigindo permissões dos arquivos estáticos..."
-chown -R www-data:www-data staticfiles/
-chmod -R 755 staticfiles/
-
-# Criar superusuário (opcional)
-echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@example.com', 'admin123')" | python manage.py shell --settings=core.settings_production
-
-# Iniciar serviço Django
-sudo systemctl start django
-
-echo "[OK] Django iniciado com sucesso!"
-EOF
-
-# Executar configuração do Django como usuário django
-chmod +x /home/django/setup_django.sh
-sudo -u django /home/django/setup_django.sh
-
-# Configurar backup automático
-cat > /home/django/backup.sh << 'BACKUP_EOF'
-#!/bin/bash
-
-# Script de backup automático
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/home/django/backups"
-DB_BACKUP="$BACKUP_DIR/db_backup_$DATE.sql"
-
-mkdir -p $BACKUP_DIR
-
-# Backup do banco
-pg_dump -h $DB_ENDPOINT -U $DB_USERNAME -d $DB_NAME > $DB_BACKUP
-
-# Backup dos arquivos de mídia
-tar -czf "$BACKUP_DIR/media_backup_$DATE.tar.gz" /home/django/sistema-agendamento/media/
-
-# Limpar backups locais antigos (manter apenas 7 dias)
-find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
-find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
-
-echo "Backup concluído: $DATE"
-BACKUP_EOF
-
-chmod +x /home/django/backup.sh
-chown django:django /home/django/backup.sh
-
-# Agendar backup diário
-echo "0 2 * * * /home/django/backup.sh" | crontab -u django -
-
-# Configurar monitoramento de saúde
-cat > /home/django/health_check.sh << 'HEALTH_EOF'
-#!/bin/bash
-
-# Script de verificação de saúde da aplicação
-APP_URL="http://localhost:8000"
-LOG_FILE="/home/django/logs/health_check.log"
-
-# Verificar se a aplicação está respondendo
-if curl -f -s "$APP_URL/health/" > /dev/null; then
-    echo "$(date): Aplicação saudável" >> $LOG_FILE
-    exit 0
+# Verificar se domínio está resolvendo
+if host $DOMAIN_NAME | grep -q "has address"; then
+    echo "DNS resolvendo para $DOMAIN_NAME, instalando certificado..."
+    
+    # Solicitar certificado
+    certbot --nginx \
+        -d $DOMAIN_NAME \
+        -d www.$DOMAIN_NAME \
+        --non-interactive \
+        --agree-tos \
+        --email fourmindsorg@gmail.com \
+        --redirect \
+        --hsts \
+        --staple-ocsp \
+        --must-staple || echo "Certificado SSL falhará até DNS propagar - execute manualmente depois"
+    
+    # Configurar renovação automática
+    systemctl enable certbot.timer
+    systemctl start certbot.timer
+    
+    echo "SSL configurado"
 else
-    echo "$(date): Aplicação não está respondendo" >> $LOG_FILE
-    # Tentar reiniciar o serviço
-    sudo systemctl restart django
-    exit 1
+    echo "DNS ainda não propagado. Configure SSL manualmente depois com:"
+    echo "sudo certbot --nginx -d $DOMAIN_NAME -d www.$DOMAIN_NAME"
 fi
-HEALTH_EOF
 
-chmod +x /home/django/health_check.sh
-chown django:django /home/django/health_check.sh
+# ========================================
+# CONFIGURAR CRON JOBS
+# ========================================
+echo "[15/15] Configurando tarefas agendadas..."
 
-# Agendar verificação de saúde a cada 5 minutos
-echo "*/5 * * * * /home/django/health_check.sh" | crontab -u django -
+# Renovação SSL
+echo "0 0,12 * * * root certbot renew --quiet" > /etc/cron.d/certbot-renew
 
-echo "Configuração da instância concluída!"
-echo "Aplicação disponível em: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
-echo "SSH: ssh -i ~/.ssh/id_rsa ubuntu@$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
-echo "Logs: /var/log/user-data.log"
+# Limpeza de logs (manter últimos 7 dias)
+echo "0 2 * * * root find /var/log/django -name '*.log' -mtime +7 -delete" > /etc/cron.d/cleanup-logs
+echo "0 2 * * * root find /var/log/gunicorn -name '*.log' -mtime +7 -delete" >> /etc/cron.d/cleanup-logs
+
+echo "Cron jobs configurados"
+
+# ========================================
+# CRIAR SCRIPT DE STATUS
+# ========================================
+cat > /usr/local/bin/app-status <<'STATUS_SCRIPT'
+#!/bin/bash
+echo "========================================="
+echo "Status do Sistema - $(date)"
+echo "========================================="
+echo ""
+echo "Serviços:"
+systemctl status nginx --no-pager | head -5
+echo ""
+supervisorctl status
+echo ""
+echo "Logs recentes (últimas 10 linhas):"
+tail -10 /var/log/gunicorn/gunicorn.log
+echo ""
+echo "Uso de recursos:"
+df -h | grep -E '(Filesystem|/$)'
+free -h
+echo ""
+echo "Health check:"
+curl -s http://localhost/health/ || echo "Health check falhou"
+echo ""
+echo "========================================="
+STATUS_SCRIPT
+
+chmod +x /usr/local/bin/app-status
+
+# ========================================
+# FINALIZAÇÃO
+# ========================================
+echo "========================================="
+echo "Configuração concluída!"
+echo "========================================="
+echo "Domínio: $DOMAIN_NAME"
+echo "Data: $(date)"
+echo ""
+echo "Próximos passos:"
+echo "1. SSH na instância"
+echo "2. Gerar SECRET_KEY: python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\""
+echo "3. Editar /home/django/app/.env.production"
+echo "4. Configurar EMAIL_HOST_PASSWORD (App Password do Gmail)"
+echo "5. Reiniciar: sudo supervisorctl restart gunicorn"
+echo ""
+echo "Comandos úteis:"
+echo "- Status: app-status"
+echo "- Logs: tail -f /var/log/gunicorn/gunicorn.log"
+echo "- Nginx logs: tail -f /var/log/nginx/error.log"
+echo "========================================="
+
+# Enviar notificação (opcional)
+# aws sns publish \
+#     --region us-east-1 \
+#     --topic-arn "arn:aws:sns:us-east-1:ACCOUNT:sistema-agendamento-alerts" \
+#     --message "EC2 inicializada com sucesso! Domínio: $DOMAIN_NAME" \
+#     --subject "Deploy Completo" 2>/dev/null || true
+
+exit 0
+

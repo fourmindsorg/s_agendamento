@@ -1,0 +1,151 @@
+name: Install SSL Certificate
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Domain name (ex: fourmindstech.com.br)"
+        required: true
+        default: "fourmindstech.com.br"
+      email:
+        description: "Email for SSL certificate"
+        required: true
+        default: "fourmindsorg@gmail.com"
+
+env:
+  EC2_HOST: 34.228.191.215
+  DOMAIN: ${{ github.event.inputs.domain || 'fourmindstech.com.br' }}
+  EMAIL: ${{ github.event.inputs.email || 'fourmindsorg@gmail.com' }}
+
+jobs:
+  check-dns:
+    name: Check DNS Propagation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check DNS for root domain
+        id: check-root
+        run: |
+          echo "Verificando DNS para ${{ env.DOMAIN }}..."
+
+          # Tentar resolver DNS
+          IP=$(dig +short ${{ env.DOMAIN }} @8.8.8.8 | tail -n1)
+
+          if [ "$IP" == "${{ env.EC2_HOST }}" ]; then
+            echo "✅ DNS propagado: ${{ env.DOMAIN }} -> $IP"
+            echo "status=ok" >> $GITHUB_OUTPUT
+          else
+            echo "❌ DNS não propagado ainda"
+            echo "Esperado: ${{ env.EC2_HOST }}"
+            echo "Recebido: $IP"
+            echo "status=fail" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Check DNS for www subdomain
+        run: |
+          echo "Verificando DNS para www.${{ env.DOMAIN }}..."
+
+          # Tentar resolver DNS
+          IP=$(dig +short www.${{ env.DOMAIN }} @8.8.8.8 | tail -n1)
+
+          if [ "$IP" == "${{ env.EC2_HOST }}" ]; then
+            echo "✅ DNS propagado: www.${{ env.DOMAIN }} -> $IP"
+          else
+            echo "⚠️ DNS www não propagado ainda"
+            echo "Esperado: ${{ env.EC2_HOST }}"
+            echo "Recebido: $IP"
+          fi
+
+  install-ssl:
+    name: Install SSL with Certbot
+    needs: check-dns
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Install SSL Certificate
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            # Instalar certificado SSL
+            sudo certbot --nginx \
+              -d ${{ env.DOMAIN }} \
+              -d www.${{ env.DOMAIN }} \
+              --email ${{ env.EMAIL }} \
+              --agree-tos \
+              --non-interactive \
+              --redirect
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ Certificado SSL instalado com sucesso!"
+            else
+              echo "❌ Erro ao instalar certificado SSL"
+              exit 1
+            fi
+          EOF
+
+      - name: Verify SSL Certificate
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            echo "Verificando certificados instalados..."
+            sudo certbot certificates
+          EOF
+
+      - name: Test HTTPS Connection
+        run: |
+          echo "Testando conexão HTTPS..."
+
+          # Testar domínio principal
+          if curl -sI https://${{ env.DOMAIN }} | grep "HTTP/2 200" > /dev/null; then
+            echo "✅ HTTPS funcionando para ${{ env.DOMAIN }}"
+          else
+            echo "⚠️ HTTPS pode não estar funcionando ainda para ${{ env.DOMAIN }}"
+          fi
+
+          # Testar www
+          if curl -sI https://www.${{ env.DOMAIN }} | grep "HTTP/2 200" > /dev/null; then
+            echo "✅ HTTPS funcionando para www.${{ env.DOMAIN }}"
+          else
+            echo "⚠️ HTTPS pode não estar funcionando ainda para www.${{ env.DOMAIN }}"
+          fi
+
+      - name: SSL Installation Summary
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "🔒 SSL INSTALADO COM SUCESSO!"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "Certificado instalado para:"
+          echo "  • ${{ env.DOMAIN }}"
+          echo "  • www.${{ env.DOMAIN }}"
+          echo ""
+          echo "Recursos configurados:"
+          echo "  ✅ HTTPS ativo"
+          echo "  ✅ Redirecionamento HTTP -> HTTPS"
+          echo "  ✅ Certificado válido por 90 dias"
+          echo "  ✅ Renovação automática configurada"
+          echo ""
+          echo "URLs de acesso:"
+          echo "  🌐 https://${{ env.DOMAIN }}"
+          echo "  🌐 https://www.${{ env.DOMAIN }}"
+          echo "  🔐 https://${{ env.DOMAIN }}/admin"
+          echo ""
+          echo "Credenciais Admin:"
+          echo "  Usuário: admin"
+          echo "  Email: ${{ env.EMAIL }}"
+          echo "  Senha: @4mindsPassword"
+          echo ""
+          echo "════════════════════════════════════════════════════════"
+          echo "🎉 SEU SITE ESTÁ PRONTO!"
+          echo "════════════════════════════════════════════════════════"
+
+

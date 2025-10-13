@@ -1,0 +1,135 @@
+name: Configure DNS - AWS Route53
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Domain name (ex: fourmindstech.com.br)"
+        required: true
+        default: "fourmindstech.com.br"
+
+env:
+  AWS_REGION: us-east-1
+  EC2_IP: 34.228.191.215
+  DOMAIN: ${{ github.event.inputs.domain || 'fourmindstech.com.br' }}
+
+jobs:
+  configure-dns:
+    name: Configure DNS Records in Route53
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get Hosted Zone ID
+        id: get-zone
+        run: |
+          ZONE_ID=$(aws route53 list-hosted-zones-by-name \
+            --dns-name ${{ env.DOMAIN }} \
+            --query "HostedZones[0].Id" \
+            --output text | cut -d'/' -f3)
+
+          if [ -z "$ZONE_ID" ] || [ "$ZONE_ID" == "None" ]; then
+            echo "❌ Hosted Zone não encontrada para ${{ env.DOMAIN }}"
+            echo "Crie uma Hosted Zone primeiro no Route53"
+            exit 1
+          fi
+
+          echo "zone_id=$ZONE_ID" >> $GITHUB_OUTPUT
+          echo "✅ Hosted Zone ID: $ZONE_ID"
+
+      - name: Create DNS Records
+        run: |
+          # Criar arquivo de configuração JSON
+          cat > dns-changes.json << EOF
+          {
+            "Comment": "Create DNS records for ${{ env.DOMAIN }}",
+            "Changes": [
+              {
+                "Action": "UPSERT",
+                "ResourceRecordSet": {
+                  "Name": "${{ env.DOMAIN }}",
+                  "Type": "A",
+                  "TTL": 3600,
+                  "ResourceRecords": [
+                    {
+                      "Value": "${{ env.EC2_IP }}"
+                    }
+                  ]
+                }
+              },
+              {
+                "Action": "UPSERT",
+                "ResourceRecordSet": {
+                  "Name": "www.${{ env.DOMAIN }}",
+                  "Type": "A",
+                  "TTL": 3600,
+                  "ResourceRecords": [
+                    {
+                      "Value": "${{ env.EC2_IP }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+          EOF
+
+          # Aplicar mudanças
+          aws route53 change-resource-record-sets \
+            --hosted-zone-id ${{ steps.get-zone.outputs.zone_id }} \
+            --change-batch file://dns-changes.json
+
+          echo "✅ Registros DNS criados com sucesso!"
+
+      - name: Verify DNS Records
+        run: |
+          echo "Verificando registros DNS..."
+          echo ""
+
+          # Registro principal
+          aws route53 list-resource-record-sets \
+            --hosted-zone-id ${{ steps.get-zone.outputs.zone_id }} \
+            --query "ResourceRecordSets[?Name=='${{ env.DOMAIN }}.']" \
+            --output table
+
+          echo ""
+
+          # Registro www
+          aws route53 list-resource-record-sets \
+            --hosted-zone-id ${{ steps.get-zone.outputs.zone_id }} \
+            --query "ResourceRecordSets[?Name=='www.${{ env.DOMAIN }}.']" \
+            --output table
+
+      - name: DNS Configuration Summary
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "✅ DNS CONFIGURADO COM SUCESSO!"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "Registros criados:"
+          echo "  • Tipo: A | Nome: @ | Valor: ${{ env.EC2_IP }}"
+          echo "  • Tipo: A | Nome: www | Valor: ${{ env.EC2_IP }}"
+          echo ""
+          echo "Domínio: ${{ env.DOMAIN }}"
+          echo "IP: ${{ env.EC2_IP }}"
+          echo ""
+          echo "⏰ Aguarde 5-30 minutos para propagação DNS"
+          echo ""
+          echo "Verificar propagação:"
+          echo "  nslookup ${{ env.DOMAIN }}"
+          echo "  nslookup www.${{ env.DOMAIN }}"
+          echo ""
+          echo "Próximo passo:"
+          echo "  Execute o workflow 'Install SSL Certificate'"
+          echo "════════════════════════════════════════════════════════"
+
+
