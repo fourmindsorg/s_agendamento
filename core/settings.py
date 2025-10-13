@@ -140,7 +140,8 @@ MESSAGE_TAGS = {
 # Configurações de Email (desenvolvimento)
 # Use locmem backend para testes (suporta mail.outbox)
 import sys
-if 'pytest' in sys.modules or 'test' in sys.argv:
+
+if "pytest" in sys.modules or "test" in sys.argv:
     EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
