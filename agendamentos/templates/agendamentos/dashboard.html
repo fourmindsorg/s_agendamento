@@ -145,7 +145,7 @@
         <h3 class="text-primary mb-0">{{ agendamentos_hoje }}</h3>
         <small class="text-muted">agendamento{{ agendamentos_hoje|pluralize }}</small>
         <div class="mt-2">
-          <a href="{% url 'agendamentos:agendamento_list' %}?data_inicio={{ today }}&data_fim={{ today }}" 
+          <a href="{% url 'agendamentos:agendamento_list' %}?data_inicio={{ today|date:'Y-m-d' }}&data_fim={{ today|date:'Y-m-d' }}" 
              class="btn btn-sm btn-outline-primary">
             Ver Detalhes
           </a>
