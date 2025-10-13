@@ -138,7 +138,13 @@ MESSAGE_TAGS = {
 }
 
 # Configurações de Email (desenvolvimento)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Use locmem backend para testes (suporta mail.outbox)
+import sys
+if 'pytest' in sys.modules or 'test' in sys.argv:
+    EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

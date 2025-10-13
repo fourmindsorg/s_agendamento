@@ -15,73 +15,49 @@ def test_django_setup():
     """Testar configuração básica do Django"""
     print("Testando configuracao do Django...")
     
-    try:
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-        django.setup()
-        print("Django configurado com sucesso")
-        return True
-    except Exception as e:
-        print(f"Erro na configuracao do Django: {e}")
-        return False
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+    django.setup()
+    print("Django configurado com sucesso")
+    assert True  # Pytest espera assert, não return
 
 def test_imports():
     """Testar importações básicas"""
     print("Testando importacoes...")
     
-    try:
-        from django.contrib.auth.models import User
-        from django.db import models
-        print("Modelos do Django importados")
-        
-        # Testar importações específicas do projeto
-        from core.settings import DEBUG
-        print(f"Configuracoes carregadas (DEBUG: {DEBUG})")
-        
-        return True
-    except Exception as e:
-        print(f"Erro nas importacoes: {e}")
-        return False
+    from django.contrib.auth.models import User
+    from django.db import models
+    print("Modelos do Django importados")
+    
+    # Testar importações específicas do projeto
+    from core.settings import DEBUG
+    print(f"Configuracoes carregadas (DEBUG: {DEBUG})")
+    
+    assert True  # Pytest espera assert, não return
 
 def test_database_connection():
     """Testar conexão com banco de dados"""
     print("Testando conexao com banco de dados...")
     
-    try:
-        from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            result = cursor.fetchone()
-            if result[0] == 1:
-                print("Conexao com banco de dados OK")
-                return True
-            else:
-                print("Resultado inesperado do banco de dados")
-                return False
-    except Exception as e:
-        print(f"Erro na conexao com banco: {e}")
-        return False
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        assert result[0] == 1, "Resultado inesperado do banco de dados"
+        print("Conexao com banco de dados OK")
 
 def test_urls():
     """Testar configuração de URLs"""
     print("Testando configuracao de URLs...")
     
-    try:
-        from django.urls import reverse
-        from django.test import Client
-        
-        client = Client()
-        
-        # Testar URLs básicas
-        try:
-            response = client.get('/')
-            print(f"Pagina principal responde (status: {response.status_code})")
-        except Exception as e:
-            print(f"Pagina principal com problema: {e}")
-        
-        return True
-    except Exception as e:
-        print(f"Erro na configuracao de URLs: {e}")
-        return False
+    from django.urls import reverse
+    from django.test import Client
+    
+    client = Client()
+    
+    # Testar URLs básicas
+    response = client.get('/')
+    print(f"Pagina principal responde (status: {response.status_code})")
+    assert response.status_code in [200, 302, 404], f"Status code inesperado: {response.status_code}"
 
 def main():
     """Executar todos os testes básicos"""
@@ -99,19 +75,22 @@ def main():
     total = len(tests)
     
     for test in tests:
-        if test():
+        try:
+            test()
             passed += 1
+        except AssertionError as e:
+            print(f"Teste falhou: {e}")
+        except Exception as e:
+            print(f"Erro no teste: {e}")
         print()
     
     print(f"Resultado: {passed}/{total} testes passaram")
     
     if passed == total:
         print("Todos os testes basicos passaram!")
-        return True
     else:
         print("Alguns testes falharam!")
-        return False
+        sys.exit(1)
 
 if __name__ == '__main__':
-    success = main()
-    sys.exit(0 if success else 1)
+    main()

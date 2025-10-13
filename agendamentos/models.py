@@ -69,7 +69,7 @@ class TipoServico(models.Model):
         ordering = ['nome']
 
     def __str__(self):
-        return f"{self.nome} - R\$ {self.preco}"
+        return f"{self.nome} - R$ {self.preco}"
 
     @property
     def duracao_formatada(self):
