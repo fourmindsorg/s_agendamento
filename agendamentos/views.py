@@ -626,8 +626,44 @@ class AgendamentoListView(LoginRequiredMixin, ListView):
         data_fim = self.request.GET.get('data_fim')
         
         if data_inicio:
+            # Converter data para formato ISO se necessário
+            try:
+                from datetime import datetime
+                # Tentar parsear data em português (ex: "13 de Outubro de 2025")
+                if ' de ' in data_inicio:
+                    meses = {
+                        'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04',
+                        'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08',
+                        'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12'
+                    }
+                    partes = data_inicio.split(' de ')
+                    dia = partes[0].strip().zfill(2)
+                    mes = meses.get(partes[1].strip(), '01')
+                    ano = partes[2].strip()
+                    data_inicio = f"{ano}-{mes}-{dia}"
+            except:
+                pass  # Se falhar, usa o valor original
+            
             queryset = queryset.filter(data_agendamento__gte=data_inicio)
+            
         if data_fim:
+            # Converter data para formato ISO se necessário
+            try:
+                from datetime import datetime
+                if ' de ' in data_fim:
+                    meses = {
+                        'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04',
+                        'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08',
+                        'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12'
+                    }
+                    partes = data_fim.split(' de ')
+                    dia = partes[0].strip().zfill(2)
+                    mes = meses.get(partes[1].strip(), '01')
+                    ano = partes[2].strip()
+                    data_fim = f"{ano}-{mes}-{dia}"
+            except:
+                pass
+            
             queryset = queryset.filter(data_agendamento__lte=data_fim)
         
         return queryset.order_by('-data_agendamento', '-hora_inicio')
