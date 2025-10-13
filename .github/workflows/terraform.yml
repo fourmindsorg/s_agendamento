@@ -1,17 +1,19 @@
 name: Terraform Infrastructure
 
+# Desabilitado: Configure AWS secrets primeiro
+# Para habilitar, descomente as linhas abaixo
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'aws-infrastructure/**'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'aws-infrastructure/**'
-  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'aws-infrastructure/**'
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'aws-infrastructure/**'
+  workflow_dispatch:  # Apenas execução manual
 
 env:
   AWS_REGION: us-east-1
