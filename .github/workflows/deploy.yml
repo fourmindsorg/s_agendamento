@@ -1,0 +1,115 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  EC2_HOST: 34.228.191.215
+  PROJECT_NAME: sistema-agendamento-4minds
+  DOMAIN: fourmindstech.com.br
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            set -e
+            
+            echo "=== Atualizando código do repositório ==="
+            cd /home/django/sistema-de-agendamento
+            
+            # Fazer backup do .env
+            cp .env .env.backup
+            
+            # Atualizar código
+            sudo -u django git fetch origin
+            sudo -u django git reset --hard origin/main
+            
+            # Restaurar .env
+            cp .env.backup .env
+            
+            # Ativar ambiente virtual
+            source venv/bin/activate
+            
+            # Instalar/atualizar dependências
+            pip install -r requirements.txt
+            
+            # Executar migrações
+            export DB_NAME=agendamentos_db
+            export DB_USER=postgres
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DB_HOST=${{ secrets.DB_HOST }}
+            export DB_PORT=5432
+            
+            python manage.py migrate --settings=core.settings_production
+            
+            # Coletar arquivos estáticos
+            python manage.py collectstatic --noinput --settings=core.settings_production
+            
+            # Corrigir permissões
+            sudo chown -R django:django staticfiles/
+            sudo chmod -R 755 staticfiles/
+            
+            # Reiniciar serviços
+            sudo systemctl restart django
+            sudo systemctl reload nginx
+            
+            echo "=== Deploy concluído com sucesso! ==="
+          EOF
+
+      - name: Verificar status dos serviços
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            echo "=== Status Django ==="
+            sudo systemctl status django --no-pager | head -10
+            
+            echo ""
+            echo "=== Status Nginx ==="
+            sudo systemctl status nginx --no-pager | head -10
+            
+            echo ""
+            echo "=== Teste HTTP ==="
+            curl -I http://localhost:8000 | head -5
+          EOF
+
+      - name: Notificar sucesso
+        if: success()
+        run: |
+          echo "✅ Deploy realizado com sucesso!"
+          echo "🌐 Site: https://${{ env.DOMAIN }}"
+          echo "🔐 Admin: https://${{ env.DOMAIN }}/admin"
+
+      - name: Notificar falha
+        if: failure()
+        run: |
+          echo "❌ Deploy falhou! Verifique os logs acima."
+
+
+
