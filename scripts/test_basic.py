@@ -6,6 +6,7 @@ Testes básicos para o sistema de agendamento
 import os
 import sys
 import django
+import pytest
 from django.conf import settings
 
 # Adicionar o diretório raiz do projeto ao Python path
@@ -39,6 +40,7 @@ def test_imports():
     assert True  # Pytest espera assert, não return
 
 
+@pytest.mark.django_db
 def test_database_connection():
     """Testar conexão com banco de dados"""
     print("Testando conexao com banco de dados...")
@@ -52,6 +54,7 @@ def test_database_connection():
         print("Conexao com banco de dados OK")
 
 
+@pytest.mark.django_db
 def test_urls():
     """Testar configuração de URLs"""
     print("Testando configuracao de URLs...")
