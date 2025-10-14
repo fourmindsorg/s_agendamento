@@ -143,12 +143,28 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
-# Forçar Django a servir arquivos estáticos em produção
-# if not DEBUG:
-#     # Adicionar URL para servir arquivos estáticos
-#     from django.conf.urls.static import static
-#     from django.conf import settings
+# =========================
+# settings.py (trecho)
+# =========================
 
-#     # Esta configuração será aplicada no urls.py
-#     STATIC_URL = "/static/"
-#     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# adicionar no settings.py do seu projeto
+import os
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+
+# Asaas
+ASAAS_API_KEY = os.environ.get('ASAAS_API_KEY')
+ASAAS_ENV = os.environ.get('ASAAS_ENV', 'sandbox') # 'sandbox' ou 'production'
+ASAAS_WEBHOOK_TOKEN = os.environ.get('ASAAS_WEBHOOK_TOKEN') # seu token para validar webhooks
+
+
+# AWS / S3 settings (exemplo simplificado)
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
