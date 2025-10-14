@@ -5,7 +5,7 @@ on:
   # schedule:
   #   # Executa todos os dias às 3h UTC (0h BRT)
   #   - cron: '0 3 * * *'
-  workflow_dispatch:  # Apenas execução manual
+  workflow_dispatch: # Apenas execução manual
 
 env:
   AWS_REGION: us-east-1
@@ -16,7 +16,7 @@ jobs:
   backup:
     name: Backup PostgreSQL para S3
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -62,10 +62,10 @@ jobs:
       - name: Upload backup to S3
         run: |
           DATE=$(date +%Y%m%d_%H%M%S)
-          
+
           # Download backup do EC2
           scp -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }}:/home/django/backups/backup_*.dump.gz ./
-          
+
           # Upload para S3
           aws s3 cp backup_*.dump.gz s3://${{ env.S3_BUCKET }}/backups/database/ --storage-class GLACIER
 
@@ -76,7 +76,7 @@ jobs:
             find /home/django/backups -name "backup_*.dump.gz" -mtime +7 -delete
             echo "Backups antigos removidos do servidor"
           EOF
-          
+
           # Manter apenas backups dos últimos 30 dias no S3
           aws s3 ls s3://${{ env.S3_BUCKET }}/backups/database/ | \
             while read -r line; do
@@ -101,7 +101,3 @@ jobs:
         if: failure()
         run: |
           echo "❌ Backup falhou! Verifique os logs."
-
-
-
-
