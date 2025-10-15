@@ -35,13 +35,12 @@ cat ~/.ssh/id_rsa
 
 #### **DB_PASSWORD**
 ```
-Valor: [Senha do banco PostgreSQL]
+Valor: 4mindsPassword_db_Postgre
 ```
 
 #### **DB_HOST**
 ```
-Valor: [Endpoint do RDS PostgreSQL]
-Exemplo: sistema-agendamento-postgres.xxxxx.us-east-1.rds.amazonaws.com
+Valor: agendamento-4minds-postgres.cgr24gyuwi3d.us-east-1.rds.amazonaws.com
 ```
 
 ### 3. Verificar Secrets Configurados
