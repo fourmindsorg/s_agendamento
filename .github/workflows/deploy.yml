@@ -50,15 +50,19 @@ jobs:
             echo "=== Atualizando código do repositório ==="
             cd /home/django/app
             
-            # Fazer backup do .env
-            cp .env .env.backup
+            # Fazer backup do .env (se existir)
+            if [ -f .env ]; then
+                cp .env .env.backup
+            fi
             
             # Atualizar código
             sudo -u django git fetch origin
             sudo -u django git reset --hard origin/main
             
-            # Restaurar .env
-            cp .env.backup .env
+            # Restaurar .env (se backup existir)
+            if [ -f .env.backup ]; then
+                cp .env.backup .env
+            fi
             
             # Ativar ambiente virtual
             source venv/bin/activate
