@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EC2_HOST: 34.228.191.215
+  EC2_HOST: 13.221.138.11
   PROJECT_NAME: sistema-agendamento-4minds
   DOMAIN: fourmindstech.com.br
 

@@ -27,7 +27,7 @@
 ### **Servidor Principal**
 - **Instância:** EC2 t2.micro (Ubuntu 22.04 LTS)
 - **Região:** us-east-1 (N. Virginia)
-- **IP Público:** [Dinâmico - verificar via AWS Console]
+- **IP Público:** 13.221.138.11
 - **Domínio:** fourmindstech.com.br
 - **SSL:** ✅ Ativo (Let's Encrypt)
 
@@ -133,7 +133,7 @@ git commit -m "Deploy: descrição da alteração"
 git push origin main
 
 # Deploy manual (via SSH)
-ssh ubuntu@[IP_EC2]
+ssh ubuntu@13.221.138.11
 cd /opt/sistema-agendamento
 git pull origin main
 sudo systemctl restart gunicorn
