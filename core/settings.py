@@ -36,7 +36,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -44,6 +43,18 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Habilitar WhiteNoise somente quando disponível e em produção
+try:
+    import whitenoise  # noqa: F401
+
+    if not DEBUG:
+        # Inserir após SecurityMiddleware
+        MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+        STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+except Exception:
+    # Em desenvolvimento ou se o pacote não estiver instalado, seguir sem WhiteNoise
+    pass
 
 ROOT_URLCONF = "core.urls"
 
