@@ -10,8 +10,6 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
-    reviewers:
-      - "fourmindsorg"
     assignees:
       - "fourmindsorg"
     commit-message:
@@ -28,8 +26,6 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
-    reviewers:
-      - "fourmindsorg"
     assignees:
       - "fourmindsorg"
     commit-message:
@@ -46,8 +42,6 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
-    reviewers:
-      - "fourmindsorg"
     assignees:
       - "fourmindsorg"
     commit-message:
@@ -56,12 +50,3 @@ updates:
     labels:
       - "dependencies"
       - "terraform"
-
-
-
-
-
-
-
-
-

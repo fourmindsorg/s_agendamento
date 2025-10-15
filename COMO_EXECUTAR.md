@@ -49,8 +49,8 @@ set SECRET_KEY=sua-chave-secreta-forte
 set ALLOWED_HOSTS=seu-dominio.com,www.seu-dominio.com
 set DB_NAME=agendamentos_db
 set DB_USER=postgres
-set DB_PASSWORD=senha
-set DB_HOST=localhost
+set DB_PASSWORD=4MindsAgendamento2025!SecureDB#Pass
+set DB_HOST=agendamento-4minds-postgres.cgr24gyuwi3d.us-east-1.rds.amazonaws.com
 set DB_PORT=5432
 
 # Linux/Mac
@@ -60,8 +60,8 @@ export SECRET_KEY=sua-chave-secreta-forte
 export ALLOWED_HOSTS=seu-dominio.com,www.seu-dominio.com
 export DB_NAME=agendamentos_db
 export DB_USER=postgres
-export DB_PASSWORD=senha
-export DB_HOST=localhost
+export DB_PASSWORD=4MindsAgendamento2025!SecureDB#Pass
+export DB_HOST=agendamento-4minds-postgres.cgr24gyuwi3d.us-east-1.rds.amazonaws.com
 export DB_PORT=5432
 ```
 

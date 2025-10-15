@@ -6,7 +6,7 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 
 - **Backend:** Django 5.2.6
 - **Frontend:** Bootstrap 5.3.0, HTML5, CSS3, JavaScript
-- **Banco de Dados:** SQLite (desenvolvimento) / PostgreSQL (produção)
+- **Banco de Dados:** SQLite (desenvolvimento) / PostgreSQL (produção em RDS)
 - **Gráficos:** Plotly.js
 - **Ícones:** Font Awesome 6.4.0
 - **Python:** 3.8+
