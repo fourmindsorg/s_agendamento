@@ -1,4 +1,4 @@
-# 📅 Sistema de Agendamentos
+# 📅 Sistema de Agendamentos - 4Minds
 
 Sistema completo para agendamento de clientes com interface moderna, responsiva e sistema de temas personalizáveis.
 
@@ -6,10 +6,13 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 
 - **Backend:** Django 5.2.6
 - **Frontend:** Bootstrap 5.3.0, HTML5, CSS3, JavaScript
-- **Banco de Dados:** SQLite (desenvolvimento) / PostgreSQL (produção em RDS)
+- **Banco de Dados:** SQLite (desenvolvimento) / PostgreSQL (produção)
 - **Gráficos:** Plotly.js
 - **Ícones:** Font Awesome 6.4.0
-- **Python:** 3.8+
+- **Python:** 3.10+
+- **Servidor:** Nginx + Gunicorn
+- **Infraestrutura:** AWS (EC2, RDS, S3, CloudWatch)
+- **Deploy:** GitHub Actions + Terraform
 
 ## ✨ Funcionalidades
 
@@ -42,8 +45,8 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 
 ### **1. Clonar o Repositório**
 ```bash
-git clone https://github.com/ViniciusMocelin/sistema-de-agendamento.git
-cd sistema-de-agendamento
+git clone https://github.com/fourmindsorg/s_agendamento.git
+cd s_agendamento
 ```
 
 ## 🚀 Deploy Automático na AWS
@@ -110,13 +113,13 @@ O sistema possui 3 pipelines automatizadas:
 ### **URLs de Acesso**
 
 Após o deploy, acesse:
-- **Aplicação:** `http://[IP_DA_EC2]`
-- **Admin:** `http://[IP_DA_EC2]/admin/`
-- **Dashboard:** `http://[IP_DA_EC2]/dashboard/`
+- **Aplicação:** `https://fourmindstech.com.br`
+- **Admin:** `https://fourmindstech.com.br/admin/`
+- **Dashboard:** `https://fourmindstech.com.br/dashboard/`
 
 **Credenciais Admin:**
-- Usuário: `@4minds`
-- Senha: `@4mindsPassword`
+- Usuário: `admin`
+- Senha: `admin123` (altere após primeiro login)
 
 ### **Gerenciamento da Infraestrutura**
 
@@ -150,5 +153,37 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_EC2]
 - **Banco de Dados:** Backup diário às 2h UTC
 - **Arquivos:** Backup dos arquivos de mídia
 - **Retenção:** 7 dias de backups
+
+## 🌐 Servidor em Produção
+
+### **Status Atual**
+- **URL:** https://fourmindstech.com.br
+- **Status:** ✅ Online e Funcionando
+- **Última Atualização:** Outubro 2025
+- **Versão:** 2.0 (Produção)
+
+### **Acesso Rápido**
+- **Aplicação:** https://fourmindstech.com.br
+- **Admin:** https://fourmindstech.com.br/admin/
+- **Dashboard:** https://fourmindstech.com.br/dashboard/
+
+### **Credenciais de Teste**
+- **Usuário:** admin
+- **Senha:** admin123
+- **⚠️ IMPORTANTE:** Alterar após primeiro login
+
+### **Infraestrutura**
+- **Servidor:** AWS EC2 t2.micro (Ubuntu 22.04)
+- **Banco:** RDS PostgreSQL 15.4
+- **Domínio:** fourmindstech.com.br
+- **SSL:** ✅ Ativo (Let's Encrypt)
+- **Monitoramento:** CloudWatch + SNS
+
+### **Documentação do Servidor**
+Para informações detalhadas sobre o servidor atual, consulte:
+- [SERVIDOR_ATUAL.md](./SERVIDOR_ATUAL.md) - Informações completas do servidor
+- [COMO_EXECUTAR.md](./COMO_EXECUTAR.md) - Guia de execução local e produção
+
+---
 
 ## 🛠️ Desenvolvimento Local

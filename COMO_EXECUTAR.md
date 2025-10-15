@@ -1,9 +1,10 @@
 # 🚀 Como Executar o Sistema de Agendamento
 
 ## 📋 Pré-requisitos
-- Python 3.8+
+- Python 3.10+
 - Virtual environment ativado
 - Dependências instaladas: `pip install -r requirements.txt`
+- Git configurado
 
 ## 🔧 Desenvolvimento (Local)
 
@@ -46,23 +47,33 @@ py run_production.py
 set DJANGO_SETTINGS_MODULE=core.settings_production
 set DEBUG=False
 set SECRET_KEY=sua-chave-secreta-forte
-set ALLOWED_HOSTS=seu-dominio.com,www.seu-dominio.com
+set ALLOWED_HOSTS=fourmindstech.com.br,www.fourmindstech.com.br
 set DB_NAME=agendamentos_db
 set DB_USER=postgres
-set DB_PASSWORD=4MindsAgendamento2025!SecureDB#Pass
-set DB_HOST=agendamento-4minds-postgres.cgr24gyuwi3d.us-east-1.rds.amazonaws.com
+set DB_PASSWORD=senha-forte-do-banco
+set DB_HOST=localhost
 set DB_PORT=5432
+set SMTP_HOST=smtp.gmail.com
+set SMTP_PORT=587
+set SMTP_USER=seu-email@gmail.com
+set SMTP_PASSWORD=sua-senha-app
+set DEFAULT_FROM_EMAIL=Sistema de Agendamentos <noreply@fourmindstech.com.br>
 
 # Linux/Mac
 export DJANGO_SETTINGS_MODULE=core.settings_production
 export DEBUG=False
 export SECRET_KEY=sua-chave-secreta-forte
-export ALLOWED_HOSTS=seu-dominio.com,www.seu-dominio.com
+export ALLOWED_HOSTS=fourmindstech.com.br,www.fourmindstech.com.br
 export DB_NAME=agendamentos_db
 export DB_USER=postgres
-export DB_PASSWORD=4MindsAgendamento2025!SecureDB#Pass
-export DB_HOST=agendamento-4minds-postgres.cgr24gyuwi3d.us-east-1.rds.amazonaws.com
+export DB_PASSWORD=senha-forte-do-banco
+export DB_HOST=localhost
 export DB_PORT=5432
+export SMTP_HOST=smtp.gmail.com
+export SMTP_PORT=587
+export SMTP_USER=seu-email@gmail.com
+export SMTP_PASSWORD=sua-senha-app
+export DEFAULT_FROM_EMAIL=Sistema de Agendamentos <noreply@fourmindstech.com.br>
 ```
 
 #### 2. Instalar dependências
