@@ -86,7 +86,17 @@ git push origin main
 
 Execute o script de verificação:
 ```bash
+# Windows
+py verificar_deploy.py
+
+# Linux/Mac
 python verificar_deploy.py
+```
+
+**Se der erro de módulo não encontrado:**
+```bash
+# Instalar dependência
+py -m pip install requests
 ```
 
 ## 🔍 Troubleshooting
