@@ -41,21 +41,21 @@ jobs:
         run: |
           echo "=== Testando conexão SSH ==="
           ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 ubuntu@${{ env.EC2_HOST }} "echo 'SSH connection successful'"
-      
+
       - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
             set -e
             
             echo "=== Atualizando código do repositório ==="
-            cd /home/django/sistema-de-agendamento
+            cd /opt/sistema-agendamento
             
             # Fazer backup do .env
             cp .env .env.backup
             
             # Atualizar código
-            sudo -u django git fetch origin
-            sudo -u django git reset --hard origin/main
+            sudo -u ubuntu git fetch origin
+            sudo -u ubuntu git reset --hard origin/main
             
             # Restaurar .env
             cp .env.backup .env
@@ -79,11 +79,11 @@ jobs:
             python manage.py collectstatic --noinput --settings=core.settings_production
             
             # Corrigir permissões
-            sudo chown -R django:django staticfiles/
+            sudo chown -R ubuntu:ubuntu staticfiles/
             sudo chmod -R 755 staticfiles/
             
             # Reiniciar serviços
-            sudo systemctl restart django
+            sudo systemctl restart gunicorn
             sudo systemctl reload nginx
             
             echo "=== Deploy concluído com sucesso! ==="
@@ -92,8 +92,8 @@ jobs:
       - name: Verificar status dos serviços
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
-            echo "=== Status Django ==="
-            sudo systemctl status django --no-pager | head -10
+            echo "=== Status Gunicorn ==="
+            sudo systemctl status gunicorn --no-pager | head -10
             
             echo ""
             echo "=== Status Nginx ==="
