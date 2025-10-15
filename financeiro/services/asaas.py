@@ -23,46 +23,53 @@ class AsaasClient:
         self.session = requests.Session()
         self.session.headers.update({'access_token': self.api_key, 'Content-Type': 'application/json'})
 
+    def _url(self, path: str) -> str:
+        return urljoin(self.base, path)
 
-def _url(self, path):
-    return urljoin(self.base, path)
+    def create_customer(self, name: str, email: str | None = None, cpf_cnpj: str | None = None, phone: str | None = None):
+        """Cria cliente no Asaas (retorna o objeto JSON)."""
+        payload = {'name': name}
+        if email:
+            payload['email'] = email
+        if cpf_cnpj:
+            payload['cpfCnpj'] = cpf_cnpj
+        if phone:
+            payload['phone'] = phone
+        response = self.session.post(self._url('customers'), json=payload, timeout=15)
+        response.raise_for_status()
+        return response.json()
 
+    def create_payment(self, customer_id: str, value: float, due_date: str, billing_type: str = 'PIX', description: str | None = None):
+        """Cria cobrança (payment). billing_type: 'PIX','BOLETO','CREDIT_CARD'"""
+        payload = {
+            'customer': customer_id,
+            'value': float(value),
+            'dueDate': due_date,  # formato YYYY-MM-DD
+            'billingType': billing_type,
+        }
+        if description:
+            payload['description'] = description
 
-def create_customer(self, name, email=None, cpf_cnpj=None, phone=None):
-    """Cria cliente no Asaas (retorna o objeto JSON)."""
-    payload = {'name': name}
-    if email: payload['email'] = email
-    if cpf_cnpj: payload['cpfCnpj'] = cpf_cnpj
-    if phone: payload['phone'] = phone
-    r = self.session.post(self._url('customers'), json=payload, timeout=15)
-    r.raise_for_status()
-    return r.json()
+        response = self.session.post(self._url('payments'), json=payload, timeout=15)
+        response.raise_for_status()
+        return response.json()
 
+    def get_pix_qr(self, payment_id: str):
+        """Recupera o QR Code (base64) e copy/paste payload para um pagamento PIX."""
+        response = self.session.get(self._url(f'payments/{payment_id}/pix'), timeout=15)
+        response.raise_for_status()
+        return response.json()
 
-def create_payment(self, customer_id, value, due_date, billing_type='PIX', description=None):
-    """Cria cobrança (payment). billing_type: 'PIX','BOLETO','CREDIT_CARD'"""
-    payload = {
-    'customer': customer_id,
-    'value': float(value),
-    'dueDate': due_date, # formato YYYY-MM-DD
-    'billingType': billing_type,
-    }
-    if description:
-        payload['description'] = description
-        r = self.session.post(self._url('payments'), json=payload, timeout=15)
-        r.raise_for_status()
-    return r.json()
-
-
-def get_pix_qr(self, payment_id):
-    """Recupera o QR Code (base64) e copy/paste payload para um pagamento PIX."""
-    r = self.session.get(self._url(f'payments/{payment_id}/pix'), timeout=15)
-    r.raise_for_status()
-    return r.json()
-
-
-def pay_with_credit_card(self, payment_id, credit_card_payload):
-    """Paga uma cobrança com cartão enviando dados do cartão (evitar no prod; prefira tokenização/checkout).
-    credit_card_payload: dict com creditCardNumber, creditCardHolderName, creditCardExpiryDate, creditCardCvv, installmentCount
-    """
-    return r.json()
+    def pay_with_credit_card(self, payment_id: str, credit_card_payload: dict):
+        """Efetua pagamento com cartão.
+        credit_card_payload: dict com creditCardNumber, creditCardHolderName, creditCardExpiryDate, creditCardCvv, installmentCount.
+        """
+        # Endpoint baseado na documentação do Asaas
+        # https://docs.asaas.com/reference/realizar-pagamento-com-cartao-de-credito
+        response = self.session.post(
+            self._url(f'payments/{payment_id}/pay'),
+            json={'creditCard': credit_card_payload},
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()
