@@ -298,7 +298,7 @@ GitHub: https://github.com/fourmindsorg/s_agendamento
 ### Comandos Essenciais
 ```bash
 # SSH
-ssh -i "C:\Users\Carlos Alberto\.ssh\id_rsa_terraform" ubuntu@34.228.191.215
+ssh -i "C:\Users\Carlos Alberto\.ssh\id_rsa_terraform" ubuntu@13.221.138.11
 
 # Status
 sudo systemctl status django nginx

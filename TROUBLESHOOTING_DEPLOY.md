@@ -40,7 +40,7 @@ O deploy está falhando mesmo com os secrets configurados no GitHub.
 **Causa:** Problema de conectividade ou servidor inacessível
 **Solução:**
 - Verifique se a EC2 está rodando
-- Confirme se o IP está correto (34.228.191.215)
+- Confirme se o IP está correto (13.221.138.11)
 - Verifique se o Security Group permite SSH (porta 22)
 
 #### ❌ Erro: "Database connection failed"
@@ -55,19 +55,19 @@ O deploy está falhando mesmo com os secrets configurados no GitHub.
 #### Teste SSH Local:
 ```bash
 # No Windows, use o arquivo .pem
-ssh -i s_agendametnos_key_pairs_AWS.pem ubuntu@34.228.191.215
+ssh -i s_agendametnos_key_pairs_AWS.pem ubuntu@13.221.138.11
 
 # Teste rápido de conectividade
-ssh -o BatchMode=yes -o ConnectTimeout=10 ubuntu@34.228.191.215 exit
+ssh -o BatchMode=yes -o ConnectTimeout=10 ubuntu@13.221.138.11 exit
 ```
 
 #### Teste Ping:
 ```bash
 # Windows
-ping -n 4 34.228.191.215
+ping -n 4 13.221.138.11
 
 # Linux/Mac
-ping -c 4 34.228.191.215
+ping -c 4 13.221.138.11
 ```
 
 ### 5. Deploy Manual via GitHub Actions
@@ -100,7 +100,7 @@ Se o deploy automático falhar:
 #### Logs do Servidor:
 ```bash
 # Conectar via SSH
-ssh -i s_agendametnos_key_pairs_AWS.pem ubuntu@34.228.191.215
+ssh -i s_agendametnos_key_pairs_AWS.pem ubuntu@13.221.138.11
 
 # Verificar logs do Django
 sudo journalctl -u django -f
