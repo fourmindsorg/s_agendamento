@@ -132,7 +132,8 @@ try:
     import whitenoise
 
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    # Usar storage simples para evitar problemas com arquivos faltando
+    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 except ImportError:
     # Se WhiteNoise não estiver disponível, usar configuração básica
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
