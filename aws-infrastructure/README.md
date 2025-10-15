@@ -516,6 +516,7 @@ Este projeto está sob a licença especificada no arquivo [LICENSE](../LICENSE).
 - **Email:** fourmindsorg@gmail.com
 - **Domínio:** fourmindstech.com.br
 - **Projeto:** Sistema de Agendamento 4Minds
+- **Repositório:** https://github.com/fourmindsorg/s_agendamento
 
 ### Links Úteis
 - [AWS Support](https://aws.amazon.com/support)
