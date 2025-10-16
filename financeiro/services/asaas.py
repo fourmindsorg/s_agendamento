@@ -5,6 +5,7 @@ import os
 import requests
 from django.conf import settings
 from urllib.parse import urljoin
+from typing import Optional, Dict, Any
 
 
 ASAAS_BASE = {
@@ -33,10 +34,10 @@ class AsaasClient:
     def create_customer(
         self,
         name: str,
-        email: str | None = None,
-        cpf_cnpj: str | None = None,
-        phone: str | None = None,
-    ):
+        email: Optional[str] = None,
+        cpf_cnpj: Optional[str] = None,
+        phone: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Cria cliente no Asaas (retorna o objeto JSON)."""
         payload = {"name": name}
         if email:
@@ -55,8 +56,8 @@ class AsaasClient:
         value: float,
         due_date: str,
         billing_type: str = "PIX",
-        description: str | None = None,
-    ):
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Cria cobrança (payment). billing_type: 'PIX','BOLETO','CREDIT_CARD'"""
         payload = {
             "customer": customer_id,
@@ -71,13 +72,21 @@ class AsaasClient:
         response.raise_for_status()
         return response.json()
 
-    def get_pix_qr(self, payment_id: str):
+    def get_payment(self, payment_id: str) -> Dict[str, Any]:
+        """Recupera dados de um pagamento."""
+        response = self.session.get(self._url(f"payments/{payment_id}"), timeout=15)
+        response.raise_for_status()
+        return response.json()
+
+    def get_pix_qr(self, payment_id: str) -> Dict[str, Any]:
         """Recupera o QR Code (base64) e copy/paste payload para um pagamento PIX."""
         response = self.session.get(self._url(f"payments/{payment_id}/pix"), timeout=15)
         response.raise_for_status()
         return response.json()
 
-    def pay_with_credit_card(self, payment_id: str, credit_card_payload: dict):
+    def pay_with_credit_card(
+        self, payment_id: str, credit_card_payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Efetua pagamento com cartão.
         credit_card_payload: dict com creditCardNumber, creditCardHolderName, creditCardExpiryDate, creditCardCvv, installmentCount.
         """

@@ -175,12 +175,13 @@
             <i class="fas fa-bars"></i>
         </button>
         
-        <h1 class="page-title">Sistema de Agendamentos Online</h1>
+        <h1 class="d-block d-md-none page-title">Agenda Online</h1>
+        <h1 class="d-none d-md-block page-title">Sistema de Agendamentos Online</h1>
         
         <div class="user-area">
             <!-- Dropdown de Temas e Modo -->
             <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-palette me-1"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" style="min-width: 280px;">
@@ -237,7 +238,7 @@
                         <h6>{{ user.get_full_name|default:user.username }}</h6>
                         <small>{{ user.email|default:"Usuário" }}</small>
                     </div>
-                    <i class="fas fa-chevron-down ms-2"></i>
+                    <i class="d-none d-md-block fas fa-chevron-down ms-2"></i>
                 </div>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="{% url 'authentication:profile' %}">
@@ -262,8 +263,7 @@
         </div>
     </div>
     
-    <!-- Bootstrap JS -->
-   
+    <!-- Bootstrap JS -->   
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>

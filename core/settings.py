@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "agendamentos",
     "authentication",
     "info",
+    "financeiro",
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,13 @@ try:
 except Exception:
     # Em desenvolvimento ou se o pacote não estiver instalado, seguir sem WhiteNoise
     pass
+
+# Configurações da API Asaas
+ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY")
+ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox")  # 'sandbox' ou 'production'
+ASAAS_WEBHOOK_TOKEN = os.environ.get(
+    "ASAAS_WEBHOOK_TOKEN"
+)  # Token para validar webhooks
 
 ROOT_URLCONF = "core.urls"
 
