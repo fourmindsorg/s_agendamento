@@ -32,6 +32,80 @@
             --shadow-color: rgba(102, 126, 234, 0.15);
         }
 
+        /* Navbar Menu Styles - Similar to sidebar-menu */
+        .navbar-menu {
+            display: flex;
+            align-items: left;
+            gap: 5px;
+            margin-left: auto;
+        }
+
+        .navbar-menu .menu-item {
+            margin: 0;
+        }
+
+        .navbar-menu .menu-link {
+            display: flex;
+            align-items: left;
+            padding: 8px 12px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .navbar-menu .menu-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        .navbar-menu .menu-icon {
+            font-size: 1rem;
+            width: 16px;
+            text-align: center;
+            margin-right: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-menu .menu-text {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                flex-direction: column;
+                width: 100%;
+                gap: 3px;
+                margin-top: 15px;
+                align-items: stretch;
+            }
+
+            .navbar-menu .menu-item {
+                width: 100%;
+            }
+
+            .navbar-menu .menu-link {
+                width: 100%;
+                justify-content: start;
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+
+            .navbar-menu .menu-icon {
+                margin-right: 10px;
+                font-size: 1.1rem;
+            }
+
+            .navbar-menu .menu-text {
+                font-size: 1rem;
+            }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -210,6 +284,16 @@
         .navbar.scrolled .navbar-brand {
             color: var(--primary-color) !important;
         }
+
+        .navbar.scrolled .navbar-menu .menu-link {
+            color: var(--primary-color) !important;
+        }
+
+        .navbar.scrolled .navbar-menu .menu-link:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color) !important;
+        }
+
 
         .nav-link {
             color: rgba(255,255,255,0.9) !important;
@@ -631,36 +715,53 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Início</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#features">Recursos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#benefits">Benefícios</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#pricing">Preços</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#testimonials">Depoimentos</a>
-                    </li>
+                <div class="navbar-menu ms-auto">
+                    <div class="menu-item">
+                        <a href="/" class="menu-link">
+                            <i class="menu-icon fas fa-home"></i>
+                            <span class="menu-text">Início</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="#features" class="menu-link">
+                            <i class="menu-icon fas fa-star"></i>
+                            <span class="menu-text">Recursos</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="#benefits" class="menu-link">
+                            <i class="menu-icon fas fa-check-circle"></i>
+                            <span class="menu-text">Benefícios</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="#pricing" class="menu-link">
+                            <i class="menu-icon fas fa-tag"></i>
+                            <span class="menu-text">Preços</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="#testimonials" class="menu-link">
+                            <i class="menu-icon fas fa-quote-left"></i>
+                            <span class="menu-text">Depoimentos</span>
+                        </a>
+                    </div>
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'agendamentos:dashboard' %}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    <div class="menu-item">
+                        <a href="{% url 'agendamentos:dashboard' %}" class="menu-link">
+                            <i class="menu-icon fas fa-tachometer-alt"></i>
+                            <span class="menu-text">Dashboard</span>
                         </a>
-                    </li>
+                    </div>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'authentication:login' %}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Entrar
+                    <div class="menu-item">
+                        <a href="{% url 'authentication:login' %}" class="menu-link">
+                            <i class="menu-icon fas fa-sign-in-alt"></i>
+                            <span class="menu-text">Entrar</span>
                         </a>
-                    </li>
+                    </div>
                     {% endif %}
-                </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -1106,8 +1207,8 @@
             });
         });
 
-        // Auto-collapse navbar on mobile when clicking nav links
-        document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+        // Auto-collapse navbar on mobile when clicking menu links
+        document.querySelectorAll('.navbar-menu .menu-link').forEach(link => {
             link.addEventListener('click', function() {
                 // Check if navbar is collapsed (mobile view)
                 const navbarCollapse = document.getElementById('navbarNav');
