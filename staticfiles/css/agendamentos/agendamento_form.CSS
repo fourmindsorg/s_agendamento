@@ -146,7 +146,7 @@
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  /* gap: 8px; */
 }
 
 .btn-outline-secondary:hover {
@@ -201,6 +201,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -221,9 +222,7 @@ textarea.form-control {
   background-color: var(--surface-color) !important;
 }
 
-.select2-container--default
-  .select2-selection--single
-  .select2-selection__rendered {
+.select2-container--default .select2-selection--single .select2-selection__rendered {
   color: var(--text-color) !important;
   line-height: 44px !important;
   padding-left: 15px !important;

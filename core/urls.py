@@ -19,6 +19,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("authentication.urls")),  # URLs de autenticação
     path("info/", include("info.urls")),
+    path("financeiro/", include("financeiro.urls")),  # URLs do financeiro
     path("", include("agendamentos.urls")),
 ]
 

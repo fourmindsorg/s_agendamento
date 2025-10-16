@@ -624,7 +624,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="#home">
+            <a class="navbar-brand" href="/">
                 <i class="fas fa-calendar-check me-2"></i>AgendaFácil
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -633,7 +633,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#home">Início</a>
+                        <a class="nav-link" href="/">Início</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#features">Recursos</a>
@@ -1103,6 +1103,24 @@
             
             card.addEventListener('mouseleave', function() {
                 this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Auto-collapse navbar on mobile when clicking nav links
+        document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                // Check if navbar is collapsed (mobile view)
+                const navbarCollapse = document.getElementById('navbarNav');
+                const navbarToggler = document.querySelector('.navbar-toggler');
+                
+                // If navbar is expanded on mobile (has 'show' class), collapse it
+                if (navbarCollapse.classList.contains('show')) {
+                    // Use Bootstrap's collapse method to properly close
+                    const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+                        toggle: false
+                    });
+                    bsCollapse.hide();
+                }
             });
         });
     </script>
