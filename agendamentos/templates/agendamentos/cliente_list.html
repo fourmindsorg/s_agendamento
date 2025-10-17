@@ -334,7 +334,7 @@
 
 {% block content %}
 <!-- Header da Lista -->
-<div class="list-header">
+<div class="list-header p-3">
   <h1 class="list-title">
     <i class="fas fa-users"></i>
     Gerenciar Clientes
@@ -351,8 +351,8 @@
     <a href="{% url 'agendamentos:cliente_create' %}" class="btn btn-custom">
       <i class="fas fa-user-plus"></i>Novo Cliente
     </a>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-secondary">
-      <i class="fas fa-arrow-left"></i>Dashboard
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
     </a>
   </div>
 </div>
