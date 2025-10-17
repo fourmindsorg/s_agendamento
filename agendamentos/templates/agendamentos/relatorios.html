@@ -3,7 +3,7 @@
 {% block title %}Relatórios - Sistema de Agendamentos{% endblock %}
 
 {% block extra_css %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.3.min.js"></script>
 <style>
   /* Header personalizado */
   .reports-header {
@@ -401,11 +401,11 @@
   
   <!-- Ações no Header -->
   <div class="header-actions">
-    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtroModal">
-      <i class="fas fa-filter"></i>Filtros
-    </button>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-secondary">
-      <i class="fas fa-arrow-left"></i>Dashboard
+    <a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtroModal">
+      <i class="fas fa-filter me-2"></i>Filtrar
+    </a>
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
     </a>
   </div>
 </div>

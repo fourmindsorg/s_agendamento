@@ -32,6 +32,10 @@
             --shadow-color: rgba(102, 126, 234, 0.15);
         }
 
+        .theme-color {
+            color: var(--secondary-color);
+        }
+
         /* Navbar Menu Styles - Similar to sidebar-menu */
         .navbar-menu {
             display: flex;
@@ -346,7 +350,7 @@
 
         /* Features Section */
         .features-section {
-            padding: 5rem 0;
+           padding: 6rem 0;
             background: white;
         }
 
@@ -425,7 +429,7 @@
 
         /* Benefits Section */
         .benefits-section {
-            padding: 5rem 0;
+           padding: 6rem 0;
             background: var(--light-color);
         }
 
@@ -465,7 +469,7 @@
 
         /* Pricing Section */
         .pricing-section {
-            padding: 5rem 0;
+           padding: 6rem 0;
             background: white;
         }
 
@@ -547,11 +551,18 @@
             font-weight: 600;
             border-radius: 10px;
             transition: all 0.3s ease;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-pricing:hover {
+            background: var(--gradient-bg);
+            color: white;
         }
 
         /* Testimonials Section */
         .testimonials-section {
-            padding: 5rem 0;
+           padding: 6rem 0;
             background: var(--gradient-bg);
             color: white;
         }
@@ -596,7 +607,7 @@
 
         /* CTA Section */
         .cta-section {
-            padding: 5rem 0;
+           padding: 6rem 0;
             background: var(--dark-color);
             color: white;
             text-align: center;
@@ -695,6 +706,17 @@
             transform: translateX(-50%);
             color: white;
             animation: bounce 2s infinite;
+        }
+
+        .btn-teste {
+            background: var(--gradient-bg);
+            color: white;
+        }
+
+        .btn-teste:hover {
+            background: white;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
         @keyframes bounce {
@@ -971,7 +993,133 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
+<!-- SEÇÃO DE PLANOS -->
+    <section id="pricing" class="pricing-section bg-light">
+    <div class="container">
+
+        <!-- Cabeçalho -->
+        <div class="text-center mb-5 fade-in-up">
+        <h2 class="section-title fade-in-up">Planos Que Crescem Com o Seu Negócio</h2>
+        <p class="section-subtitle text-muted fs-5">
+            Comece pequeno, evolua no seu ritmo e pague de acordo com o que faz sentido para você.
+        </p>
+        </div>
+
+        <!-- Benefícios gerais -->
+        <div class="row justify-content-center mb-5 fade-in-up">
+        <div class="col-md-10">
+            <div class="d-flex flex-wrap justify-content-center gap-4 text-center">
+            <div class="plane-icon">
+                <i class="fas fa-bolt fa-2x theme-color mb-2"></i>
+                <p class="fw-semibold mb-0">Automatize sua rotina</p>
+                <small class="text-muted">Economize tempo e reduza tarefas manuais</small>
+            </div>
+            <div class="plane-icon">
+                <i class="fas fa-chart-line fa-2x theme-color mb-2"></i>
+                <p class="fw-semibold mb-0">Acompanhe seu crescimento</p>
+                <small class="text-muted">Relatórios e métricas em tempo real</small>
+            </div>
+            <div class="plane-icon">
+                <i class="fas fa-headset fa-2x theme-color mb-2"></i>
+                <p class="fw-semibold mb-0">Suporte que resolve</p>
+                <small class="text-muted">Equipe pronta para ajudar quando precisar</small>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Recursos inclusos -->
+        <div class="text-center mb-5 fade-in-up">
+            <h4 class="fw-bold text-dark mb-3">Todos os planos incluem:</h4>
+            <ul class="pricing-features list-unstyled d-inline-block text-start">
+                <li><i class="fas fa-check text-success me-2"></i> Até 100 agendamentos/mês</li>
+                <li><i class="fas fa-check text-success me-2"></i> 1 usuário incluso</li>
+                <li><i class="fas fa-check text-success me-2"></i> Relatórios básicos</li>
+                <li><i class="fas fa-check text-success me-2"></i> Suporte por e-mail</li>
+            </ul>
+        </div>
+
+        <!-- Planos -->
+        <div class="row g-4 justify-content-center fade-in-up">
+
+        <!-- PLANO MENSAL -->
+        <div class="col-md-6 col-lg-4">
+            <div class="pricing-card border rounded-4 shadow-sm p-4 text-center bg-white h-100">
+                <h3 class="pricing-title fw-bold mb-3">Plano Mensal</h3>
+                <p class="text-muted mb-4">
+                    Ideal para quem quer começar sem compromisso e testar nossos recursos.
+                </p>
+
+                <div class="pricing-value mb-3">
+                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 49</h3>
+                    <small class="text-muted">no cartão de crédito</small>
+                </div>
+                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 45</span> no Pix</p>
+
+                <a href="{% url 'authentication:register' %}" class="btn btn-outline-primary btn-pricing">
+                    Começar Agora
+                </a>
+            </div>
+        </div>
+
+        <!-- PLANO SEMESTRAL - DESTAQUE -->
+        <div class="col-md-6 col-lg-4">
+            <div class="pricing-card featured fade-in-up border-2 rounded-4 shadow-lg p-4 text-center bg-white position-relative h-100">
+                <div class="position-absolute top-0 start-50 translate-middle badge pricing-badge text-white rounded-pill px-3 py-2">
+                    Mais Popular ⭐
+                </div>
+
+                <h3 class="pricing-title fw-bold mb-3">Plano Semestral</h3>
+                <p class="text-muted mb-4">
+                    O melhor custo-benefício! Mais economia e acesso completo por 6 meses.
+                </p>
+
+                <div class="pricing-value mb-3">
+                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 280</h3>
+                    <small class="text-muted">no cartão de crédito</small>
+                </div>
+                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 250</span> no Pix</p>
+
+                <a href="{% url 'authentication:register' %}" class="btn btn-teste btn-pricing">
+                    Teste Grátis por 14 Dias
+                </a>
+            </div>
+        </div>
+
+        <!-- PLANO ANUAL -->
+        <div class="col-md-6 col-lg-4">
+            <div class="pricing-card border rounded-4 shadow-sm p-4 text-center bg-white h-100">
+                <h3 class="pricing-title fw-bold mb-3">Plano Anual</h3>
+                <p class="text-muted mb-4">
+                    Para quem pensa a longo prazo. Pague menos e mantenha sua operação tranquila o ano inteiro.
+                </p>
+
+                <div class="pricing-value mb-3">
+                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 560</h3>
+                    <small class="text-muted">no cartão de crédito</small>
+                </div>
+                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 500</span> no Pix</p>
+
+                <a href="{% url 'authentication:register' %}" class="btn btn-outline-primary btn-pricing">
+                    Falar com Vendas
+                </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chamada Final -->
+        <div class="text-center mt-5 fade-in-up">
+            <h4 class="fw-bold mb-2 text-dark">Transforme sua rotina agora mesmo!</h4>
+            <p class="text-muted mb-4">Ganhe tempo, organize sua agenda e aumente seus resultados.</p>
+            <a href="{% url 'authentication:register' %}" class="btn btn-teste rounded-pill p-5 py-3 shadow-sm">
+                Criar Minha Conta Grátis
+            </a>
+        </div>
+
+    </div>
+    </section>
+
+    {% comment %} <!-- Pricing Section -->
     <section id="pricing" class="pricing-section">
         <div class="container">
             <div class="text-center mb-5">
@@ -1035,7 +1183,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> {% endcomment %}
 
     <!-- Testimonials Section -->
     <section id="testimonials" class="testimonials-section">
