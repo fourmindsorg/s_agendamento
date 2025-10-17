@@ -1,0 +1,233 @@
+{% extends 'authentication/auth_base.html' %}
+
+{% block title %}Escolha seu Plano{% endblock %}
+
+{% block header_title %}Escolha seu Plano{% endblock %}
+{% block header_subtitle %}Selecione o plano ideal para suas necessidades{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <!-- Mensagem de boas-vindas -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-star me-2"></i>
+                    Bem-vindo, {{ usuario.first_name|default:usuario.username }}!
+                </h2>
+                <p class="lead text-muted">
+                    Escolha o plano que melhor se adapta às suas necessidades e comece a usar o sistema hoje mesmo.
+                </p>
+            </div>
+
+            <!-- Opção de período gratuito -->
+            <div class="row justify-content-center mb-5">
+                <div class="col-lg-8">
+                    <div class="card border-2 border-success shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-gift text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h3 class="card-title text-success fw-bold mb-3">Período Gratuito</h3>
+                            <p class="text-muted mb-4">
+                                Teste todas as funcionalidades do sistema por <strong>14 dias</strong> sem compromisso.
+                                Ideal para conhecer a plataforma antes de escolher um plano pago.
+                            </p>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                <a href="{% url 'authentication:skip_plan_selection' %}" 
+                                   class="btn btn-success btn-lg px-4">
+                                    <i class="fas fa-play me-2"></i>
+                                    Começar Período Gratuito
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Separador -->
+            <div class="text-center mb-5">
+                <hr class="my-4">
+                <span class="bg-white px-3 text-muted">ou escolha um plano pago</span>
+                <hr class="my-4">
+            </div>
+
+            <!-- Planos pagos -->
+            <div class="row g-4 justify-content-center">
+                {% for plano in planos %}
+                {% if plano.tipo != 'gratuito' %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="pricing-card border rounded-4 shadow-sm p-4 text-center bg-white h-100 position-relative
+                                {% if plano.destaque %}border-2 border-primary featured{% endif %}">
+                        
+                        {% if plano.destaque %}
+                        <div class="position-absolute top-0 start-50 translate-middle badge bg-primary text-white rounded-pill px-3 py-2">
+                            Mais Popular ⭐
+                        </div>
+                        {% endif %}
+
+                        <h3 class="pricing-title fw-bold mb-3">{{ plano.nome }}</h3>
+                        <p class="text-muted mb-4">{{ plano.descricao }}</p>
+
+                        <div class="pricing-value mb-3">
+                            <h3 class="pricing-price display-6 fw-bold text-dark mb-0">
+                                R$ {{ plano.preco_cartao|floatformat:0 }}
+                            </h3>
+                            <small class="text-muted">no cartão de crédito</small>
+                        </div>
+                        
+                        {% if plano.economia_pix > 0 %}
+                        <p class="text-muted my-2">
+                            ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
+                            <br><small class="text-success">Economia de R$ {{ plano.economia_pix|floatformat:0 }}</small>
+                        </p>
+                        {% else %}
+                        <p class="text-muted my-2">
+                            ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
+                        </p>
+                        {% endif %}
+
+                        <div class="pricing-features mb-4">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    Duração: {{ plano.duracao_dias }} dias
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    Acesso completo ao sistema
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    Suporte prioritário
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    Backup automático
+                                </li>
+                            </ul>
+                        </div>
+
+                        <a href="{% url 'authentication:select_plan' plano.id %}" 
+                           class="btn {% if plano.destaque %}btn-primary{% else %}btn-outline-primary{% endif %} btn-pricing w-100">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Contratar Plano
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Informações adicionais -->
+            <div class="row justify-content-center mt-5">
+                <div class="col-lg-8">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body text-center p-4">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-shield-alt text-primary me-2"></i>
+                                Garantia de Satisfação
+                            </h5>
+                            <p class="text-muted mb-0">
+                                Todos os nossos planos incluem garantia de 7 dias. 
+                                Se não ficar satisfeito, devolvemos seu dinheiro.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pricing-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.pricing-card.featured {
+    transform: scale(1.05);
+}
+
+.pricing-card.featured:hover {
+    transform: scale(1.05) translateY(-5px);
+}
+
+.pricing-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.pricing-title {
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.pricing-price {
+    color: #2c3e50;
+    font-size: 2.5rem;
+}
+
+.pricing-features li {
+    font-size: 0.9rem;
+}
+
+.btn-pricing {
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-pricing:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+    .pricing-card.featured {
+        transform: none;
+    }
+    
+    .pricing-card.featured:hover {
+        transform: translateY(-5px);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar animação de entrada
+    const cards = document.querySelectorAll('.pricing-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+    
+    // Adicionar efeito de hover nos botões
+    const buttons = document.querySelectorAll('.btn-pricing');
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -28,7 +28,7 @@ function alterarTema(tema, event) {
     event.stopPropagation();
   }
 
-  fetch("/auth/ajax/alterar-tema/", {
+  fetch("/authentication/ajax/alterar-tema/", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -49,7 +49,7 @@ function alterarTema(tema, event) {
 function alterarModo(isDark) {
   const modo = isDark ? "dark" : "light";
 
-  fetch("/auth/ajax/alterar-modo/", {
+  fetch("/authentication/ajax/alterar-modo/", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

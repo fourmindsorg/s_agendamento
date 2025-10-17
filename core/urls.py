@@ -17,7 +17,7 @@ def health_check(request):
 urlpatterns = [
     path("health/", health_check, name="health_check"),  # Health check endpoint
     path("admin/", admin.site.urls),
-    path("auth/", include("authentication.urls")),  # URLs de autenticação
+    path("authentication/", include("authentication.urls")),  # URLs de autenticação
     path("info/", include("info.urls")),
     path("financeiro/", include("financeiro.urls")),  # URLs do financeiro
     path("", include("agendamentos.urls")),
