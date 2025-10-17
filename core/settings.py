@@ -139,12 +139,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ========================================
 
 # URLs de redirecionamento
-LOGIN_URL = "/auth/login/"
+LOGIN_URL = "/authentication/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"  # ou onde quiser redirecionar após login
-LOGOUT_REDIRECT_URL = "/auth/login/"
+LOGOUT_REDIRECT_URL = "/authentication/login/"
 
 # Configuração adicional para logout
-LOGOUT_URL = "/auth/logout/"
+LOGOUT_URL = "/authentication/logout/"
 
 # Configurações de Mensagens Bootstrap
 from django.contrib.messages import constants as messages

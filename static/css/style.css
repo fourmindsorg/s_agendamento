@@ -191,11 +191,24 @@ body {
     align-items: center;
     padding: 0 30px;
     z-index: 999;
-    transition: all var(--transition-speed) ease;
+    transition: left var(--transition-speed) ease;
 }
 
 .sidebar.collapsed+.topbar {
     left: var(--sidebar-collapsed-width);
+}
+
+/* Responsividade da topbar */
+@media (max-width: 768px) {
+    .topbar {
+        left: 0 !important;
+        right: 0;
+        padding: 0 15px;
+    }
+
+    .sidebar.show+.topbar {
+        left: 0 !important;
+    }
 }
 
 /* Toggle Button */
@@ -496,6 +509,8 @@ small {
 
     .topbar {
         left: 0 !important;
+        right: 0;
+        padding: 0 15px;
     }
 
     .main-content {

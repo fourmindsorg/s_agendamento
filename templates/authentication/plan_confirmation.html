@@ -1,0 +1,244 @@
+{% extends 'authentication/auth_base.html' %}
+
+{% block title %}Confirmação do Plano{% endblock %}
+
+{% block header_title %}Confirmação do Plano{% endblock %}
+{% block header_subtitle %}Revise os detalhes e escolha a forma de pagamento{% endblock %}
+
+{% block content %}
+{% if plano %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Resumo do Plano -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="card-title text-primary mb-2">
+                                <i class="fas fa-{{ plano.tipo|default:'star' }} me-2"></i>
+                                {{ plano.nome }}
+                            </h3>
+                            <p class="text-muted mb-3">{{ plano.descricao }}</p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">Duração: {{ plano.duracao_dias }} dias</span>
+                                <span class="badge bg-info">Acesso Completo</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="pricing-display">
+                                <h2 class="text-primary mb-1">R$ {{ plano.preco_cartao|floatformat:0 }}</h2>
+                                <small class="text-muted">no cartão de crédito</small>
+                                {% if plano.economia_pix > 0 %}
+                                <div class="mt-2">
+                                    <p class="text-success mb-0 fw-bold">R$ {{ plano.preco_pix|floatformat:0 }} no PIX</p>
+                                    <small class="text-success">Economia de R$ {{ plano.economia_pix|floatformat:0 }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formas de Pagamento -->
+            <div class="row g-4">
+                <!-- PIX -->
+                <div class="col-md-6">
+                    <div class="card border-2 border-success h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-qrcode text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title text-success mb-3">PIX</h4>
+                            <p class="text-muted mb-3">
+                                Pagamento instantâneo e seguro. 
+                                {% if plano.economia_pix > 0 %}
+                                <strong>Economia de R$ {{ plano.economia_pix|floatformat:0 }}!</strong>
+                                {% endif %}
+                            </p>
+                            <div class="pricing-value mb-4">
+                                <h3 class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</h3>
+                            </div>
+                            <button class="btn btn-success btn-lg w-100" onclick="processarPagamento('pix')">
+                                <i class="fas fa-qrcode me-2"></i>
+                                Pagar com PIX
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cartão de Crédito -->
+                <div class="col-md-6">
+                    <div class="card border-2 border-primary h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-credit-card text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title text-primary mb-3">Cartão de Crédito</h4>
+                            <p class="text-muted mb-3">
+                                Pagamento parcelado em até 12x sem juros. 
+                                Aprovação imediata.
+                            </p>
+                            <div class="pricing-value mb-4">
+                                <h3 class="text-primary fw-bold">R$ {{ plano.preco_cartao|floatformat:0 }}</h3>
+                                <small class="text-muted">ou em até 12x de R$ {{ plano.preco_cartao|floatformat:2|div:12|floatformat:2 }}</small>
+                            </div>
+                            <button class="btn btn-primary btn-lg w-100" onclick="processarPagamento('cartao')">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Pagar com Cartão
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações de Segurança -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body p-4">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-shield-alt text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="fw-bold">Pagamento Seguro</h6>
+                                    <small class="text-muted">SSL 256-bit encryption</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-undo text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="fw-bold">Garantia de 7 dias</h6>
+                                    <small class="text-muted">Reembolso total</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-headset text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="fw-bold">Suporte 24/7</h6>
+                                    <small class="text-muted">Sempre disponível</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <a href="{% url 'authentication:plan_selection' %}" class="btn btn-outline-secondary me-3">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Voltar aos Planos
+                    </a>
+                    <a href="{% url 'authentication:skip_plan_selection' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-gift me-2"></i>
+                        Usar Período Gratuito
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Processamento -->
+<div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Processando...</span>
+                </div>
+                <h5 class="mb-3">Processando Pagamento</h5>
+                <p class="text-muted">Aguarde enquanto processamos sua solicitação...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 4rem;"></i>
+                    <h3 class="text-warning mb-3">Plano Não Encontrado</h3>
+                    <p class="text-muted mb-4">
+                        O plano selecionado não está mais disponível ou não existe.
+                    </p>
+                    <a href="{% url 'authentication:plan_selection' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Voltar aos Planos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.pricing-display h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function processarPagamento(metodo) {
+    // Mostrar modal de processamento
+    const modal = new bootstrap.Modal(document.getElementById('processingModal'));
+    modal.show();
+    
+    // Simular processamento (aqui você integraria com o Asaas)
+    setTimeout(() => {
+        modal.hide();
+        
+        if (metodo === 'pix') {
+            // Redirecionar para página de PIX
+            window.location.href = "{% url 'financeiro:create_pix_charge' %}";
+        } else if (metodo === 'cartao') {
+            // Redirecionar para página de cartão
+            alert('Integração com cartão de crédito será implementada em breve!');
+        }
+    }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar animação de entrada
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}
