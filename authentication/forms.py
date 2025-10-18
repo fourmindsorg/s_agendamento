@@ -63,19 +63,19 @@ class CustomUserCreationForm(UserCreationForm):
                 raise ValidationError(
                     "Este nome de usuário já está em uso. Escolha outro."
                 )
-            
+
             # Verificar comprimento mínimo
             if len(username) < 3:
                 raise ValidationError(
                     "O nome de usuário deve ter pelo menos 3 caracteres."
                 )
-            
+
             # Verificar caracteres permitidos
             if not re.match(r"^[a-zA-Z0-9_]+$", username):
                 raise ValidationError(
                     "O nome de usuário pode conter apenas letras, números e underscore (_)."
                 )
-        
+
         return username
 
     def clean_email(self):
@@ -87,12 +87,12 @@ class CustomUserCreationForm(UserCreationForm):
                 raise ValidationError(
                     "Este email já está cadastrado. Use outro email ou faça login."
                 )
-            
+
             # Verificar formato do email
             email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             if not re.match(email_regex, email):
                 raise ValidationError("Digite um email válido.")
-        
+
         return email
 
     def clean_first_name(self):
@@ -102,11 +102,11 @@ class CustomUserCreationForm(UserCreationForm):
             # Verificar comprimento mínimo
             if len(first_name.strip()) < 2:
                 raise ValidationError("O nome deve ter pelo menos 2 caracteres.")
-            
+
             # Verificar se contém apenas letras e espaços
             if not re.match(r"^[a-zA-ZÀ-ÿ\s]+$", first_name):
                 raise ValidationError("O nome pode conter apenas letras e espaços.")
-        
+
         return first_name.strip()
 
     def clean_last_name(self):
@@ -116,41 +116,41 @@ class CustomUserCreationForm(UserCreationForm):
             # Verificar comprimento mínimo
             if len(last_name.strip()) < 2:
                 raise ValidationError("O sobrenome deve ter pelo menos 2 caracteres.")
-            
+
             # Verificar se contém apenas letras e espaços
             if not re.match(r"^[a-zA-ZÀ-ÿ\s]+$", last_name):
                 raise ValidationError(
                     "O sobrenome pode conter apenas letras e espaços."
                 )
-        
+
         return last_name.strip()
 
     def clean_password2(self):
         """Validação personalizada para confirmação de senha"""
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
-        
+
         if password1 and password2:
             if password1 != password2:
                 raise ValidationError("As senhas não coincidem.")
-            
+
             # Verificar força da senha
             if len(password1) < 8:
                 raise ValidationError("A senha deve ter pelo menos 8 caracteres.")
-            
+
             # Verificar se contém pelo menos uma letra e um número
             if not re.search(r"[A-Za-z]", password1):
                 raise ValidationError("A senha deve conter pelo menos uma letra.")
-            
+
             if not re.search(r"[0-9]", password1):
                 raise ValidationError("A senha deve conter pelo menos um número.")
-        
+
         return password2
 
     def clean(self):
         """Validação geral do formulário"""
         cleaned_data = super().clean()
-        
+
         # Verificar se todos os campos obrigatórios estão preenchidos
         required_fields = [
             "username",
@@ -163,7 +163,7 @@ class CustomUserCreationForm(UserCreationForm):
         for field in required_fields:
             if not cleaned_data.get(field):
                 raise ValidationError(f"O campo {field} é obrigatório.")
-        
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -174,7 +174,7 @@ class CustomUserCreationForm(UserCreationForm):
             user.first_name = self.cleaned_data["first_name"]
             user.last_name = self.cleaned_data["last_name"]
             user.is_active = True  # Ativar usuário por padrão
-            
+
             if commit:
                 user.save()
             return user
@@ -186,7 +186,7 @@ class CustomUserChangeForm(UserChangeForm):
     """Form personalizado para edição de usuários"""
 
     password = None  # Remove o campo de senha
-    
+
     class Meta:
         model = User
         fields = (
@@ -346,9 +346,24 @@ class BillingInfoForm(forms.Form):
     endereco = forms.CharField(
         max_length=200,
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Rua, número, complemento"}
+            attrs={"class": "form-control", "placeholder": "Rua, avenida, etc."}
         ),
-        label="Endereço",
+        label="Logradouro",
+    )
+
+    numero = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "123"}),
+        label="Número",
+    )
+
+    complemento = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Apartamento, sala, etc."}
+        ),
+        label="Complemento",
     )
 
     cidade = forms.CharField(
@@ -394,7 +409,7 @@ class BillingInfoForm(forms.Form):
     )
 
     def clean_cpf(self):
-        """Validação do CPF"""
+        """Validação completa do CPF"""
         cpf = self.cleaned_data.get("cpf", "").replace(".", "").replace("-", "")
 
         if not cpf.isdigit():
@@ -403,11 +418,52 @@ class BillingInfoForm(forms.Form):
         if len(cpf) != 11:
             raise ValidationError("O CPF deve ter 11 dígitos.")
 
-        # Validação básica do CPF
+        # Validação básica do CPF - verificar se todos os dígitos são iguais
         if cpf == cpf[0] * 11:
             raise ValidationError("CPF inválido.")
 
+        # Validação do algoritmo do CPF
+        if not self._validar_cpf(cpf):
+            raise ValidationError("CPF inválido.")
+
         return cpf
+
+    def _validar_cpf(self, cpf):
+        """Valida o CPF usando o algoritmo oficial"""
+        # Remove caracteres não numéricos
+        cpf = re.sub(r"[^0-9]", "", cpf)
+
+        # Verifica se tem 11 dígitos
+        if len(cpf) != 11:
+            return False
+
+        # Verifica se todos os dígitos são iguais
+        if cpf == cpf[0] * 11:
+            return False
+
+        # Calcula o primeiro dígito verificador
+        soma = 0
+        for i in range(9):
+            soma += int(cpf[i]) * (10 - i)
+        resto = soma % 11
+        digito1 = 0 if resto < 2 else 11 - resto
+
+        # Verifica o primeiro dígito
+        if int(cpf[9]) != digito1:
+            return False
+
+        # Calcula o segundo dígito verificador
+        soma = 0
+        for i in range(10):
+            soma += int(cpf[i]) * (11 - i)
+        resto = soma % 11
+        digito2 = 0 if resto < 2 else 11 - resto
+
+        # Verifica o segundo dígito
+        if int(cpf[10]) != digito2:
+            return False
+
+        return True
 
     def clean_telefone(self):
         """Validação do telefone"""
