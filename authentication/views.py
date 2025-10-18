@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.http import HttpResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
@@ -108,6 +109,16 @@ def verificar_assinatura_expirada(user):
 # ========================================
 # VIEWS DE AUTENTICAÇÃO
 # ========================================
+
+
+class TestLoginView(TemplateView):
+    """View de teste - retorna apenas texto simples"""
+    
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("Teste funcionando! Sistema operacional.")
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("POST funcionando! Sistema operacional.")
 
 
 class SimpleLoginView(LoginView):
