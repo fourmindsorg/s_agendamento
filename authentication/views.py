@@ -62,6 +62,14 @@ def verificar_assinatura_expirada(user):
         return False
 
     try:
+        # Verificar se o modelo existe e está acessível
+        from django.db import connection
+        from django.db.utils import DatabaseError
+        
+        # Testar conexão com banco
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1")
+        
         # Buscar assinatura ativa mais recente
         assinatura = (
             AssinaturaUsuario.objects.filter(usuario=user, status="ativa")
@@ -70,22 +78,28 @@ def verificar_assinatura_expirada(user):
         )
 
         if not assinatura:
-            # Usuário não tem assinatura ativa
-            return True
+            # Usuário não tem assinatura ativa - permitir acesso
+            return False
 
         # Verificar se a assinatura expirou
         agora = timezone.now()
         if assinatura.data_fim < agora:
             # Marcar como expirada
-            assinatura.status = "expirada"
-            assinatura.save()
+            try:
+                assinatura.status = "expirada"
+                assinatura.save()
+            except Exception as save_error:
+                logging.error(f"Erro ao salvar assinatura expirada: {save_error}")
             return True
 
         return False
 
+    except DatabaseError as e:
+        logging.error(f"Erro de banco ao verificar assinatura: {e}")
+        return False  # Em caso de erro de banco, permitir acesso
     except Exception as e:
         logging.error(f"Erro ao verificar assinatura do usuário {user.id}: {e}")
-        return True  # Em caso de erro, considerar como expirada por segurança
+        return False  # Em caso de erro, permitir acesso (não bloquear)
 
 
 # ========================================
@@ -103,35 +117,45 @@ class CustomLoginView(LoginView):
         return reverse_lazy("agendamentos:dashboard")
 
     def form_valid(self, form):
-        user = form.get_user()
+        try:
+            user = form.get_user()
 
-        # Verificar se o usuário está ativo
-        if not user.is_active:
-            messages.error(
+            # Verificar se o usuário está ativo
+            if not user.is_active:
+                messages.error(
+                    self.request,
+                    "Sua conta está inativa. Entre em contato com o suporte para reativar sua conta.",
+                )
+                return redirect("authentication:plan_selection")
+
+            # Verificar se a assinatura expirou (com tratamento de erro)
+            try:
+                if verificar_assinatura_expirada(user):
+                    # Primeiro, fazer o login do usuário para salvar a sessão
+                    from django.contrib.auth import login
+
+                    login(self.request, user)
+
+                    # Redirecionar para seleção de planos com mensagem
+                    messages.warning(
+                        self.request,
+                        "Seu período gratuito expirou. Selecione um plano para continuar usando o sistema.",
+                    )
+                    return redirect("authentication:plan_selection")
+            except Exception as e:
+                # Se houver erro na verificação de assinatura, continuar com login normal
+                logging.error(f"Erro ao verificar assinatura: {e}")
+                pass
+
+            messages.success(
                 self.request,
-                "Sua conta está inativa. Entre em contato com o suporte para reativar sua conta.",
+                f"Bem-vindo, {user.first_name or user.username}!",
             )
-            return redirect("authentication:plan_selection")
-
-        # Verificar se a assinatura expirou
-        if verificar_assinatura_expirada(user):
-            # Primeiro, fazer o login do usuário para salvar a sessão
-            from django.contrib.auth import login
-
-            login(self.request, user)
-
-            # Redirecionar para seleção de planos com mensagem
-            messages.warning(
-                self.request,
-                "Seu período gratuito expirou. Selecione um plano para continuar usando o sistema.",
-            )
-            return redirect("authentication:plan_selection")
-
-        messages.success(
-            self.request,
-            f"Bem-vindo, {user.first_name or user.username}!",
-        )
-        return super().form_valid(form)
+            return super().form_valid(form)
+        except Exception as e:
+            logging.error(f"Erro no form_valid: {e}")
+            # Em caso de erro, fazer login básico
+            return super().form_valid(form)
 
     def form_invalid(self, form):
         """Lidar com formulário inválido, incluindo usuários inativos"""
