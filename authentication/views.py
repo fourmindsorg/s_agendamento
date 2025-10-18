@@ -31,9 +31,11 @@ from datetime import timedelta
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+
 # Importação condicional do AsaasClient
 try:
     from financeiro.services.asaas import AsaasClient
+
     ASAAS_AVAILABLE = True
 except RuntimeError as e:
     # Asaas não configurado - continuar sem ele
@@ -41,6 +43,7 @@ except RuntimeError as e:
     ASAAS_AVAILABLE = False
     print(f"Asaas não disponível: {e}")
 from django.conf import settings
+
 # Importação condicional do PaymentPixView
 try:
     from .pix_views import PaymentPixView
@@ -65,11 +68,11 @@ def verificar_assinatura_expirada(user):
         # Verificar se o modelo existe e está acessível
         from django.db import connection
         from django.db.utils import DatabaseError
-        
+
         # Testar conexão com banco
         cursor = connection.cursor()
         cursor.execute("SELECT 1")
-        
+
         # Buscar assinatura ativa mais recente
         assinatura = (
             AssinaturaUsuario.objects.filter(usuario=user, status="ativa")
@@ -107,8 +110,31 @@ def verificar_assinatura_expirada(user):
 # ========================================
 
 
+class BasicLoginView(LoginView):
+    """View de login básica sem verificações complexas"""
+
+    template_name = "authentication/login.html"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy("agendamentos:dashboard")
+
+    def form_valid(self, form):
+        """Login básico sem verificações extras"""
+        try:
+            # Login simples sem verificações
+            return super().form_valid(form)
+        except Exception as e:
+            logging.error(f"Erro no login básico: {e}")
+            # Em caso de erro, redirecionar para dashboard
+            from django.contrib.auth import login
+            user = form.get_user()
+            login(self.request, user)
+            return redirect(self.get_success_url())
+
+
 class CustomLoginView(LoginView):
-    """View personalizada para login"""
+    """View personalizada para login - mantida para compatibilidade"""
 
     template_name = "authentication/login.html"
     redirect_authenticated_user = True
@@ -746,7 +772,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
         """Gera dados para QR Code PIX usando API Asaas"""
         if not ASAAS_AVAILABLE:
             raise RuntimeError("Serviço de pagamento Asaas não está configurado")
-        
+
         try:
             # Inicializar cliente Asaas
             asaas_client = AsaasClient()

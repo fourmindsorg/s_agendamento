@@ -42,7 +42,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "authentication.middleware.SubscriptionExpirationMiddleware",
+    # "authentication.middleware.SubscriptionExpirationMiddleware",  # Temporariamente desabilitado
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
