@@ -64,23 +64,29 @@ jobs:
                 cp .env.backup .env
             fi
             
-            # Ativar ambiente virtual
-            source venv/bin/activate
+            # Corrigir permissões do ambiente virtual
+            sudo chown -R django:django venv/
             
-            # Instalar/atualizar dependências
-            pip install -r requirements.txt
+            # Ativar ambiente virtual e instalar dependências como usuário django
+            sudo -u django bash -c "
+              cd /home/django/app
+              source venv/bin/activate
+              pip install -r requirements.txt
+            "
             
-            # Executar migrações
-            export DB_NAME=agendamentos_db
-            export DB_USER=postgres
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_PORT=5432
-            
-            python manage.py migrate --settings=core.settings_production
-            
-            # Coletar arquivos estáticos
-            python manage.py collectstatic --noinput --settings=core.settings_production
+            # Executar migrações e coletar arquivos estáticos como usuário django
+            sudo -u django bash -c "
+              cd /home/django/app
+              source venv/bin/activate
+              export DB_NAME=agendamentos_db
+              export DB_USER=postgres
+              export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+              export DB_HOST=${{ secrets.DB_HOST }}
+              export DB_PORT=5432
+              
+              python manage.py migrate --settings=core.settings_production
+              python manage.py collectstatic --noinput --settings=core.settings_production
+            "
             
             # Corrigir permissões
             sudo chown -R django:django staticfiles/
