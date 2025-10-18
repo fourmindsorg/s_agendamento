@@ -110,6 +110,20 @@ def verificar_assinatura_expirada(user):
 # ========================================
 
 
+class SimpleLoginView(LoginView):
+    """View de login super simples - apenas Django padrão"""
+
+    template_name = "authentication/login.html"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy("agendamentos:dashboard")
+
+    def form_valid(self, form):
+        """Login super simples - apenas Django padrão"""
+        return super().form_valid(form)
+
+
 class BasicLoginView(LoginView):
     """View de login básica sem verificações complexas"""
 
