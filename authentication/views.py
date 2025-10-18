@@ -31,7 +31,15 @@ from datetime import timedelta
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from financeiro.services.asaas import AsaasClient
+# Importação condicional do AsaasClient
+try:
+    from financeiro.services.asaas import AsaasClient
+    ASAAS_AVAILABLE = True
+except RuntimeError as e:
+    # Asaas não configurado - continuar sem ele
+    AsaasClient = None
+    ASAAS_AVAILABLE = False
+    print(f"Asaas não disponível: {e}")
 from django.conf import settings
 from .pix_views import PaymentPixView
 
@@ -707,6 +715,9 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
 
     def gerar_qr_code_pix(self, plano, valor, billing_data):
         """Gera dados para QR Code PIX usando API Asaas"""
+        if not ASAAS_AVAILABLE:
+            raise RuntimeError("Serviço de pagamento Asaas não está configurado")
+        
         try:
             # Inicializar cliente Asaas
             asaas_client = AsaasClient()
