@@ -333,7 +333,6 @@
 
     .header-actions {
       width: 100%;
-      justify-content: center;
     }
   }
 
@@ -364,6 +363,7 @@
 {% endblock %}
 
 {% block content %}
+
 <!-- Header da Lista -->
 <div class="list-header">
   <h1 class="list-title">
@@ -383,11 +383,11 @@
       <i class="fas fa-calendar-plus"></i>Novo Agendamento
     </a>
     <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
-      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
+      <i class="fas fa-arrow-left me-2"></i>Dashboard
     </a>
     <div class="dropdown">
       <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <i class="fas fa-cog"></i>Ações
+        <i class="fas fa-cog me-2"></i>Ações
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="{% url 'agendamentos:cliente_list' %}">
@@ -467,7 +467,7 @@
         </select>
       </div>
       
-      <div class="col-md-2">
+      <div class="col-md-2" style="max-width:150px;">
         <label for="data_inicio" class="form-label">
           <i class="fas fa-calendar me-1"></i>Data Início
         </label>
@@ -478,7 +478,7 @@
                value="{{ data_inicio }}">
       </div>
       
-      <div class="col-md-2">
+      <div class="col-md-2" style="max-width:150px;">
         <label for="data_fim" class="form-label">
           <i class="fas fa-calendar me-1"></i>Data Fim
         </label>
@@ -489,17 +489,21 @@
                value="{{ data_fim }}">
       </div>
       
-      <div class="col-md-3 d-flex align-items-end gap-2">
-        <button type="submit" class="btn btn-custom">
-          <i class="fas fa-search"></i>Filtrar
-        </button>
-        <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-secondary">
-          <i class="fas fa-times"></i>Limpar
-        </a>
-        <div class="dropdown">
-          <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            <i class="fas fa-download"></i>
-          </button>
+      <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
+        <div class="d-flex gap-2">
+          <a type="submit" class="btn btn-custom justify-content-center">
+            <i class="fas fa-search"></i>Filtrar
+          </a>
+
+          <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom justify-content-center p-2">
+            <i class="fas fa-times fa-lg"></i>Limpar
+          </a>
+        </div>
+        
+        <div class="dropdown m-0">
+          <a class="btn btn-outline-custom dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-download fa-lg"></i>Exportar
+          </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
@@ -507,6 +511,7 @@
           </ul>
         </div>
       </div>
+      
     </form>
   </div>
 </div>
@@ -768,7 +773,7 @@
           <br>Tente ajustar os critérios de busca.
         </p>
         <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-primary">
-          <i class="fas fa-times me-2"></i>Limpar Filtros
+          <i class="fas fa-times"></i>Limpar Filtros
         </a>
       {% else %}
         <i class="fas fa-calendar-times"></i>

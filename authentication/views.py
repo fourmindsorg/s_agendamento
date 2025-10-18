@@ -22,6 +22,9 @@ from .models import PreferenciasUsuario, Plano, AssinaturaUsuario
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
 from datetime import timedelta
+import logging
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 
 # ========================================
 # VIEWS DE AUTENTICAÇÃO
@@ -60,16 +63,69 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("authentication:plan_selection")
 
     def form_valid(self, form):
-        user = form.save()
-        # Fazer login automático após registro
-        from django.contrib.auth import login
+        """Processa o formulário válido com tratamento de erros"""
+        try:
+            # Salvar o usuário
+            user = form.save()
+            
+            # Fazer login automático após registro
+            from django.contrib.auth import login
+            login(self.request, user)
+            
+            # Criar preferências padrão para o usuário
+            try:
+                PreferenciasUsuario.objects.create(
+                    usuario=user,
+                    tema='claro',
+                    modo='normal'
+                )
+            except Exception as e:
+                logging.warning(f"Erro ao criar preferências para usuário {user.username}: {e}")
+            
+            messages.success(
+                self.request,
+                f"Bem-vindo, {user.first_name or user.username}! Agora escolha seu plano.",
+            )
+            return super().form_valid(form)
+            
+        except IntegrityError as e:
+            logging.error(f"Erro de integridade ao criar usuário: {e}")
+            messages.error(
+                self.request,
+                "Erro interno do sistema. Tente novamente ou entre em contato com o suporte."
+            )
+            return self.form_invalid(form)
+            
+        except ValidationError as e:
+            logging.error(f"Erro de validação ao criar usuário: {e}")
+            messages.error(
+                self.request,
+                "Dados inválidos. Verifique as informações e tente novamente."
+            )
+            return self.form_invalid(form)
+            
+        except Exception as e:
+            logging.error(f"Erro inesperado ao criar usuário: {e}")
+            messages.error(
+                self.request,
+                "Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte."
+            )
+            return self.form_invalid(form)
 
-        login(self.request, user)
-        messages.success(
-            self.request,
-            f"Bem-vindo, {user.first_name or user.username}! Agora escolha seu plano.",
-        )
-        return super().form_valid(form)
+    def form_invalid(self, form):
+        """Processa formulário inválido com logs detalhados"""
+        # Log dos erros para debugging
+        for field, errors in form.errors.items():
+            logging.warning(f"Erro no campo '{field}': {errors}")
+        
+        # Adicionar mensagem geral de erro
+        if not messages.get_messages(self.request):
+            messages.error(
+                self.request,
+                "Por favor, corrija os erros abaixo e tente novamente."
+            )
+        
+        return super().form_invalid(form)
 
 
 # ========================================

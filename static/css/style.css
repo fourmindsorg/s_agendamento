@@ -78,7 +78,14 @@ body {
 }
 
 .sidebar.collapsed .logo-text {
-    font-size: 1rem;
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Regra adicional para garantir que funcione - v2 */
+#sidebar.collapsed .sidebar-logo .logo-text {
+    display: none !important;
 }
 
 .logo-icon {
@@ -497,6 +504,61 @@ small {
     color: white !important;
 }
 
+/* Botão outline customizado - mesmo estilo dos botões outline */
+.btn-outline-custom {
+    background: transparent !important;
+    border: 2px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+    padding: 12px 25px;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+}
+
+.btn-outline-custom:hover {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px var(--shadow-color) !important;
+    text-decoration: none !important;
+}
+
+.btn-outline-custom:focus {
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+    outline: none !important;
+}
+
+/* Garantir que os ícones herdem a cor do texto dos botões */
+.btn-custom i,
+.btn-outline-custom i,
+.btn-custom .fas,
+.btn-outline-custom .fas {
+    color: inherit !important;
+}
+
+.btn-custom:hover i,
+.btn-outline-custom:hover i,
+.btn-custom:hover .fas,
+.btn-outline-custom:hover .fas {
+    color: inherit !important;
+}
+
+/* Regras específicas para ícones FontAwesome */
+.btn-custom .fas,
+.btn-outline-custom .fas {
+    color: inherit !important;
+}
+
+.btn-custom:hover .fas,
+.btn-outline-custom:hover .fas {
+    color: inherit !important;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .sidebar {
@@ -544,5 +606,27 @@ small {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Layout responsivo para botões de filtro */
+@media (max-width: 767.98px) {
+    .d-flex.flex-column.flex-lg-row .d-flex.gap-2 {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .d-flex.flex-column.flex-lg-row .d-flex.gap-2 .btn {
+        flex: 1;
+    }
+
+    .d-flex.flex-column.flex-lg-row .dropdown {
+        width: 100% !important;
+        margin-top: 0.5rem;
+    }
+
+    .d-flex.flex-column.flex-lg-row .dropdown .btn {
+        width: 100% !important;
+        justify-content: center;
     }
 }

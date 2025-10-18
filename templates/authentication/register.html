@@ -6,7 +6,7 @@
 {% block header_subtitle %}Cadastre-se para acessar o sistema{% endblock %}
 
 {% block content %}
-<form method="post" novalidate>
+<form method="post" novalidate id="registerForm">
     {% csrf_token %}
     
     <div class="row">
@@ -123,9 +123,147 @@
 
 {% block extra_js %}
 <script>
-    // Auto-focus no primeiro campo
     document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus no primeiro campo
         document.getElementById('{{ form.first_name.id_for_label }}').focus();
+        
+        // Validação em tempo real
+        const form = document.getElementById('registerForm');
+        const inputs = form.querySelectorAll('input[required]');
+        
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                validateField(this);
+            });
+            
+            input.addEventListener('input', function() {
+                clearFieldError(this);
+            });
+        });
+        
+        // Validação do formulário antes do envio
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                showAlert('Por favor, corrija os erros antes de continuar.', 'danger');
+            }
+        });
+        
+        function validateField(field) {
+            const value = field.value.trim();
+            const fieldName = field.name;
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Limpar erros anteriores
+            clearFieldError(field);
+            
+            // Validações específicas por campo
+            switch(fieldName) {
+                case 'first_name':
+                case 'last_name':
+                    if (value.length < 2) {
+                        errorMessage = 'Deve ter pelo menos 2 caracteres';
+                        isValid = false;
+                    } else if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(value)) {
+                        errorMessage = 'Apenas letras e espaços são permitidos';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'username':
+                    if (value.length < 3) {
+                        errorMessage = 'Deve ter pelo menos 3 caracteres';
+                        isValid = false;
+                    } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                        errorMessage = 'Apenas letras, números e _ são permitidos';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'email':
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(value)) {
+                        errorMessage = 'Digite um email válido';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'password1':
+                    if (value.length < 8) {
+                        errorMessage = 'Deve ter pelo menos 8 caracteres';
+                        isValid = false;
+                    } else if (!/[A-Za-z]/.test(value)) {
+                        errorMessage = 'Deve conter pelo menos uma letra';
+                        isValid = false;
+                    } else if (!/[0-9]/.test(value)) {
+                        errorMessage = 'Deve conter pelo menos um número';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'password2':
+                    const password1 = document.getElementById('id_password1').value;
+                    if (value !== password1) {
+                        errorMessage = 'As senhas não coincidem';
+                        isValid = false;
+                    }
+                    break;
+            }
+            
+            if (!isValid) {
+                showFieldError(field, errorMessage);
+            }
+            
+            return isValid;
+        }
+        
+        function showFieldError(field, message) {
+            field.classList.add('is-invalid');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback d-block';
+            errorDiv.textContent = message;
+            errorDiv.id = field.name + '_error';
+            
+            field.parentNode.appendChild(errorDiv);
+        }
+        
+        function clearFieldError(field) {
+            field.classList.remove('is-invalid');
+            const errorDiv = document.getElementById(field.name + '_error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const form = document.getElementById('registerForm');
+            form.insertBefore(alertDiv, form.firstChild);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
     });
 </script>
 {% endblock %}
