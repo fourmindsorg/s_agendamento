@@ -10,6 +10,7 @@ from django.views.generic import (
     DeleteView,
     DetailView,
 )
+from authentication.mixins import SubscriptionRequiredMixin, ReadOnlyForExpiredMixin
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from django.http import JsonResponse
@@ -31,7 +32,7 @@ class HomeView(TemplateView):
     template_name = "agendamentos/home.html"
 
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(LoginRequiredMixin, ReadOnlyForExpiredMixin, TemplateView):
     """Dashboard principal com gráficos e KPIs"""
 
     template_name = "agendamentos/dashboard.html"
@@ -329,7 +330,7 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
 # ========================================
 
 
-class ClienteListView(LoginRequiredMixin, ListView):
+class ClienteListView(LoginRequiredMixin, ReadOnlyForExpiredMixin, ListView):
     """Lista todos os clientes do usuário"""
 
     model = Cliente
@@ -367,7 +368,7 @@ class ClienteListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ClienteCreateView(LoginRequiredMixin, CreateView):
+class ClienteCreateView(LoginRequiredMixin, SubscriptionRequiredMixin, CreateView):
     """Criar novo cliente"""
 
     model = Cliente
@@ -389,7 +390,7 @@ class ClienteCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class ClienteDetailView(LoginRequiredMixin, DetailView):
+class ClienteDetailView(LoginRequiredMixin, ReadOnlyForExpiredMixin, DetailView):
     """Detalhes do cliente"""
 
     model = Cliente
@@ -457,7 +458,7 @@ class ClienteDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class ClienteUpdateView(LoginRequiredMixin, UpdateView):
+class ClienteUpdateView(LoginRequiredMixin, SubscriptionRequiredMixin, UpdateView):
     """Editar cliente"""
 
     model = Cliente
@@ -481,7 +482,7 @@ class ClienteUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class ClienteDeleteView(LoginRequiredMixin, DeleteView):
+class ClienteDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, DeleteView):
     """Deletar cliente"""
 
     model = Cliente
@@ -518,7 +519,7 @@ class ClienteDeleteView(LoginRequiredMixin, DeleteView):
 # ========================================
 
 
-class TipoServicoListView(LoginRequiredMixin, ListView):
+class TipoServicoListView(LoginRequiredMixin, ReadOnlyForExpiredMixin, ListView):
     """Lista todos os tipos de serviço do usuário"""
 
     model = TipoServico
@@ -573,7 +574,7 @@ class TipoServicoListView(LoginRequiredMixin, ListView):
         return context
 
 
-class TipoServicoCreateView(LoginRequiredMixin, CreateView):
+class TipoServicoCreateView(LoginRequiredMixin, SubscriptionRequiredMixin, CreateView):
     """Criar novo tipo de serviço"""
 
     model = TipoServico
@@ -595,7 +596,7 @@ class TipoServicoCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class TipoServicoUpdateView(LoginRequiredMixin, UpdateView):
+class TipoServicoUpdateView(LoginRequiredMixin, SubscriptionRequiredMixin, UpdateView):
     """Editar tipo de serviço"""
 
     model = TipoServico
@@ -619,7 +620,7 @@ class TipoServicoUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class TipoServicoDeleteView(LoginRequiredMixin, DeleteView):
+class TipoServicoDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, DeleteView):
     """Deletar tipo de serviço"""
 
     model = TipoServico
@@ -656,7 +657,7 @@ class TipoServicoDeleteView(LoginRequiredMixin, DeleteView):
 # ========================================
 
 
-class AgendamentoListView(LoginRequiredMixin, ListView):
+class AgendamentoListView(LoginRequiredMixin, ReadOnlyForExpiredMixin, ListView):
     """Lista todos os agendamentos do usuário"""
 
     model = Agendamento
@@ -781,7 +782,7 @@ class AgendamentoListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AgendamentoCreateView(LoginRequiredMixin, CreateView):
+class AgendamentoCreateView(LoginRequiredMixin, SubscriptionRequiredMixin, CreateView):
     """Criar novo agendamento"""
 
     model = Agendamento
@@ -809,7 +810,7 @@ class AgendamentoCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class AgendamentoDetailView(LoginRequiredMixin, DetailView):
+class AgendamentoDetailView(LoginRequiredMixin, ReadOnlyForExpiredMixin, DetailView):
     """Detalhes do agendamento"""
 
     model = Agendamento
@@ -820,7 +821,7 @@ class AgendamentoDetailView(LoginRequiredMixin, DetailView):
         return Agendamento.objects.filter(criado_por=self.request.user)
 
 
-class AgendamentoUpdateView(LoginRequiredMixin, UpdateView):
+class AgendamentoUpdateView(LoginRequiredMixin, SubscriptionRequiredMixin, UpdateView):
     """Editar agendamento"""
 
     model = Agendamento
@@ -859,7 +860,7 @@ class AgendamentoUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class AgendamentoDeleteView(LoginRequiredMixin, DeleteView):
+class AgendamentoDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, DeleteView):
     """Deletar agendamento"""
 
     model = Agendamento
@@ -888,7 +889,9 @@ class AgendamentoDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class AgendamentoStatusUpdateView(LoginRequiredMixin, UpdateView):
+class AgendamentoStatusUpdateView(
+    LoginRequiredMixin, SubscriptionRequiredMixin, UpdateView
+):
     """View para alterar status do agendamento"""
 
     model = Agendamento

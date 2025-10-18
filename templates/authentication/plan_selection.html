@@ -154,7 +154,8 @@
                                     </p>
                                 </div>
 
-                                <!-- Opção de período gratuito -->
+                                <!-- Opção de período gratuito (apenas se não tiver usado) -->
+                                {% if not ja_usou_gratuito %}
                                 <div class="col-12 mb-5">
                                     <div class="row justify-content-center">
                                         <div class="col-lg-8">
@@ -187,6 +188,20 @@
                                     <span class="bg-white px-3 text-muted">ou escolha um plano pago</span>
                                     <hr class="my-4">
                                 </div>
+                                {% else %}
+                                <!-- Mensagem para usuário que já usou o período gratuito -->
+                                <div class="col-12 mb-5">
+                                    <div class="row justify-content-center">
+                                        <div class="col-lg-8">
+                                        <div class="alert alert-info text-center">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Você já utilizou seu período gratuito de 14 dias.</strong>
+                                            <br>Escolha um dos planos abaixo para continuar usando o sistema.
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
 
                                 <!-- Planos pagos -->
                                 <div class="col-12">
@@ -245,10 +260,10 @@
                                                 </ul>
                                             </div>
 
-                                            <a href="{% url 'authentication:select_plan' plano.id %}" 
+                                            <a href="{% url 'authentication:checkout' plano.id %}" 
                                                 class="btn {% if plano.destaque %}btn-primary{% else %}btn-outline-primary{% endif %} btn-pricing w-100">
-                                                <i class="fas fa-credit-card me-2"></i>
-                                                Contratar Plano
+                                                <i class="fas fa-shopping-cart me-2"></i>
+                                                Finalizar Compra
                                             </a>
                                         </div>
                                     </div>

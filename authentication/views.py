@@ -13,7 +13,13 @@ from django.views.generic import (
     DetailView,
     TemplateView,
 )
-from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .forms import (
+    CustomUserCreationForm,
+    CustomUserChangeForm,
+    PaymentMethodForm,
+    CreditCardForm,
+    BillingInfoForm,
+)
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -25,6 +31,46 @@ from datetime import timedelta
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+
+# ========================================
+# FUNÇÕES UTILITÁRIAS
+# ========================================
+
+
+def verificar_assinatura_expirada(user):
+    """
+    Verifica se o usuário tem assinatura ativa e não expirada.
+    Retorna True se expirada, False se ativa.
+    """
+    if not user.is_authenticated:
+        return False
+
+    try:
+        # Buscar assinatura ativa mais recente
+        assinatura = (
+            AssinaturaUsuario.objects.filter(usuario=user, status="ativa")
+            .order_by("-data_inicio")
+            .first()
+        )
+
+        if not assinatura:
+            # Usuário não tem assinatura ativa
+            return True
+
+        # Verificar se a assinatura expirou
+        agora = timezone.now()
+        if assinatura.data_fim < agora:
+            # Marcar como expirada
+            assinatura.status = "expirada"
+            assinatura.save()
+            return True
+
+        return False
+
+    except Exception as e:
+        logging.error(f"Erro ao verificar assinatura do usuário {user.id}: {e}")
+        return True  # Em caso de erro, considerar como expirada por segurança
+
 
 # ========================================
 # VIEWS DE AUTENTICAÇÃO
@@ -41,11 +87,53 @@ class CustomLoginView(LoginView):
         return reverse_lazy("agendamentos:dashboard")
 
     def form_valid(self, form):
+        user = form.get_user()
+
+        # Verificar se o usuário está ativo
+        if not user.is_active:
+            messages.error(
+                self.request,
+                "Sua conta está inativa. Entre em contato com o suporte para reativar sua conta.",
+            )
+            return redirect("authentication:plan_selection")
+
+        # Verificar se a assinatura expirou
+        if verificar_assinatura_expirada(user):
+            # Primeiro, fazer o login do usuário para salvar a sessão
+            from django.contrib.auth import login
+
+            login(self.request, user)
+
+            # Redirecionar para seleção de planos com mensagem
+            messages.warning(
+                self.request,
+                "Seu período gratuito expirou. Selecione um plano para continuar usando o sistema.",
+            )
+            return redirect("authentication:plan_selection")
+
         messages.success(
             self.request,
-            f"Bem-vindo, {form.get_user().first_name or form.get_user().username}!",
+            f"Bem-vindo, {user.first_name or user.username}!",
         )
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """Lidar com formulário inválido, incluindo usuários inativos"""
+        # Verificar se é um problema de usuário inativo
+        username = form.cleaned_data.get("username") if form.cleaned_data else None
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                if not user.is_active:
+                    messages.error(
+                        self.request,
+                        "Sua conta está inativa. Entre em contato com o suporte para reativar sua conta.",
+                    )
+                    return redirect("authentication:plan_selection")
+            except User.DoesNotExist:
+                pass
+
+        return super().form_invalid(form)
 
 
 def custom_logout_view(request):
@@ -67,48 +155,49 @@ class RegisterView(CreateView):
         try:
             # Salvar o usuário
             user = form.save()
-            
+
             # Fazer login automático após registro
             from django.contrib.auth import login
+
             login(self.request, user)
-            
+
             # Criar preferências padrão para o usuário
             try:
                 PreferenciasUsuario.objects.create(
-                    usuario=user,
-                    tema='claro',
-                    modo='normal'
+                    usuario=user, tema="claro", modo="normal"
                 )
             except Exception as e:
-                logging.warning(f"Erro ao criar preferências para usuário {user.username}: {e}")
-            
+                logging.warning(
+                    f"Erro ao criar preferências para usuário {user.username}: {e}"
+                )
+
             messages.success(
                 self.request,
                 f"Bem-vindo, {user.first_name or user.username}! Agora escolha seu plano.",
             )
             return super().form_valid(form)
-            
+
         except IntegrityError as e:
             logging.error(f"Erro de integridade ao criar usuário: {e}")
             messages.error(
                 self.request,
-                "Erro interno do sistema. Tente novamente ou entre em contato com o suporte."
+                "Erro interno do sistema. Tente novamente ou entre em contato com o suporte.",
             )
             return self.form_invalid(form)
-            
+
         except ValidationError as e:
             logging.error(f"Erro de validação ao criar usuário: {e}")
             messages.error(
                 self.request,
-                "Dados inválidos. Verifique as informações e tente novamente."
+                "Dados inválidos. Verifique as informações e tente novamente.",
             )
             return self.form_invalid(form)
-            
+
         except Exception as e:
             logging.error(f"Erro inesperado ao criar usuário: {e}")
             messages.error(
                 self.request,
-                "Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte."
+                "Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte.",
             )
             return self.form_invalid(form)
 
@@ -117,14 +206,13 @@ class RegisterView(CreateView):
         # Log dos erros para debugging
         for field, errors in form.errors.items():
             logging.warning(f"Erro no campo '{field}': {errors}")
-        
+
         # Adicionar mensagem geral de erro
         if not messages.get_messages(self.request):
             messages.error(
-                self.request,
-                "Por favor, corrija os erros abaixo e tente novamente."
+                self.request, "Por favor, corrija os erros abaixo e tente novamente."
             )
-        
+
         return super().form_invalid(form)
 
 
@@ -314,7 +402,32 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["planos"] = Plano.objects.filter(ativo=True).order_by("ordem")
         context["usuario"] = self.request.user
+
+        # Verificar se o usuário já usou o período gratuito
+        context["ja_usou_gratuito"] = self.verificar_ja_usou_gratuito()
+
         return context
+
+    def verificar_ja_usou_gratuito(self):
+        """Verifica se o usuário já usou o período gratuito"""
+        try:
+            # Buscar plano gratuito
+            plano_gratuito = Plano.objects.filter(tipo="gratuito", ativo=True).first()
+            if not plano_gratuito:
+                return False
+
+            # Verificar se o usuário já teve alguma assinatura gratuita
+            assinaturas_gratuitas = AssinaturaUsuario.objects.filter(
+                usuario=self.request.user, plano=plano_gratuito
+            ).exists()
+
+            return assinaturas_gratuitas
+
+        except Exception as e:
+            logging.error(
+                f"Erro ao verificar período gratuito para usuário {self.request.user.id}: {e}"
+            )
+            return False
 
 
 class PlanConfirmationView(LoginRequiredMixin, TemplateView):
@@ -406,3 +519,211 @@ def skip_plan_selection(request):
     except Plano.DoesNotExist:
         messages.error(request, "Plano gratuito não configurado.")
         return redirect("authentication:plan_selection")
+
+
+@login_required
+def get_plano_duracao(request, plano_id):
+    """AJAX endpoint para obter duração do plano"""
+    try:
+        plano = Plano.objects.get(id=plano_id, ativo=True)
+        return JsonResponse({"success": True, "duracao_dias": plano.duracao_dias})
+    except Plano.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Plano não encontrado"})
+
+
+# ========================================
+# VIEWS DE CHECKOUT E PAGAMENTO
+# ========================================
+
+
+class CheckoutView(LoginRequiredMixin, TemplateView):
+    """View para finalizar a compra do plano"""
+
+    template_name = "authentication/checkout.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        plano_id = self.kwargs.get("plano_id")
+
+        try:
+            plano = Plano.objects.get(id=plano_id, ativo=True)
+            context["plano"] = plano
+            context["payment_form"] = PaymentMethodForm()
+            context["billing_form"] = BillingInfoForm()
+            context["card_form"] = CreditCardForm()
+
+            # Preencher dados do usuário se disponível
+            if self.request.user.is_authenticated:
+                billing_form = BillingInfoForm(
+                    initial={
+                        "nome_completo": f"{self.request.user.first_name} {self.request.user.last_name}".strip(),
+                        "email": self.request.user.email,
+                    }
+                )
+                context["billing_form"] = billing_form
+
+        except Plano.DoesNotExist:
+            messages.error(self.request, "Plano não encontrado.")
+            return redirect("authentication:plan_selection")
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        plano_id = self.kwargs.get("plano_id")
+
+        try:
+            plano = Plano.objects.get(id=plano_id, ativo=True)
+        except Plano.DoesNotExist:
+            messages.error(request, "Plano não encontrado.")
+            return redirect("authentication:plan_selection")
+
+        # Processar formulários
+        payment_form = PaymentMethodForm(request.POST)
+        billing_form = BillingInfoForm(request.POST)
+        card_form = (
+            CreditCardForm(request.POST)
+            if request.POST.get("metodo_pagamento") == "cartao"
+            else None
+        )
+
+        if payment_form.is_valid() and billing_form.is_valid():
+            metodo_pagamento = payment_form.cleaned_data["metodo_pagamento"]
+
+            # Validar formulário de cartão se necessário
+            if metodo_pagamento == "cartao" and card_form:
+                if not card_form.is_valid():
+                    context = self.get_context_data()
+                    context["payment_form"] = payment_form
+                    context["billing_form"] = billing_form
+                    context["card_form"] = card_form
+                    context["plano"] = plano
+                    return self.render_to_response(context)
+
+            # Processar pagamento
+            return self.processar_pagamento(
+                request,
+                plano,
+                metodo_pagamento,
+                billing_form.cleaned_data,
+                card_form.cleaned_data if card_form else None,
+            )
+
+        # Se houver erros, renderizar novamente
+        context = self.get_context_data()
+        context["payment_form"] = payment_form
+        context["billing_form"] = billing_form
+        context["card_form"] = card_form
+        context["plano"] = plano
+        return self.render_to_response(context)
+
+    def processar_pagamento(
+        self, request, plano, metodo_pagamento, billing_data, card_data=None
+    ):
+        """Processa o pagamento do plano"""
+
+        # Calcular valor baseado no método de pagamento
+        if metodo_pagamento == "pix":
+            valor = plano.preco_pix
+        else:
+            valor = plano.preco_cartao
+
+        # Criar assinatura
+        data_fim = timezone.now() + timedelta(days=plano.duracao_dias)
+
+        assinatura = AssinaturaUsuario.objects.create(
+            usuario=request.user,
+            plano=plano,
+            data_fim=data_fim,
+            status="ativa",
+            valor_pago=valor,
+            metodo_pagamento=metodo_pagamento,
+        )
+
+        if metodo_pagamento == "pix":
+            # Simular geração de QR Code PIX
+            qr_code_data = self.gerar_qr_code_pix(plano, valor, billing_data)
+            return redirect("authentication:payment_pix", assinatura_id=assinatura.id)
+        else:
+            # Simular processamento de cartão
+            return self.processar_cartao(request, assinatura, card_data, billing_data)
+
+    def gerar_qr_code_pix(self, plano, valor, billing_data):
+        """Gera dados para QR Code PIX (simulado)"""
+        # Em um sistema real, aqui seria feita a integração com gateway de pagamento
+        return {
+            "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
+            "chave_pix": "contato@sistema.com.br",
+            "valor": valor,
+            "descricao": f"Pagamento - {plano.nome}",
+        }
+
+    def processar_cartao(self, request, assinatura, card_data, billing_data):
+        """Processa pagamento com cartão (simulado)"""
+        # Em um sistema real, aqui seria feita a integração com gateway de pagamento
+        # Simular processamento bem-sucedido
+        messages.success(request, "Pagamento processado com sucesso!")
+        return redirect("authentication:payment_success", assinatura_id=assinatura.id)
+
+
+class PaymentPixView(LoginRequiredMixin, TemplateView):
+    """View para exibir QR Code PIX"""
+
+    template_name = "authentication/payment_pix.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assinatura_id = self.kwargs.get("assinatura_id")
+
+        try:
+            assinatura = AssinaturaUsuario.objects.get(
+                id=assinatura_id, usuario=self.request.user
+            )
+            context["assinatura"] = assinatura
+
+            # Gerar dados do PIX
+            qr_data = self.gerar_qr_code_pix(
+                assinatura.plano,
+                assinatura.valor_pago,
+                {
+                    "cpf": "00000000000",  # Em um sistema real, pegaria dos dados de cobrança
+                    "nome": assinatura.usuario.get_full_name(),
+                },
+            )
+            context["qr_data"] = qr_data
+
+        except AssinaturaUsuario.DoesNotExist:
+            messages.error(self.request, "Assinatura não encontrada.")
+            return redirect("authentication:plan_selection")
+
+        return context
+
+    def gerar_qr_code_pix(self, plano, valor, billing_data):
+        """Gera dados para QR Code PIX (simulado)"""
+        return {
+            "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
+            "chave_pix": "contato@sistema.com.br",
+            "valor": valor,
+            "descricao": f"Pagamento - {plano.nome}",
+            "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}5204000053039865405{valor:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
+        }
+
+
+class PaymentSuccessView(LoginRequiredMixin, TemplateView):
+    """View de sucesso do pagamento"""
+
+    template_name = "authentication/payment_success.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assinatura_id = self.kwargs.get("assinatura_id")
+
+        try:
+            assinatura = AssinaturaUsuario.objects.get(
+                id=assinatura_id, usuario=self.request.user
+            )
+            context["assinatura"] = assinatura
+        except AssinaturaUsuario.DoesNotExist:
+            messages.error(self.request, "Assinatura não encontrada.")
+            return redirect("authentication:plan_selection")
+
+        return context

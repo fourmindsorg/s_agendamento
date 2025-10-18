@@ -27,6 +27,24 @@ urlpatterns = [
         views.PlanConfirmationView.as_view(),
         name="plan_confirmation",
     ),
+    # AJAX para admin
+    path(
+        "ajax/plano/<int:plano_id>/duracao/",
+        views.get_plano_duracao,
+        name="get_plano_duracao",
+    ),
     path("planos/selecionar/<int:plano_id>/", views.select_plan, name="select_plan"),
     path("planos/pular/", views.skip_plan_selection, name="skip_plan_selection"),
+    # Checkout e Pagamento
+    path("checkout/<int:plano_id>/", views.CheckoutView.as_view(), name="checkout"),
+    path(
+        "pagamento/pix/<int:assinatura_id>/",
+        views.PaymentPixView.as_view(),
+        name="payment_pix",
+    ),
+    path(
+        "pagamento/sucesso/<int:assinatura_id>/",
+        views.PaymentSuccessView.as_view(),
+        name="payment_success",
+    ),
 ]
