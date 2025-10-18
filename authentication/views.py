@@ -31,6 +31,9 @@ from datetime import timedelta
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from financeiro.services.asaas import AsaasClient
+from django.conf import settings
+from .pix_views import PaymentPixView
 
 # ========================================
 # FUNÇÕES UTILITÁRIAS
@@ -640,8 +643,13 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         )
 
         if metodo_pagamento == "pix":
-            # Simular geração de QR Code PIX
+            # Gerar QR Code PIX via Asaas
             qr_code_data = self.gerar_qr_code_pix(plano, valor, billing_data)
+
+            # Armazenar dados do PIX na sessão
+            request.session["pix_data"] = qr_code_data
+            request.session["assinatura_id"] = assinatura.id
+
             return redirect("authentication:payment_pix", assinatura_id=assinatura.id)
         else:
             # Simular processamento de cartão
@@ -698,14 +706,66 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
         return context
 
     def gerar_qr_code_pix(self, plano, valor, billing_data):
-        """Gera dados para QR Code PIX (simulado)"""
-        return {
-            "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
-            "chave_pix": "contato@sistema.com.br",
-            "valor": valor,
-            "descricao": f"Pagamento - {plano.nome}",
-            "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}5204000053039865405{valor:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
-        }
+        """Gera dados para QR Code PIX usando API Asaas"""
+        try:
+            # Inicializar cliente Asaas
+            asaas_client = AsaasClient()
+
+            # Criar cliente no Asaas
+            customer_data = asaas_client.create_customer(
+                name=billing_data["nome_completo"],
+                email=billing_data["email"],
+                cpf_cnpj=billing_data["cpf"].replace(".", "").replace("-", ""),
+                phone=billing_data["telefone"]
+                .replace("(", "")
+                .replace(")", "")
+                .replace("-", "")
+                .replace(" ", ""),
+            )
+
+            # Criar cobrança PIX
+            from datetime import datetime, timedelta
+
+            due_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+            payment_data = asaas_client.create_payment(
+                customer_id=customer_data["id"],
+                value=float(valor),
+                due_date=due_date,
+                billing_type="PIX",
+                description=f"Pagamento - {plano.nome}",
+            )
+
+            # Obter QR Code PIX
+            pix_data = asaas_client.get_pix_qr(payment_data["id"])
+
+            return {
+                "payment_id": payment_data["id"],
+                "qr_code": pix_data.get("payload", ""),
+                "qr_code_image": pix_data.get("encodedImage", ""),
+                "chave_pix": pix_data.get("payload", ""),
+                "valor": valor,
+                "descricao": f"Pagamento - {plano.nome}",
+                "vencimento": due_date,
+                "status": payment_data.get("status", "PENDING"),
+                "pix_copia_cola": pix_data.get("payload", ""),
+            }
+
+        except Exception as e:
+            logging.error(f"Erro ao gerar PIX via Asaas: {str(e)}")
+            # Fallback para simulação em caso de erro
+            return {
+                "payment_id": f"sim_{plano.id}_{int(timezone.now().timestamp())}",
+                "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
+                "qr_code_image": "",
+                "chave_pix": "contato@sistema.com.br",
+                "valor": valor,
+                "descricao": f"Pagamento - {plano.nome}",
+                "vencimento": (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
+                "status": "PENDING",
+                "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}5204000053039865405{valor:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
+                "erro": "Modo simulação ativado",
+            }
 
 
 class PaymentSuccessView(LoginRequiredMixin, TemplateView):
