@@ -41,7 +41,12 @@ except RuntimeError as e:
     ASAAS_AVAILABLE = False
     print(f"Asaas não disponível: {e}")
 from django.conf import settings
-from .pix_views import PaymentPixView
+# Importação condicional do PaymentPixView
+try:
+    from .pix_views import PaymentPixView
+except ImportError as e:
+    PaymentPixView = None
+    print(f"PaymentPixView não disponível: {e}")
 
 # ========================================
 # FUNÇÕES UTILITÁRIAS
