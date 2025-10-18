@@ -179,6 +179,38 @@
         margin-top: 0.5rem;
     }
     
+    /* Estilos para validação de CPF */
+    .cpf-error-message {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-control.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    /* Estilos para busca de CEP */
+    .form-control.loading {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.5 3.5 1 1 2-2'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem 1rem;
+        padding-right: 2.5rem;
+    }
+    
+    .cep-message {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+    }
+    
     @media (max-width: 768px) {
         .checkout-content {
             grid-template-columns: 1fr;
@@ -277,6 +309,9 @@
                             {% if billing_form.cep.errors %}
                                 <div class="text-danger">{{ billing_form.cep.errors.0 }}</div>
                             {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-search me-1"></i>Digite o CEP para buscar automaticamente
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">{{ billing_form.cidade.label }}</label>
@@ -300,6 +335,23 @@
                             {{ billing_form.endereco }}
                             {% if billing_form.endereco.errors %}
                                 <div class="text-danger">{{ billing_form.endereco.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.numero.label }}</label>
+                            {{ billing_form.numero }}
+                            {% if billing_form.numero.errors %}
+                                <div class="text-danger">{{ billing_form.numero.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.complemento.label }}</label>
+                            {{ billing_form.complemento }}
+                            {% if billing_form.complemento.errors %}
+                                <div class="text-danger">{{ billing_form.complemento.errors.0 }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -507,6 +559,93 @@ document.addEventListener('DOMContentLoaded', function() {
             value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
             e.target.value = value;
         });
+        
+        // Validação de CPF ao perder o foco
+        cpfInput.addEventListener('blur', function() {
+            const cpf = this.value.replace(/\D/g, '');
+            const isValid = validarCPF(cpf);
+            
+            // Remove classes anteriores
+            this.classList.remove('is-valid', 'is-invalid');
+            
+            if (cpf.length === 11) {
+                if (isValid) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                    // Remove mensagem de erro se existir
+                    const errorDiv = this.parentNode.querySelector('.cpf-error-message');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                } else {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                    // Adiciona mensagem de erro
+                    const errorDiv = this.parentNode.querySelector('.cpf-error-message');
+                    if (!errorDiv) {
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'cpf-error-message text-danger mt-1';
+                        errorMessage.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>CPF inválido';
+                        this.parentNode.appendChild(errorMessage);
+                    }
+                }
+            } else if (cpf.length > 0) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                // Adiciona mensagem de erro para CPF incompleto
+                const errorDiv = this.parentNode.querySelector('.cpf-error-message');
+                if (!errorDiv) {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'cpf-error-message text-danger mt-1';
+                    errorMessage.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>CPF deve ter 11 dígitos';
+                    this.parentNode.appendChild(errorMessage);
+                }
+            }
+        });
+    }
+    
+    // Função para validar CPF
+    function validarCPF(cpf) {
+        // Remove caracteres não numéricos
+        cpf = cpf.replace(/\D/g, '');
+        
+        // Verifica se tem 11 dígitos
+        if (cpf.length !== 11) {
+            return false;
+        }
+        
+        // Verifica se todos os dígitos são iguais
+        if (cpf === cpf[0].repeat(11)) {
+            return false;
+        }
+        
+        // Calcula o primeiro dígito verificador
+        let soma = 0;
+        for (let i = 0; i < 9; i++) {
+            soma += parseInt(cpf.charAt(i)) * (10 - i);
+        }
+        let resto = soma % 11;
+        let digito1 = resto < 2 ? 0 : 11 - resto;
+        
+        // Verifica o primeiro dígito
+        if (parseInt(cpf.charAt(9)) !== digito1) {
+            return false;
+        }
+        
+        // Calcula o segundo dígito verificador
+        soma = 0;
+        for (let i = 0; i < 10; i++) {
+            soma += parseInt(cpf.charAt(i)) * (11 - i);
+        }
+        resto = soma % 11;
+        let digito2 = resto < 2 ? 0 : 11 - resto;
+        
+        // Verifica o segundo dígito
+        if (parseInt(cpf.charAt(10)) !== digito2) {
+            return false;
+        }
+        
+        return true;
     }
     
     // Format phone
@@ -529,6 +668,102 @@ document.addEventListener('DOMContentLoaded', function() {
             value = value.replace(/(\d{5})(\d)/, '$1-$2');
             e.target.value = value;
         });
+        
+        // Busca automática de endereço por CEP
+        cepInput.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarEnderecoPorCEP(cep);
+            }
+        });
+    }
+    
+    // Função para buscar endereço por CEP
+    async function buscarEnderecoPorCEP(cep) {
+        try {
+            // Mostrar loading
+            const cepInput = document.querySelector('input[name="cep"]');
+            cepInput.disabled = true;
+            cepInput.classList.add('loading');
+            
+            // Buscar na API ViaCEP
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+            
+            if (data.erro) {
+                throw new Error('CEP não encontrado');
+            }
+            
+            // Preencher os campos automaticamente
+            const enderecoInput = document.querySelector('input[name="endereco"]');
+            const cidadeInput = document.querySelector('input[name="cidade"]');
+            const estadoSelect = document.querySelector('select[name="estado"]');
+            
+            if (enderecoInput) {
+                enderecoInput.value = data.logradouro || '';
+            }
+            
+            if (cidadeInput) {
+                cidadeInput.value = data.localidade || '';
+            }
+            
+            if (estadoSelect) {
+                // Mapear UF para o valor do select
+                const ufMap = {
+                    'AC': 'AC', 'AL': 'AL', 'AP': 'AP', 'AM': 'AM', 'BA': 'BA',
+                    'CE': 'CE', 'DF': 'DF', 'ES': 'ES', 'GO': 'GO', 'MA': 'MA',
+                    'MT': 'MT', 'MS': 'MS', 'MG': 'MG', 'PA': 'PA', 'PB': 'PB',
+                    'PR': 'PR', 'PE': 'PE', 'PI': 'PI', 'RJ': 'RJ', 'RN': 'RN',
+                    'RS': 'RS', 'RO': 'RO', 'RR': 'RR', 'SC': 'SC', 'SP': 'SP',
+                    'SE': 'SE', 'TO': 'TO'
+                };
+                
+                const uf = data.uf;
+                if (uf && ufMap[uf]) {
+                    estadoSelect.value = ufMap[uf];
+                }
+            }
+            
+            // Mostrar mensagem de sucesso
+            mostrarMensagemCEP('Endereço encontrado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            mostrarMensagemCEP('CEP não encontrado. Verifique o número digitado.', 'error');
+        } finally {
+            // Remover loading
+            const cepInput = document.querySelector('input[name="cep"]');
+            cepInput.disabled = false;
+            cepInput.classList.remove('loading');
+        }
+    }
+    
+    // Função para mostrar mensagens de CEP
+    function mostrarMensagemCEP(mensagem, tipo) {
+        // Remove mensagem anterior se existir
+        const mensagemAnterior = document.querySelector('.cep-message');
+        if (mensagemAnterior) {
+            mensagemAnterior.remove();
+        }
+        
+        // Cria nova mensagem
+        const mensagemDiv = document.createElement('div');
+        mensagemDiv.className = `cep-message alert alert-${tipo === 'success' ? 'success' : 'danger'} mt-2`;
+        mensagemDiv.innerHTML = `
+            <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${mensagem}
+        `;
+        
+        // Adiciona após o campo CEP
+        const cepInput = document.querySelector('input[name="cep"]');
+        cepInput.parentNode.appendChild(mensagemDiv);
+        
+        // Remove a mensagem após 5 segundos
+        setTimeout(() => {
+            if (mensagemDiv.parentNode) {
+                mensagemDiv.remove();
+            }
+        }, 5000);
     }
 });
 </script>
