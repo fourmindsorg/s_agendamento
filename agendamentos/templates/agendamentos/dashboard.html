@@ -23,7 +23,7 @@
   <!-- Ações no Header -->
   <div class="header-actions">
     <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom">
-      <i class="fas fa-plus me-2"></i>Novo Agendamento
+      <i class="fas fa-calendar-plus"></i>Novo Agendamento
     </a>
     <a href="{% url 'agendamentos:relatorios' %}" class="btn btn-outline-primary">
       <i class="fas fa-chart-bar me-2"></i>Relatórios
@@ -239,10 +239,9 @@
         <div class="row g-3">
           <div class="col-md-4">
             <a href="{% url 'agendamentos:agendamento_create' %}" 
-               class="btn btn-custom w-100 py-3 action-card">
+               class="btn btn-custom justify-content-center w-100 py-3 action-card">
               <i class="fas fa-calendar-plus fa-2x d-block mb-2"></i>
               <strong>Novo Agendamento</strong>
-              <br><small>Agendar cliente</small>
             </a>
           </div>
           <div class="col-md-4">
@@ -250,7 +249,6 @@
                class="btn btn-outline-primary w-100 py-3 action-card">
               <i class="fas fa-user-plus fa-2x d-block mb-2"></i>
               <strong>Cadastrar Cliente</strong>
-              <br><small>Novo cliente</small>
             </a>
           </div>
           <div class="col-md-4">

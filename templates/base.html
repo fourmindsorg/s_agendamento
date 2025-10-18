@@ -94,6 +94,32 @@
                 color: white !important;
             }
         {% endif %}
+        
+        /* CORREÇÃO: Ocultar texto do logo quando sidebar colapsado */
+        .sidebar.collapsed .logo-text {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        #sidebar.collapsed .sidebar-logo .logo-text {
+            display: none !important;
+        }
+        
+        /* CORREÇÃO: Garantir que ícones dos botões herdem a cor do texto */
+        .btn-custom i,
+        .btn-outline-custom i,
+        .btn-custom .fas,
+        .btn-outline-custom .fas {
+            color: inherit !important;
+        }
+        
+        .btn-custom:hover i,
+        .btn-outline-custom:hover i,
+        .btn-custom:hover .fas,
+        .btn-outline-custom:hover .fas {
+            color: inherit !important;
+        }
 </style>
 
 </head>

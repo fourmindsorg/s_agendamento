@@ -36,7 +36,7 @@ body {
 
 /* Header de autenticação */
 .auth-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #764ba2 0%, #1d4ed8 100%);
     color: white;
     padding: 2rem;
     text-align: center;
@@ -101,7 +101,7 @@ body {
 
 .form-control:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: #764ba2;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     background-color: #ffffff;
     color: #1e293b;
@@ -141,7 +141,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #764ba2 0%, #1d4ed8 100%);
     color: white;
     width: 100%;
 }
@@ -154,20 +154,20 @@ body {
 
 .btn-outline-primary {
     background: transparent;
-    color: #3b82f6;
-    border: 2px solid #3b82f6;
+    color: #764ba2;
+    border: 2px solid #764ba2;
     width: 100%;
 }
 
 .btn-outline-primary:hover {
-    background: #3b82f6;
+    background: #764ba2;
     color: white;
     transform: translateY(-2px);
 }
 
 .btn-link {
     background: none;
-    color: #3b82f6;
+    color: #764ba2;
     text-decoration: none;
     padding: 8px 0;
     font-weight: 500;
@@ -187,7 +187,7 @@ body {
 
 /* Links */
 a {
-    color: #3b82f6;
+    color: #764ba2;
     text-decoration: none;
     transition: all 0.3s ease;
 }
@@ -208,7 +208,7 @@ a:hover {
     width: 18px;
     height: 18px;
     margin-right: 10px;
-    accent-color: #3b82f6;
+    accent-color: #764ba2;
 }
 
 .form-check-label {
@@ -259,7 +259,7 @@ a:hover {
 }
 
 .auth-links a:hover {
-    color: #3b82f6;
+    color: #764ba2;
 }
 
 /* Loading spinner */
@@ -364,7 +364,7 @@ a:hover {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #1d4ed8, #3b82f6);
+    background: linear-gradient(90deg, #764ba2, #1d4ed8, #764ba2);
     background-size: 200% 100%;
     animation: gradient 3s ease infinite;
 }
@@ -409,7 +409,7 @@ a:hover {
 }
 
 .btn-outline-primary {
-    color: #3b82f6 !important;
+    color: #764ba2 !important;
 }
 
 .btn-outline-primary:hover {

@@ -62,65 +62,20 @@
     margin-bottom: 20px;
   }
 
+  .filter-card .card-header {
+    background: var(--light-color) !important;
+    border: none;
+    padding: 15px 20px;
+  }
+
   .filter-card .card-body {
-    padding: 25px;
+    padding: 20px;
   }
 
   .list-card .card-header {
     background: var(--light-color) !important;
     border: none;
     padding: 15px 20px;
-  }
-
-  /* Stats cards */
-  .stat-card {
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--gradient-bg);
-  }
-
-  .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  }
-
-  .stat-card .card-body {
-    padding: 20px;
-    text-align: center;
-  }
-
-  .stat-card i {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    opacity: 0.8;
-  }
-
-  .stat-card h5 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-    color: var(--text-color) !important;
-  }
-
-  .stat-card small {
-    color: var(--text-muted-color) !important;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   /* Form controls */
@@ -167,30 +122,98 @@
     color: white !important;
   }
 
-  /* Service icon */
-  .service-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
+  /* Quick filters */
+  .quick-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .quick-filter-btn {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 2px solid var(--border-color);
+    background: var(--surface-color);
+    color: var(--text-color) !important;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .quick-filter-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white !important;
+    transform: translateY(-1px);
+  }
+
+  .quick-filter-btn.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white !important;
+  }
+
+  /* Date badge */
+  .date-badge {
+    width: 50px;
+    padding: 8px 4px;
+    font-size: 12px;
+    line-height: 1;
     background: var(--gradient-bg) !important;
     color: white !important;
-    border-radius: 50%;
+    border-radius: 8px;
   }
-
-  /* Service cards mobile */
-  .service-card {
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    background: var(--surface-color);
+  
+  .date-badge .day {
+    font-size: 16px;
+    font-weight: bold;
   }
-
-  .service-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    border-color: var(--info-color);
+  
+  .date-badge .month {
+    font-size: 10px;
+    text-transform: uppercase;
   }
-
+  
+  /* Avatar */
+  .avatar-sm {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+    font-weight: bold;
+    background: var(--success-color) !important;
+    color: white !important;
+  }
+  
+  /* Status rows */
+  .agendamento-row[data-status="concluido"] {
+    background-color: rgba(40, 167, 69, 0.05);
+  }
+  
+  .agendamento-row[data-status="cancelado"] {
+    background-color: rgba(220, 53, 69, 0.05);
+  }
+  
+  .agendamento-card[data-status="concluido"] {
+    border-left: 4px solid var(--success-color);
+  }
+  
+  .agendamento-card[data-status="cancelado"] {
+    border-left: 4px solid var(--danger-color);
+  }
+  
+  .agendamento-card[data-status="agendado"] {
+    border-left: 4px solid var(--warning-color);
+  }
+  
+  .agendamento-card[data-status="confirmado"] {
+    border-left: 4px solid var(--primary-color);
+  }
+  
   /* Table styling */
   .table {
     color: var(--text-color) !important;
@@ -209,12 +232,10 @@
     padding: 15px 12px;
     vertical-align: middle;
     border-color: var(--border-color) !important;
-    color: var(--text-color) !important;
   }
-
+  
   .table-hover tbody tr:hover {
     background-color: var(--light-color) !important;
-    transform: translateX(5px);
   }
 
   /* Button groups */
@@ -223,7 +244,7 @@
     border-radius: 6px !important;
     margin: 0 2px;
   }
-
+  
   /* Empty state */
   .empty-state {
     padding: 60px 20px;
@@ -278,7 +299,6 @@
   .modal-header {
     border-bottom: 1px solid var(--border-color);
     background: var(--surface-color);
-    border-radius: 15px 15px 0 0;
   }
 
   .modal-body {
@@ -288,78 +308,36 @@
   .modal-footer {
     border-top: 1px solid var(--border-color);
     background: var(--surface-color);
-    border-radius: 0 0 15px 15px;
   }
 
-  .service-preview {
-    border-left: 4px solid var(--info-color);
+  .agendamento-preview {
+    border-left: 4px solid var(--primary-color);
     background: var(--light-color) !important;
     border-radius: 8px;
   }
 
-  /* Badge styling */
-  .badge {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-    border-radius: 15px;
-    font-weight: 600;
-  }
-
-  /* Price styling */
-  .price-display {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--success-color) !important;
-  }
-
-  /* Duration badge */
-  .duration-badge {
-    background: var(--primary-color) !important;
-    color: white !important;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-  }
-
-  /* Stats badge */
-  .stats-badge {
-    background: var(--info-color) !important;
-    color: white !important;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-  }
-
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .header-actions {
-      width: 100%;
-      justify-content: center;
+    .date-badge {
+      width: 40px;
+      padding: 6px 2px;
     }
-
-    .filter-card .card-body {
-      padding: 20px;
-    }
-
-    .service-icon {
-      width: 35px;
-      height: 35px;
+    
+    .date-badge .day {
       font-size: 14px;
     }
 
-    .stat-card h5 {
-      font-size: 1.5rem;
+    .quick-filters {
+      justify-content: center;
     }
 
-    .stat-card i {
-      font-size: 2rem;
+    .header-actions {
+      width: 100%;
     }
   }
 
   /* Animations */
-  .list-card, .filter-card, .stat-card {
+  .list-card, .filter-card {
     animation: slideInUp 0.5s ease-out;
   }
 
@@ -374,18 +352,12 @@
     }
   }
 
-  /* Row hover effects */
-  .table tbody tr {
+  .agendamento-row, .agendamento-card {
     transition: all 0.3s ease;
   }
 
-  /* Search highlight */
-  .search-highlight {
-    background: var(--warning-color);
-    color: var(--dark-color);
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 600;
+  .agendamento-row:hover {
+    transform: translateX(5px);
   }
 </style>
 {% endblock %}
@@ -406,11 +378,11 @@
   
   <!-- Ações no Header -->
   <div class="header-actions">
-    <a href="{% url 'agendamentos:servico_create' %}" class="btn btn-custom">
+    <a href="{% url 'agendamentos:servico_create' %}" class="btn btn-custom me-4 m-sm-0">
       <i class="fas fa-plus"></i>Novo Serviço
     </a>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-secondary">
-      <i class="fas fa-arrow-left"></i>Dashboard
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
     </a>
   </div>
 </div>
@@ -442,26 +414,29 @@
         </select>
       </div>
       
-      <div class="col-md-4 d-flex align-items-end gap-2">
-        <button type="submit" class="btn btn-custom">
-          <i class="fas fa-search"></i>Filtrar
-        </button>
-        <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-secondary">
-          <i class="fas fa-times"></i>Limpar
-        </a>
-        <div class="ms-auto">
-          <div class="dropdown">
-            <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              <i class="fas fa-download"></i>Exportar
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
-              <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
-              <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Imprimir</a></li>
-            </ul>
-          </div>
+      <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
+        <div class="d-flex gap-2">
+          <a type="submit" class="btn btn-custom justify-content-center">
+            <i class="fas fa-search"></i>Filtrar
+          </a>
+
+          <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-custom justify-content-center p-2">
+            <i class="fas fa-times"></i>Limpar
+          </a>
+        </div>
+
+        <div class="dropdown m-0">
+          <a type="button" class="btn btn-outline-custom dropdown-toggle p-2" data-bs-toggle="dropdown">
+            <i class="fas fa-download fa-lg"></i>Exportar
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Imprimir</a></li>
+          </ul>
         </div>
       </div>
+
     </form>
   </div>
 </div>
