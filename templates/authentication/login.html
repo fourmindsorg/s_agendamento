@@ -86,25 +86,38 @@
 
 {% block extra_js %}
 <script>
-    // Toggle password visibility
-    document.getElementById('togglePassword').addEventListener('click', function() {
-        const password = document.getElementById('{{ form.password.id_for_label }}');
-        const icon = this.querySelector('i');
-        
-        if (password.type === 'password') {
-            password.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            password.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    });
-
+document.addEventListener('DOMContentLoaded', function() {
     // Auto-focus no primeiro campo
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('{{ form.username.id_for_label }}').focus();
-    });
+    const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+    if (usernameField) {
+        usernameField.focus();
+    }
+    
+    // Toggle password visibility
+    const toggleButton = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+    
+    if (toggleButton && passwordInput) {
+        toggleButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                this.setAttribute('title', 'Ocultar senha');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                this.setAttribute('title', 'Mostrar senha');
+            }
+        });
+        
+        // Adicionar tooltip inicial
+        toggleButton.setAttribute('title', 'Mostrar senha');
+    }
+});
 </script>
 {% endblock %}

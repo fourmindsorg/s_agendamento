@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+
+{% block title %}Pagamento PIX - {{ assinatura.plano.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pix-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .pix-header {
+        background: linear-gradient(135deg, #32CD32 0%, #228B22 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .pix-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .qr-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .qr-code {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 2rem;
+        margin: 1rem 0;
+        display: inline-block;
+    }
+    
+    .qr-code img {
+        max-width: 200px;
+        height: auto;
+    }
+    
+    .pix-details {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+    }
+    
+    .pix-info {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #32CD32;
+    }
+    
+    .pix-info h5 {
+        color: #32CD32;
+        margin-bottom: 1rem;
+    }
+    
+    .pix-info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .pix-info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .pix-info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .pix-info-value {
+        color: #32CD32;
+        font-weight: bold;
+    }
+    
+    .copy-section {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .copy-input {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 0.75rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-copy {
+        background: #32CD32;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-copy:hover {
+        background: #228B22;
+        transform: translateY(-1px);
+    }
+    
+    .btn-copy.copied {
+        background: #28a745;
+    }
+    
+    .instructions {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .instructions h6 {
+        color: #0066cc;
+        margin-bottom: 1rem;
+    }
+    
+    .instructions ol {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .instructions li {
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .status-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .status-icon {
+        font-size: 3rem;
+        color: #f39c12;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .btn-check-status {
+        background: #f39c12;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-check-status:hover {
+        background: #e67e22;
+        transform: translateY(-1px);
+    }
+    
+    .btn-back {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        .pix-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .qr-code {
+            padding: 1rem;
+        }
+        
+        .qr-code img {
+            max-width: 150px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pix-container">
+    <!-- Header -->
+    <div class="pix-header">
+        <h1><i class="fas fa-qrcode me-2"></i>Pagamento via PIX</h1>
+        <p class="mb-0">Escaneie o QR Code ou copie o código PIX para efetuar o pagamento</p>
+    </div>
+    
+    <div class="pix-content">
+        <!-- QR Code -->
+        <div class="qr-section">
+            <h3 class="mb-3">QR Code PIX</h3>
+            
+            <div class="qr-code">
+                <!-- QR Code será gerado aqui -->
+                <div id="qrcode" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+            </div>
+            
+            <p class="text-muted mt-3">
+                <i class="fas fa-mobile-alt me-1"></i>
+                Escaneie com seu celular
+            </p>
+        </div>
+        
+        <!-- Detalhes do PIX -->
+        <div class="pix-details">
+            <div class="pix-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Informações do Pagamento</h5>
+                
+                <div class="pix-info-item">
+                    <span class="pix-info-label">Plano:</span>
+                    <span class="pix-info-value">{{ assinatura.plano.nome }}</span>
+                </div>
+                
+                <div class="pix-info-item">
+                    <span class="pix-info-label">Valor:</span>
+                    <span class="pix-info-value">R$ {{ assinatura.valor_pago|floatformat:2 }}</span>
+                </div>
+                
+                <div class="pix-info-item">
+                    <span class="pix-info-label">Chave PIX:</span>
+                    <span class="pix-info-value">{{ qr_data.chave_pix }}</span>
+                </div>
+                
+                <div class="pix-info-item">
+                    <span class="pix-info-label">Descrição:</span>
+                    <span class="pix-info-value">{{ qr_data.descricao }}</span>
+                </div>
+            </div>
+            
+            <!-- Código PIX Copia e Cola -->
+            <div class="copy-section">
+                <h6><i class="fas fa-copy me-2"></i>Código PIX (Copia e Cola)</h6>
+                <p class="text-muted small mb-3">Copie o código abaixo e cole no seu app de pagamento</p>
+                
+                <textarea class="copy-input" id="pixCode" rows="4" readonly>{{ qr_data.pix_copia_cola }}</textarea>
+                
+                <button class="btn-copy" onclick="copyPixCode()">
+                    <i class="fas fa-copy me-2"></i>Copiar Código PIX
+                </button>
+            </div>
+            
+            <!-- Instruções -->
+            <div class="instructions">
+                <h6><i class="fas fa-list-ol me-2"></i>Como pagar:</h6>
+                <ol>
+                    <li>Abra o app do seu banco ou carteira digital</li>
+                    <li>Escaneie o QR Code ou cole o código PIX</li>
+                    <li>Confirme os dados e finalize o pagamento</li>
+                    <li>O pagamento será processado automaticamente</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status do Pagamento -->
+    <div class="status-section">
+        <div class="status-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h5>Aguardando Pagamento</h5>
+        <p class="text-muted mb-3">
+            Após efetuar o pagamento, aguarde alguns instantes para a confirmação automática.
+        </p>
+        
+        <button class="btn-check-status" onclick="checkPaymentStatus()">
+            <i class="fas fa-sync-alt me-2"></i>Verificar Status
+        </button>
+    </div>
+    
+    <!-- Botões de Ação -->
+    <div class="text-center mt-4">
+        <a href="{% url 'authentication:plan_selection' %}" class="btn-back">
+            <i class="fas fa-arrow-left me-2"></i>Voltar aos Planos
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gerar QR Code
+    const qrData = '{{ qr_data.qr_code }}';
+    const qrContainer = document.getElementById('qrcode');
+    
+    QRCode.toCanvas(qrContainer, qrData, {
+        width: 200,
+        height: 200,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, function (error) {
+        if (error) {
+            console.error('Erro ao gerar QR Code:', error);
+            qrContainer.innerHTML = '<div class="text-center text-muted"><i class="fas fa-qrcode fa-3x"></i><br>QR Code indisponível</div>';
+        }
+    });
+    
+    // Verificar status do pagamento a cada 30 segundos
+    setInterval(checkPaymentStatus, 30000);
+});
+
+function copyPixCode() {
+    const pixCode = document.getElementById('pixCode');
+    const btnCopy = document.querySelector('.btn-copy');
+    
+    pixCode.select();
+    pixCode.setSelectionRange(0, 99999); // Para dispositivos móveis
+    
+    try {
+        document.execCommand('copy');
+        
+        // Feedback visual
+        btnCopy.innerHTML = '<i class="fas fa-check me-2"></i>Código Copiado!';
+        btnCopy.classList.add('copied');
+        
+        setTimeout(() => {
+            btnCopy.innerHTML = '<i class="fas fa-copy me-2"></i>Copiar Código PIX';
+            btnCopy.classList.remove('copied');
+        }, 2000);
+        
+    } catch (err) {
+        console.error('Erro ao copiar:', err);
+        alert('Erro ao copiar. Selecione o texto e copie manualmente.');
+    }
+}
+
+function checkPaymentStatus() {
+    const btnCheck = document.querySelector('.btn-check-status');
+    const statusIcon = document.querySelector('.status-icon');
+    const statusSection = document.querySelector('.status-section');
+    
+    // Mostrar loading
+    btnCheck.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verificando...';
+    btnCheck.disabled = true;
+    
+    // Simular verificação (em um sistema real, faria uma requisição AJAX)
+    setTimeout(() => {
+        // Simular pagamento aprovado (para demonstração)
+        const isPaid = Math.random() > 0.7; // 30% de chance de estar pago
+        
+        if (isPaid) {
+            // Pagamento aprovado
+            statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            statusIcon.style.color = '#28a745';
+            statusIcon.style.animation = 'none';
+            
+            statusSection.innerHTML = `
+                <div class="text-center">
+                    <div class="status-icon" style="color: #28a745; animation: none;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 style="color: #28a745;">Pagamento Aprovado!</h5>
+                    <p class="text-muted mb-3">
+                        Seu pagamento foi processado com sucesso. Você já pode usar o sistema!
+                    </p>
+                    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-success">
+                        <i class="fas fa-tachometer-alt me-2"></i>Ir para Dashboard
+                    </a>
+                </div>
+            `;
+        } else {
+            // Ainda aguardando
+            btnCheck.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Verificar Status';
+            btnCheck.disabled = false;
+            
+            // Mostrar notificação
+            if (typeof showNotification === 'function') {
+                showNotification('Pagamento ainda não identificado. Tente novamente em alguns instantes.', 'info');
+            }
+        }
+    }, 2000);
+}
+
+// Função para mostrar notificações (se disponível)
+function showNotification(message, type = 'info') {
+    // Implementar sistema de notificações se necessário
+    console.log(`${type.toUpperCase()}: ${message}`);
+}
+</script>
+{% endblock %}

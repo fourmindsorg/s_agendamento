@@ -137,6 +137,8 @@ class AssinaturaUsuario(models.Model):
         """Verifica se a assinatura está ativa"""
         from django.utils import timezone
 
+        if not self.data_fim:
+            return False
         return self.status == "ativa" and self.data_fim > timezone.now()
 
     @property
@@ -144,7 +146,7 @@ class AssinaturaUsuario(models.Model):
         """Calcula dias restantes da assinatura"""
         from django.utils import timezone
 
-        if self.status == "ativa":
+        if self.status == "ativa" and self.data_fim:
             delta = self.data_fim - timezone.now()
             return max(0, delta.days)
         return 0

@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+
+{% block title %}Finalizar Compra - {{ plano.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .checkout-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .checkout-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    .step {
+        display: flex;
+        align-items: center;
+        margin: 0 1rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        color: white;
+    }
+    
+    .step.active {
+        background: rgba(255, 255, 255, 0.3);
+        font-weight: bold;
+    }
+    
+    .step-number {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .checkout-content {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+    }
+    
+    .checkout-form {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .checkout-summary {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+    }
+    
+    .plan-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid #e9ecef;
+    }
+    
+    .plan-card.featured {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .payment-method {
+        margin-bottom: 2rem;
+    }
+    
+    .payment-option {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .payment-option.selected {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .card-details {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .card-details.show {
+        display: block;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .btn-checkout {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .price-highlight {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .price-original {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-size: 1.2rem;
+    }
+    
+    .savings {
+        background: #d4edda;
+        color: #155724;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .checkout-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .checkout-steps {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .step {
+            margin: 0.5rem 0;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <!-- Header -->
+    <div class="checkout-header">
+        <h1><i class="fas fa-shopping-cart me-2"></i>Finalizar Compra</h1>
+        <p class="mb-0">Complete seu pedido e comece a usar o sistema</p>
+        
+        <!-- Steps -->
+        <div class="checkout-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <span>Dados de Cobrança</span>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <span>Pagamento</span>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <span>Confirmação</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="checkout-content">
+        <!-- Formulário -->
+        <div class="checkout-form">
+            <form method="post" id="checkoutForm">
+                {% csrf_token %}
+                
+                <!-- Dados de Cobrança -->
+                <div class="mb-4">
+                    <h3 class="mb-3">
+                        <i class="fas fa-user me-2"></i>Dados de Cobrança
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.nome_completo.label }}</label>
+                            {{ billing_form.nome_completo }}
+                            {% if billing_form.nome_completo.errors %}
+                                <div class="text-danger">{{ billing_form.nome_completo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.email.label }}</label>
+                            {{ billing_form.email }}
+                            {% if billing_form.email.errors %}
+                                <div class="text-danger">{{ billing_form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.telefone.label }}</label>
+                            {{ billing_form.telefone }}
+                            {% if billing_form.telefone.errors %}
+                                <div class="text-danger">{{ billing_form.telefone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.cpf.label }}</label>
+                            {{ billing_form.cpf }}
+                            {% if billing_form.cpf.errors %}
+                                <div class="text-danger">{{ billing_form.cpf.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.cep.label }}</label>
+                            {{ billing_form.cep }}
+                            {% if billing_form.cep.errors %}
+                                <div class="text-danger">{{ billing_form.cep.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.cidade.label }}</label>
+                            {{ billing_form.cidade }}
+                            {% if billing_form.cidade.errors %}
+                                <div class="text-danger">{{ billing_form.cidade.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.estado.label }}</label>
+                            {{ billing_form.estado }}
+                            {% if billing_form.estado.errors %}
+                                <div class="text-danger">{{ billing_form.estado.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ billing_form.endereco.label }}</label>
+                            {{ billing_form.endereco }}
+                            {% if billing_form.endereco.errors %}
+                                <div class="text-danger">{{ billing_form.endereco.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Método de Pagamento -->
+                <div class="payment-method">
+                    <h3 class="mb-3">
+                        <i class="fas fa-credit-card me-2"></i>Método de Pagamento
+                    </h3>
+                    
+                    <div class="payment-option" data-method="pix">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pagamento" value="pix" id="pix" checked>
+                            <label class="form-check-label" for="pix">
+                                <i class="fas fa-qrcode me-2"></i>
+                                <strong>PIX</strong>
+                                <span class="text-success ms-2">- R$ {{ plano.preco_pix|floatformat:2 }}</span>
+                                {% if plano.economia_pix > 0 %}
+                                    <span class="savings">Economia de R$ {{ plano.economia_pix|floatformat:2 }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-option" data-method="cartao">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pagamento" value="cartao" id="cartao">
+                            <label class="form-check-label" for="cartao">
+                                <i class="fas fa-credit-card me-2"></i>
+                                <strong>Cartão de Crédito</strong>
+                                <span class="text-primary ms-2">- R$ {{ plano.preco_cartao|floatformat:2 }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dados do Cartão (oculto inicialmente) -->
+                <div class="card-details" id="cardDetails">
+                    <h4 class="mb-3">Dados do Cartão</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">{{ card_form.numero_cartao.label }}</label>
+                        {{ card_form.numero_cartao }}
+                        {% if card_form.numero_cartao.errors %}
+                            <div class="text-danger">{{ card_form.numero_cartao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">{{ card_form.nome_portador.label }}</label>
+                        {{ card_form.nome_portador }}
+                        {% if card_form.nome_portador.errors %}
+                            <div class="text-danger">{{ card_form.nome_portador.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ card_form.validade_mes.label }}</label>
+                            {{ card_form.validade_mes }}
+                            {% if card_form.validade_mes.errors %}
+                                <div class="text-danger">{{ card_form.validade_mes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ card_form.validade_ano.label }}</label>
+                            {{ card_form.validade_ano }}
+                            {% if card_form.validade_ano.errors %}
+                                <div class="text-danger">{{ card_form.validade_ano.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ card_form.cvv.label }}</label>
+                            {{ card_form.cvv }}
+                            {% if card_form.cvv.errors %}
+                                <div class="text-danger">{{ card_form.cvv.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ card_form.parcelas.label }}</label>
+                            {{ card_form.parcelas }}
+                            {% if card_form.parcelas.errors %}
+                                <div class="text-danger">{{ card_form.parcelas.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-checkout">
+                    <i class="fas fa-lock me-2"></i>Finalizar Compra
+                </button>
+            </form>
+        </div>
+        
+        <!-- Resumo do Pedido -->
+        <div class="checkout-summary">
+            <h3 class="mb-3">
+                <i class="fas fa-receipt me-2"></i>Resumo do Pedido
+            </h3>
+            
+            <div class="plan-card {% if plano.destaque %}featured{% endif %}">
+                <h4 class="mb-2">{{ plano.nome }}</h4>
+                <p class="mb-3">{{ plano.descricao }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Duração:</span>
+                    <strong>{{ plano.duracao_dias }} dias</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Preço PIX:</span>
+                    <span class="price-highlight">R$ {{ plano.preco_pix|floatformat:2 }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Preço Cartão:</span>
+                    <span class="price-original">R$ {{ plano.preco_cartao|floatformat:2 }}</span>
+                </div>
+                
+                {% if plano.economia_pix > 0 %}
+                    <div class="text-center mt-2">
+                        <span class="savings">
+                            <i class="fas fa-gift me-1"></i>
+                            Economia de R$ {{ plano.economia_pix|floatformat:2 }} no PIX
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-3">
+                <h5>O que está incluído:</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Acesso completo ao sistema</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Suporte prioritário</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Backup automático</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Atualizações gratuitas</li>
+                </ul>
+            </div>
+            
+            <div class="mt-4 p-3 bg-light rounded">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Seus dados estão protegidos com criptografia SSL
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const cardDetails = document.getElementById('cardDetails');
+    const pixRadio = document.getElementById('pix');
+    const cartaoRadio = document.getElementById('cartao');
+    
+    // Toggle payment method selection
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Check the radio button
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Show/hide card details
+            if (radio.value === 'cartao') {
+                cardDetails.classList.add('show');
+            } else {
+                cardDetails.classList.remove('show');
+            }
+        });
+    });
+    
+    // Initialize with PIX selected
+    document.querySelector('[data-method="pix"]').classList.add('selected');
+    
+    // Format card number
+    const cardNumberInput = document.querySelector('input[name="numero_cartao"]');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+    }
+    
+    // Format CPF
+    const cpfInput = document.querySelector('input[name="cpf"]');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+    
+    // Format phone
+    const phoneInput = document.querySelector('input[name="telefone"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            value = value.replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3');
+            e.target.value = value;
+        });
+    }
+    
+    // Format CEP
+    const cepInput = document.querySelector('input[name="cep"]');
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
