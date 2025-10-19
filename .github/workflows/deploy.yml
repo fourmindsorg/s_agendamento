@@ -43,9 +43,13 @@ jobs:
             pip install -r requirements.txt
             python manage.py migrate
             python manage.py collectstatic --noinput
+            sudo systemctl daemon-reload
             sudo systemctl restart gunicorn
             sudo systemctl restart nginx
+            sleep 10
+            sudo systemctl status gunicorn --no-pager
+            sudo systemctl status nginx --no-pager
 
       - name: Health Check
         run: |
-          curl -f http://${{ secrets.EC2_HOST }}/ || exit 1
+          curl -f http://3.80.178.120/ || exit 1
