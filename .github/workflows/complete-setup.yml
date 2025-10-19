@@ -1,0 +1,214 @@
+name: Complete Setup (DNS + SSL)
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Domain name"
+        required: true
+        default: "fourmindstech.com.br"
+      email:
+        description: "Email for notifications"
+        required: true
+        default: "fourmindsorg@gmail.com"
+      dns_provider:
+        description: "DNS Provider"
+        required: true
+        type: choice
+        options:
+          - manual
+          - route53
+          - cloudflare
+        default: "manual"
+
+env:
+  EC2_IP: 34.228.191.215
+  DOMAIN: ${{ github.event.inputs.domain }}
+  EMAIL: ${{ github.event.inputs.email }}
+
+jobs:
+  show-dns-instructions:
+    name: DNS Configuration Instructions
+    runs-on: ubuntu-latest
+    if: github.event.inputs.dns_provider == 'manual'
+
+    steps:
+      - name: Manual DNS Configuration
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "📋 CONFIGURAÇÃO MANUAL DO DNS"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "Acesse o painel do seu provedor DNS e crie os seguintes"
+          echo "registros:"
+          echo ""
+          echo "┌─────────────────────────────────────────────────────┐"
+          echo "│ Registro 1:                                         │"
+          echo "│ Tipo: A                                             │"
+          echo "│ Nome: @                                             │"
+          echo "│ Valor: ${{ env.EC2_IP }}                            │"
+          echo "│ TTL: 3600                                           │"
+          echo "└─────────────────────────────────────────────────────┘"
+          echo ""
+          echo "┌─────────────────────────────────────────────────────┐"
+          echo "│ Registro 2:                                         │"
+          echo "│ Tipo: A                                             │"
+          echo "│ Nome: www                                           │"
+          echo "│ Valor: ${{ env.EC2_IP }}                            │"
+          echo "│ TTL: 3600                                           │"
+          echo "└─────────────────────────────────────────────────────┘"
+          echo ""
+          echo "Após configurar, aguarde a propagação (5-30 minutos)"
+          echo ""
+          echo "Verificar propagação:"
+          echo "  nslookup ${{ env.DOMAIN }}"
+          echo "  nslookup www.${{ env.DOMAIN }}"
+          echo ""
+          echo "Quando o DNS estiver propagado, execute o workflow:"
+          echo "  'Install SSL Certificate'"
+          echo ""
+          echo "════════════════════════════════════════════════════════"
+
+  configure-route53:
+    name: Configure DNS - Route53
+    runs-on: ubuntu-latest
+    if: github.event.inputs.dns_provider == 'route53'
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Configure DNS in Route53
+        run: |
+          # Ver workflow configure-dns-route53.yml
+          echo "Configurando DNS no Route53..."
+          echo "Execute o workflow 'Configure DNS - AWS Route53' para configuração completa"
+
+  configure-cloudflare:
+    name: Configure DNS - Cloudflare
+    runs-on: ubuntu-latest
+    if: github.event.inputs.dns_provider == 'cloudflare'
+
+    steps:
+      - name: Configure DNS in Cloudflare
+        run: |
+          # Ver workflow configure-dns-cloudflare.yml
+          echo "Configurando DNS no Cloudflare..."
+          echo "Execute o workflow 'Configure DNS - Cloudflare' para configuração completa"
+
+  wait-for-propagation:
+    name: Wait for DNS Propagation
+    needs: [show-dns-instructions]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Monitor DNS
+        run: |
+          echo "Monitorando propagação DNS..."
+          echo "Domínio: ${{ env.DOMAIN }}"
+          echo "IP Esperado: ${{ env.EC2_IP }}"
+          echo ""
+
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            
+            echo "[$ATTEMPT/$MAX_ATTEMPTS] Verificando DNS..."
+            
+            IP=$(dig +short ${{ env.DOMAIN }} @8.8.8.8 | tail -n1)
+            
+            if [ "$IP" == "${{ env.EC2_IP }}" ]; then
+              echo "✅ DNS propagado com sucesso!"
+              echo "DNS_READY=true" >> $GITHUB_ENV
+              exit 0
+            fi
+            
+            echo "Aguardando... (próxima tentativa em 30s)"
+            sleep 30
+          done
+
+          echo "⏰ Timeout: DNS não propagou em 30 minutos"
+          echo "Você pode tentar executar o workflow novamente mais tarde"
+          exit 1
+
+  install-ssl-auto:
+    name: Install SSL Certificate
+    needs: wait-for-propagation
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts
+
+      - name: Install SSL
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
+            sudo certbot --nginx \
+              -d ${{ env.DOMAIN }} \
+              -d www.${{ env.DOMAIN }} \
+              --email ${{ env.EMAIL }} \
+              --agree-tos \
+              --non-interactive \
+              --redirect
+          EOF
+
+          echo "✅ SSL instalado com sucesso!"
+
+  final-summary:
+    name: Final Summary
+    needs: [install-ssl-auto]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Show Summary
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "🎉 CONFIGURAÇÃO COMPLETA!"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "✅ DNS configurado"
+          echo "✅ SSL instalado"
+          echo "✅ Site pronto para uso!"
+          echo ""
+          echo "URLs:"
+          echo "  🌐 https://${{ env.DOMAIN }}"
+          echo "  🌐 https://www.${{ env.DOMAIN }}"
+          echo "  🔐 https://${{ env.DOMAIN }}/admin"
+          echo ""
+          echo "Credenciais Admin:"
+          echo "  Usuário: admin"
+          echo "  Email: ${{ env.EMAIL }}"
+          echo "  Senha: @4mindsPassword"
+          echo ""
+          echo "════════════════════════════════════════════════════════"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

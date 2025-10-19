@@ -1,0 +1,45 @@
+# Code Owners para fourmindsorg/s_agendamento
+# https://github.com/fourmindsorg
+
+# Default owners para tudo no repositório
+* @fourmindsorg
+
+# Infraestrutura AWS
+/aws-infrastructure/ @fourmindsorg
+
+# Workflows CI/CD
+/.github/ @fourmindsorg
+
+# Configurações Django
+/core/ @fourmindsorg
+
+# Apps principais
+/agendamentos/ @fourmindsorg
+/authentication/ @fourmindsorg
+/info/ @fourmindsorg
+
+# Arquivos de configuração
+*.yml @fourmindsorg
+*.yaml @fourmindsorg
+*.tf @fourmindsorg
+*.md @fourmindsorg
+requirements.txt @fourmindsorg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

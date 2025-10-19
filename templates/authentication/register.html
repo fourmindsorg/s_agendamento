@@ -1,0 +1,269 @@
+{% extends 'authentication/auth_base.html' %}
+
+{% block title %}Cadastro{% endblock %}
+
+{% block header_title %}Criar Conta{% endblock %}
+{% block header_subtitle %}Cadastre-se para acessar o sistema{% endblock %}
+
+{% block content %}
+<form method="post" novalidate id="registerForm">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                <i class="fas fa-user me-2"></i>Nome
+            </label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.first_name.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                <i class="fas fa-user me-2"></i>Sobrenome
+            </label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.last_name.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.username.id_for_label }}" class="form-label">
+            <i class="fas fa-at me-2"></i>Usuário
+        </label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.username.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.email.id_for_label }}" class="form-label">
+            <i class="fas fa-envelope me-2"></i>Email
+        </label>
+        {{ form.email }}
+        {% if form.email.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.email.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.password1.id_for_label }}" class="form-label">
+            <i class="fas fa-lock me-2"></i>Senha
+        </label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.password1.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label for="{{ form.password2.id_for_label }}" class="form-label">
+            <i class="fas fa-lock me-2"></i>Confirmar Senha
+        </label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.password2.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="d-grid gap-2 mb-3">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-user-plus me-2"></i>Criar Conta
+        </button>
+    </div>
+
+    <div class="auth-links">
+        <p class="mb-0">
+            Já tem uma conta? 
+            <a href="{% url 'authentication:login' %}" class="text-decoration-none">
+                <i class="fas fa-sign-in-alt me-1"></i>Faça login aqui
+            </a>
+        </p>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus no primeiro campo
+        document.getElementById('{{ form.first_name.id_for_label }}').focus();
+        
+        // Validação em tempo real
+        const form = document.getElementById('registerForm');
+        const inputs = form.querySelectorAll('input[required]');
+        
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                validateField(this);
+            });
+            
+            input.addEventListener('input', function() {
+                clearFieldError(this);
+            });
+        });
+        
+        // Validação do formulário antes do envio
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                showAlert('Por favor, corrija os erros antes de continuar.', 'danger');
+            }
+        });
+        
+        function validateField(field) {
+            const value = field.value.trim();
+            const fieldName = field.name;
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Limpar erros anteriores
+            clearFieldError(field);
+            
+            // Validações específicas por campo
+            switch(fieldName) {
+                case 'first_name':
+                case 'last_name':
+                    if (value.length < 2) {
+                        errorMessage = 'Deve ter pelo menos 2 caracteres';
+                        isValid = false;
+                    } else if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(value)) {
+                        errorMessage = 'Apenas letras e espaços são permitidos';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'username':
+                    if (value.length < 3) {
+                        errorMessage = 'Deve ter pelo menos 3 caracteres';
+                        isValid = false;
+                    } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                        errorMessage = 'Apenas letras, números e _ são permitidos';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'email':
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(value)) {
+                        errorMessage = 'Digite um email válido';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'password1':
+                    if (value.length < 8) {
+                        errorMessage = 'Deve ter pelo menos 8 caracteres';
+                        isValid = false;
+                    } else if (!/[A-Za-z]/.test(value)) {
+                        errorMessage = 'Deve conter pelo menos uma letra';
+                        isValid = false;
+                    } else if (!/[0-9]/.test(value)) {
+                        errorMessage = 'Deve conter pelo menos um número';
+                        isValid = false;
+                    }
+                    break;
+                    
+                case 'password2':
+                    const password1 = document.getElementById('id_password1').value;
+                    if (value !== password1) {
+                        errorMessage = 'As senhas não coincidem';
+                        isValid = false;
+                    }
+                    break;
+            }
+            
+            if (!isValid) {
+                showFieldError(field, errorMessage);
+            }
+            
+            return isValid;
+        }
+        
+        function showFieldError(field, message) {
+            field.classList.add('is-invalid');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback d-block';
+            errorDiv.textContent = message;
+            errorDiv.id = field.name + '_error';
+            
+            field.parentNode.appendChild(errorDiv);
+        }
+        
+        function clearFieldError(field) {
+            field.classList.remove('is-invalid');
+            const errorDiv = document.getElementById(field.name + '_error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const form = document.getElementById('registerForm');
+            form.insertBefore(alertDiv, form.firstChild);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

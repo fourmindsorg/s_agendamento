@@ -1,0 +1,103 @@
+name: Backup Database
+
+# Desabilitado: Configure AWS secrets primeiro
+on:
+  # schedule:
+  #   # Executa todos os dias às 3h UTC (0h BRT)
+  #   - cron: '0 3 * * *'
+  workflow_dispatch: # Apenas execução manual
+
+env:
+  AWS_REGION: us-east-1
+  EC2_HOST: 34.228.191.215
+  S3_BUCKET: sistema-agendamento-4minds-backups
+
+jobs:
+  backup:
+    name: Backup PostgreSQL para S3
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create backup
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            # Configurar variáveis
+            DATE=$(date +%Y%m%d_%H%M%S)
+            BACKUP_DIR="/home/django/backups"
+            DB_HOST="${{ secrets.DB_HOST }}"
+            DB_NAME="agendamentos_db"
+            DB_USER="postgres"
+            PGPASSWORD="${{ secrets.DB_PASSWORD }}"
+            
+            # Criar diretório de backups
+            mkdir -p $BACKUP_DIR
+            
+            # Fazer backup do banco
+            export PGPASSWORD
+            pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME -F c -f "$BACKUP_DIR/backup_$DATE.dump"
+            
+            # Comprimir backup
+            gzip "$BACKUP_DIR/backup_$DATE.dump"
+            
+            echo "Backup criado: backup_$DATE.dump.gz"
+            
+            # Listar backups
+            ls -lh $BACKUP_DIR/
+          EOF
+
+      - name: Upload backup to S3
+        run: |
+          DATE=$(date +%Y%m%d_%H%M%S)
+
+          # Download backup do EC2
+          scp -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }}:/home/django/backups/backup_*.dump.gz ./
+
+          # Upload para S3
+          aws s3 cp backup_*.dump.gz s3://${{ env.S3_BUCKET }}/backups/database/ --storage-class GLACIER
+
+      - name: Cleanup old backups
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
+            # Manter apenas backups dos últimos 7 dias no servidor
+            find /home/django/backups -name "backup_*.dump.gz" -mtime +7 -delete
+            echo "Backups antigos removidos do servidor"
+          EOF
+
+          # Manter apenas backups dos últimos 30 dias no S3
+          aws s3 ls s3://${{ env.S3_BUCKET }}/backups/database/ | \
+            while read -r line; do
+              createDate=$(echo $line | awk '{print $1" "$2}')
+              createDate=$(date -d "$createDate" +%s)
+              olderThan=$(date -d "30 days ago" +%s)
+              if [[ $createDate -lt $olderThan ]]; then
+                fileName=$(echo $line | awk '{print $4}')
+                if [[ $fileName != "" ]]; then
+                  aws s3 rm s3://${{ env.S3_BUCKET }}/backups/database/$fileName
+                fi
+              fi
+            done
+
+      - name: Notificar sucesso
+        if: success()
+        run: |
+          echo "✅ Backup realizado com sucesso!"
+          echo "📦 Backup armazenado em: s3://${{ env.S3_BUCKET }}/backups/database/"
+
+      - name: Notificar falha
+        if: failure()
+        run: |
+          echo "❌ Backup falhou! Verifique os logs."

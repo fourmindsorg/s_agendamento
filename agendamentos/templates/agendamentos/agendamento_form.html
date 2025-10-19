@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<!-- Header do Formulário -->
+<div class="form-header">
+  <h1 class="form-title">
+    <i class="fas fa-calendar-plus"></i>
+    {% if object %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
+  </h1>
+  <p class="form-subtitle">
+    {% if object %}
+      Atualize as informações do agendamento de {{ object.cliente.nome }}
+    {% else %}
+      Preencha os dados para criar um novo agendamento
+    {% endif %}
+  </p>
+  
+  <!-- Ações no Header -->
+  <div class="header-actions">
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-primary">
+      <i class="fas fa-list me-2"></i>Ver Agendamentos
+    </a>
+  </div>
+</div>
+
+<!-- Formulário -->
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card form-card">
+      <div class="card-header">
+        <h4 class="mb-0 text-white">
+          <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+          Dados do Agendamento
+        </h4>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <!-- Cliente e Serviço -->
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label for="{{ form.cliente.id_for_label }}" class="form-label required">
+                <i class="fas fa-user text-primary"></i>
+                Cliente
+              </label>
+              {{ form.cliente }}
+              {% if form.cliente.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.cliente.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <a href="{% url 'agendamentos:cliente_create' %}" >
+                  <i class="fas fa-plus me-1"></i>Cadastrar novo cliente
+                </a>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <label for="{{ form.servico.id_for_label }}" class="form-label required">
+                <i class="fas fa-cogs text-primary"></i>
+                Serviço
+              </label>
+              {{ form.servico }}
+              {% if form.servico.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.servico.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <a href="{% url 'agendamentos:servico_create' %}" >
+                  <i class="fas fa-plus me-1"></i>Cadastrar novo serviço
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data e Hora -->
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label for="{{ form.data_agendamento.id_for_label }}" class="form-label required">
+                <i class="fas fa-calendar text-success"></i>
+                Data do Agendamento
+              </label>
+              {{ form.data_agendamento }}
+              {% if form.data_agendamento.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.data_agendamento.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>Selecione a data desejada para o agendamento
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <label for="{{ form.hora_inicio.id_for_label }}" class="form-label required">
+                <i class="fas fa-clock text-warning"></i>
+                Hora de Início
+              </label>
+              {{ form.hora_inicio }}
+              {% if form.hora_inicio.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.hora_inicio.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>Formato: HH:MM (ex: 14:30)
+              </div>
+            </div>
+          </div>
+
+          <!-- Valor -->
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label for="{{ form.valor_cobrado.id_for_label }}" class="form-label">
+                <i class="fas fa-dollar-sign text-info"></i>
+                Valor a Cobrar
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">R\$</span>
+                {{ form.valor_cobrado }}
+              </div>
+              {% if form.valor_cobrado.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.valor_cobrado.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>Deixe em branco para usar o valor padrão do serviço
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <div class="card bg-light border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                  <div>
+                    <h6 class="mb-1">
+                      <i class="fas fa-lightbulb text-warning me-2"></i>Dica
+                    </h6>
+                    <small class="text-muted">
+                      O valor será automaticamente preenchido com o preço do serviço selecionado
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="mb-4">
+            <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+              <i class="fas fa-sticky-note text-secondary"></i>
+              Observações
+            </label>
+            {{ form.observacoes }}
+            {% if form.observacoes.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.observacoes.errors %}
+                  <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="form-text">
+              <i class="fas fa-info-circle me-1"></i>Informações adicionais sobre o agendamento (opcional)
+            </div>
+          </div>
+
+          <!-- Erros gerais -->
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>Atenção!</strong>
+              {% for error in form.non_field_errors %}
+                <br>{{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Botões de ação -->
+          <div class="d-flex gap-3 justify-content-end mt-4 pt-3 border-top">
+            <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-custom">
+              <i class="fas fa-{% if object %}save{% else %}plus{% endif %} me-2"></i>
+              {% if object %}Atualizar Agendamento{% else %}Criar Agendamento{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-preencher data com hoje se estiver vazio
+    const dataInput = document.getElementById('{{ form.data_agendamento.id_for_label }}');
+    if (!dataInput.value) {
+        const hoje = new Date();
+        const dataFormatada = hoje.toISOString().split('T')[0];
+        dataInput.value = dataFormatada;
+    }
+    
+    // Máscara para hora
+    const horaInput = document.getElementById('{{ form.hora_inicio.id_for_label }}');
+    if (horaInput) {
+        horaInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Auto-calcular valor baseado no serviço selecionado
+    const servicoSelect = document.getElementById('{{ form.servico.id_for_label }}');
+    const valorInput = document.getElementById('{{ form.valor_cobrado.id_for_label }}');
+    
+    if (servicoSelect && valorInput) {
+        servicoSelect.addEventListener('change', function() {
+            if (this.value && !valorInput.value) {
+                // Aqui você pode fazer uma requisição AJAX para buscar o preço do serviço
+                // Por enquanto, vamos deixar o usuário preencher manualmente
+                console.log('Serviço selecionado:', this.value);
+            }
+        });
+    }
+    
+    // Validação em tempo real
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Animação de foco nos inputs
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+            this.parentElement.style.transition = 'transform 0.2s ease';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+
+
+{% endblock %}
