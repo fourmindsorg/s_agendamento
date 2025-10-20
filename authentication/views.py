@@ -27,7 +27,7 @@ from django.views.decorators.http import require_POST
 from .models import PreferenciasUsuario, Plano, AssinaturaUsuario
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -661,7 +661,8 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         return {
             "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
             "chave_pix": "contato@sistema.com.br",
-            "valor": valor,
+            # Converter Decimal para float para permitir serialização JSON na sessão
+            "valor": float(valor),
             "descricao": f"Pagamento - {plano.nome}",
         }
 
@@ -697,7 +698,9 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     "nome": assinatura.usuario.get_full_name(),
                 },
             )
+            # Manter ambas as chaves por compatibilidade com templates existentes
             context["qr_data"] = qr_data
+            context["pix_data"] = qr_data
 
         except AssinaturaUsuario.DoesNotExist:
             messages.error(self.request, "Assinatura não encontrada.")
@@ -724,8 +727,6 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             )
 
             # Criar cobrança PIX
-            from datetime import datetime, timedelta
-
             due_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
             payment_data = asaas_client.create_payment(
@@ -744,7 +745,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 "qr_code": pix_data.get("payload", ""),
                 "qr_code_image": pix_data.get("encodedImage", ""),
                 "chave_pix": pix_data.get("payload", ""),
-                "valor": valor,
+                "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": due_date,
                 "status": payment_data.get("status", "PENDING"),

@@ -322,7 +322,13 @@ class BillingInfoForm(forms.Form):
     telefone = forms.CharField(
         max_length=20,
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "(11) 99999-9999"}
+            attrs={
+                "class": "form-control",
+                "placeholder": "(11) 99999-9999",
+                "maxlength": "15",  # (11) 99999-9999 => 15 caracteres
+                "inputmode": "numeric",
+                "autocomplete": "tel",
+            }
         ),
         label="Telefone",
     )
@@ -478,8 +484,8 @@ class BillingInfoForm(forms.Form):
         if not telefone.isdigit():
             raise ValidationError("O telefone deve conter apenas números.")
 
-        if len(telefone) < 10 or len(telefone) > 11:
-            raise ValidationError("O telefone deve ter 10 ou 11 dígitos.")
+        if len(telefone) != 11:
+            raise ValidationError("O telefone deve ter exatamente 11 dígitos.")
 
         return telefone
 

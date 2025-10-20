@@ -171,7 +171,7 @@
     .savings {
         background: #d4edda;
         color: #155724;
-        padding: 0.5rem 1rem;
+        padding: 0.2rem 1rem;
         border-radius: 20px;
         font-size: 0.9rem;
         font-weight: 600;
@@ -365,13 +365,13 @@
                     
                     <div class="payment-option" data-method="pix">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="metodo_pagamento" value="pix" id="pix" checked>
+                            <input class="form-check-input mt-1" type="radio" name="metodo_pagamento" value="pix" id="pix" checked>
                             <label class="form-check-label" for="pix">
                                 <i class="fas fa-qrcode me-2"></i>
                                 <strong>PIX</strong>
                                 <span class="text-success ms-2">- R$ {{ plano.preco_pix|floatformat:2 }}</span>
                                 {% if plano.economia_pix > 0 %}
-                                    <span class="savings">Economia de R$ {{ plano.economia_pix|floatformat:2 }}</span>
+                                    <span class="savings m-0">Economia de R$ {{ plano.economia_pix|floatformat:2 }}</span>
                                 {% endif %}
                             </label>
                         </div>
@@ -513,6 +513,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const cardDetails = document.getElementById('cardDetails');
     const pixRadio = document.getElementById('pix');
     const cartaoRadio = document.getElementById('cartao');
+    const cardFields = cardDetails ? cardDetails.querySelectorAll('input, select') : [];
+
+    function setCardFieldsEnabled(enabled) {
+        cardFields.forEach(el => {
+            el.disabled = !enabled;
+            if (enabled) {
+                el.required = true;
+            } else {
+                el.required = false;
+                el.removeAttribute('required');
+                el.classList.remove('is-invalid');
+            }
+        });
+    }
     
     // Toggle payment method selection
     paymentOptions.forEach(option => {
@@ -530,14 +544,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show/hide card details
             if (radio.value === 'cartao') {
                 cardDetails.classList.add('show');
+                setCardFieldsEnabled(true);
             } else {
                 cardDetails.classList.remove('show');
+                setCardFieldsEnabled(false);
             }
         });
     });
     
     // Initialize with PIX selected
     document.querySelector('[data-method="pix"]').classList.add('selected');
+    // Ensure card fields reflect initial selection
+    setCardFieldsEnabled(cartaoRadio && cartaoRadio.checked);
     
     // Format card number
     const cardNumberInput = document.querySelector('input[name="numero_cartao"]');
