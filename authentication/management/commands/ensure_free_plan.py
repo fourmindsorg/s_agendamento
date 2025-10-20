@@ -32,10 +32,14 @@ class Command(BaseCommand):
         if not plano_gratuito.ativo:
             plano_gratuito.ativo = True
             plano_gratuito.save()
-            self.stdout.write(self.style.WARNING("⚠️ Plano Gratuito estava inativo - ativado"))
+            self.stdout.write(
+                self.style.WARNING("⚠️ Plano Gratuito estava inativo - ativado")
+            )
 
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS("🎉 Plano Gratuito configurado com sucesso!"))
+        self.stdout.write(
+            self.style.SUCCESS("🎉 Plano Gratuito configurado com sucesso!")
+        )
         self.stdout.write(f"  • Nome: {plano_gratuito.nome}")
         self.stdout.write(f"  • Duração: {plano_gratuito.duracao_dias} dias")
         self.stdout.write(f"  • Preço: R$ {plano_gratuito.preco_pix}")

@@ -267,14 +267,18 @@ class RegisterView(CreateView):
             try:
                 from .models import Plano, AssinaturaUsuario
                 from datetime import timedelta
-                
+
                 # Buscar plano gratuito
-                plano_gratuito = Plano.objects.filter(tipo="gratuito", ativo=True).first()
-                
+                plano_gratuito = Plano.objects.filter(
+                    tipo="gratuito", ativo=True
+                ).first()
+
                 if plano_gratuito:
                     # Calcular data de fim (14 dias)
-                    data_fim = timezone.now() + timedelta(days=plano_gratuito.duracao_dias)
-                    
+                    data_fim = timezone.now() + timedelta(
+                        days=plano_gratuito.duracao_dias
+                    )
+
                     # Criar assinatura gratuita
                     AssinaturaUsuario.objects.create(
                         usuario=user,
@@ -282,15 +286,19 @@ class RegisterView(CreateView):
                         status="ativa",
                         data_fim=data_fim,
                         valor_pago=0.00,
-                        metodo_pagamento="gratuito"
+                        metodo_pagamento="gratuito",
                     )
-                    
-                    logging.info(f"Assinatura gratuita criada para usuário {user.username}")
+
+                    logging.info(
+                        f"Assinatura gratuita criada para usuário {user.username}"
+                    )
                 else:
                     logging.warning("Plano gratuito não encontrado no sistema")
-                    
+
             except Exception as e:
-                logging.error(f"Erro ao criar assinatura gratuita para usuário {user.username}: {e}")
+                logging.error(
+                    f"Erro ao criar assinatura gratuita para usuário {user.username}: {e}"
+                )
 
             messages.success(
                 self.request,

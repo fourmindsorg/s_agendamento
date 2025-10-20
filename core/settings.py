@@ -60,6 +60,11 @@ try:
         # Inserir após SecurityMiddleware
         MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
         STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        
+        # Configurações adicionais do WhiteNoise
+        WHITENOISE_USE_FINDERS = True
+        WHITENOISE_AUTOREFRESH = True
+        WHITENOISE_MANIFEST_STRICT = False
 except Exception:
     # Em desenvolvimento ou se o pacote não estiver instalado, seguir sem WhiteNoise
     pass
@@ -132,6 +137,12 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# Configurações adicionais para arquivos estáticos
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
