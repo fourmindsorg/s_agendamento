@@ -48,3 +48,4 @@ sudo tail -20 /var/log/nginx/error.log
 echo ""
 echo "🔍 Verificando logs do Django:"
 sudo journalctl -u gunicorn --no-pager -n 10
+

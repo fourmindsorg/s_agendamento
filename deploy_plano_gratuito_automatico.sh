@@ -57,3 +57,4 @@ echo "✅ Assinatura é criada automaticamente no cadastro"
 echo "✅ Plano gratuito está ativo no sistema"
 echo "🌐 Teste: https://fourmindstech.com.br/authentication/register/"
 echo "👤 Cadastre um novo usuário para testar o plano gratuito"
+

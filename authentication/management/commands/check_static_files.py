@@ -47,12 +47,12 @@ class Command(BaseCommand):
         if os.path.exists(settings.STATIC_ROOT):
             self.stdout.write("📁 ARQUIVOS COLETADOS:")
             self.stdout.write("-" * 20)
-            
+
             for root, dirs, files in os.walk(settings.STATIC_ROOT):
-                level = root.replace(settings.STATIC_ROOT, '').count(os.sep)
-                indent = ' ' * 2 * level
+                level = root.replace(settings.STATIC_ROOT, "").count(os.sep)
+                indent = " " * 2 * level
                 self.stdout.write(f"{indent}{os.path.basename(root)}/")
-                subindent = ' ' * 2 * (level + 1)
+                subindent = " " * 2 * (level + 1)
                 for file in files:
                     self.stdout.write(f"{subindent}{file}")
 
@@ -60,15 +60,15 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write("🎨 VERIFICANDO ARQUIVOS CSS:")
         self.stdout.write("-" * 30)
-        
+
         css_files = [
             "css/style.css",
             "css/bootstrap.min.css",
             "css/error-messages.css",
             "css/auth.css",
-            "css/dashboard.css"
+            "css/dashboard.css",
         ]
-        
+
         for css_file in css_files:
             css_path = os.path.join(settings.STATIC_ROOT, css_file)
             if os.path.exists(css_path):
@@ -81,14 +81,14 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write("⚡ VERIFICANDO ARQUIVOS JS:")
         self.stdout.write("-" * 30)
-        
+
         js_files = [
             "js/bootstrap.bundle.min.js",
             "js/script.js",
             "js/dashboard.js",
-            "js/agendamento_detail.js"
+            "js/agendamento_detail.js",
         ]
-        
+
         for js_file in js_files:
             js_path = os.path.join(settings.STATIC_ROOT, js_file)
             if os.path.exists(js_path):
@@ -99,3 +99,4 @@ class Command(BaseCommand):
 
         self.stdout.write("")
         self.stdout.write("🎉 VERIFICAÇÃO CONCLUÍDA!")
+

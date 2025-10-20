@@ -44,3 +44,4 @@ class Command(BaseCommand):
         self.stdout.write(f"  • Duração: {plano_gratuito.duracao_dias} dias")
         self.stdout.write(f"  • Preço: R$ {plano_gratuito.preco_pix}")
         self.stdout.write(f"  • Ativo: {'Sim' if plano_gratuito.ativo else 'Não'}")
+
