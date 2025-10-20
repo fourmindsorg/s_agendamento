@@ -3,16 +3,20 @@ name: Deploy to EC2
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch: # Permite execução manual
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
+    # Só executa se não for pull_request
+    if: github.event_name != 'pull_request'
 
     steps:
-      - name: Checkout code
+      - name: Checkout code from GitHub main branch
         uses: actions/checkout@v4
+        with:
+          ref: main # Garantir que está usando a branch main do GitHub
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -37,20 +41,53 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
+            echo "🚀 Iniciando deploy..."
             cd /home/ubuntu/s_agendamento
-            git pull origin main
+            
+            # Verificar branch atual
+            echo "📍 Branch atual: $(git branch --show-current)"
+            
+            # Fazer pull da branch main do GitHub
+            echo "📥 Fazendo pull da branch main..."
+            git fetch origin
+            git reset --hard origin/main
+            
+            # Verificar commit atual
+            echo "📝 Commit atual: $(git log --oneline -1)"
+            
+            # Ativar ambiente virtual
             source .venv/bin/activate
+            
+            # Instalar dependências
+            echo "📦 Instalando dependências..."
             pip install -r requirements.txt
+            
+            # Executar migrações
+            echo "🗄️ Executando migrações..."
             python manage.py migrate
+            
+            # Coletar arquivos estáticos
+            echo "📁 Coletando arquivos estáticos..."
             python manage.py collectstatic --noinput
+            
+            # Reiniciar serviços
+            echo "🔄 Reiniciando serviços..."
             sudo systemctl daemon-reload
             sudo systemctl restart gunicorn
             sudo systemctl restart nginx
+            
+            # Aguardar serviços iniciarem
             sleep 10
-            sudo systemctl status gunicorn --no-pager
-            sudo systemctl status nginx --no-pager
-            echo "✅ Deploy concluído - Redirecionamento para dashboard e avisos em vermelho configurados"
+            
+            # Verificar status dos serviços
+            echo "✅ Verificando status dos serviços..."
+            sudo systemctl status gunicorn --no-pager -l
+            sudo systemctl status nginx --no-pager -l
+            
+            echo "🎉 Deploy concluído com sucesso!"
 
       - name: Health Check
         run: |
-          curl -f http://3.80.178.120/ || exit 1
+          echo "🏥 Verificando saúde do servidor..."
+          curl -f https://fourmindstech.com.br/s_agendamentos/ || exit 1
+          echo "✅ Servidor respondendo normalmente"
