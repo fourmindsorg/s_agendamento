@@ -11,13 +11,12 @@
     
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label for="{{ form.first_name.id_for_label }}" class="form-label {% if form.first_name.errors %}has-error{% endif %}">
+            <label for="{{ form.first_name.id_for_label }}" class="form-label">
                 <i class="fas fa-user me-2"></i>Nome
             </label>
             {{ form.first_name }}
             {% if form.first_name.errors %}
                 <div class="invalid-feedback d-block">
-                    <i class="fas fa-exclamation-circle me-1"></i>
                     {% for error in form.first_name.errors %}
                         {{ error }}
                     {% endfor %}
@@ -26,13 +25,12 @@
         </div>
         
         <div class="col-md-6 mb-3">
-            <label for="{{ form.last_name.id_for_label }}" class="form-label {% if form.last_name.errors %}has-error{% endif %}">
+            <label for="{{ form.last_name.id_for_label }}" class="form-label">
                 <i class="fas fa-user me-2"></i>Sobrenome
             </label>
             {{ form.last_name }}
             {% if form.last_name.errors %}
                 <div class="invalid-feedback d-block">
-                    <i class="fas fa-exclamation-circle me-1"></i>
                     {% for error in form.last_name.errors %}
                         {{ error }}
                     {% endfor %}
@@ -42,13 +40,12 @@
     </div>
 
     <div class="mb-3">
-        <label for="{{ form.username.id_for_label }}" class="form-label {% if form.username.errors %}has-error{% endif %}">
+        <label for="{{ form.username.id_for_label }}" class="form-label">
             <i class="fas fa-at me-2"></i>Usuário
         </label>
         {{ form.username }}
         {% if form.username.errors %}
             <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
                 {% for error in form.username.errors %}
                     {{ error }}
                 {% endfor %}
@@ -57,13 +54,12 @@
     </div>
 
     <div class="mb-3">
-        <label for="{{ form.email.id_for_label }}" class="form-label {% if form.email.errors %}has-error{% endif %}">
+        <label for="{{ form.email.id_for_label }}" class="form-label">
             <i class="fas fa-envelope me-2"></i>Email
         </label>
         {{ form.email }}
         {% if form.email.errors %}
             <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
                 {% for error in form.email.errors %}
                     {{ error }}
                 {% endfor %}
@@ -72,13 +68,12 @@
     </div>
 
     <div class="mb-3">
-        <label for="{{ form.password1.id_for_label }}" class="form-label {% if form.password1.errors %}has-error{% endif %}">
+        <label for="{{ form.password1.id_for_label }}" class="form-label">
             <i class="fas fa-lock me-2"></i>Senha
         </label>
         {{ form.password1 }}
         {% if form.password1.errors %}
             <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
                 {% for error in form.password1.errors %}
                     {{ error }}
                 {% endfor %}
@@ -87,13 +82,12 @@
     </div>
 
     <div class="mb-3">
-        <label for="{{ form.password2.id_for_label }}" class="form-label {% if form.password2.errors %}has-error{% endif %}">
+        <label for="{{ form.password2.id_for_label }}" class="form-label">
             <i class="fas fa-lock me-2"></i>Confirmar Senha
         </label>
         {{ form.password2 }}
         {% if form.password2.errors %}
             <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
                 {% for error in form.password2.errors %}
                     {{ error }}
                 {% endfor %}

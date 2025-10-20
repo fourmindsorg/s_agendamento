@@ -2,8 +2,8 @@
 set -e
 set -x
 
-echo "🎨 ATUALIZANDO AVISOS EM VERMELHO"
-echo "================================="
+echo "🎨 APLICANDO AVISOS EM VERMELHO"
+echo "==============================="
 
 # 1. Atualizar código
 echo "📁 Atualizando código..."
@@ -46,9 +46,9 @@ echo "🌐 Testando aplicação..."
 curl -I http://localhost:8000/ || echo "❌ Aplicação não está respondendo localmente"
 curl -I http://3.80.178.120/ || echo "❌ Aplicação não está acessível externamente"
 
-echo "🎉 ATUALIZAÇÃO CONCLUÍDA!"
-echo "========================="
-echo "✅ Avisos em vermelho configurados"
-echo "🌐 Acesse: https://fourmindstech.com.br/"
-echo "👤 Teste o cadastro: https://fourmindstech.com.br/authentication/register/"
-echo "🔑 Teste o login: https://fourmindstech.com.br/authentication/login/"
+echo "🎉 AVISOS EM VERMELHO APLICADOS!"
+echo "================================"
+echo "✅ Mensagens de erro agora aparecem em vermelho"
+echo "✅ Campos com erro têm borda vermelha"
+echo "🌐 Teste: https://fourmindstech.com.br/authentication/register/"
+echo "👤 Tente cadastrar com usuário existente para ver o aviso vermelho"

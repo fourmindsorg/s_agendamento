@@ -1,0 +1,63 @@
+/* ========================================
+   MENSAGENS DE ERRO EM VERMELHO
+   ======================================== */
+
+/* Mensagens de erro de campos específicos */
+.invalid-feedback {
+    color: #dc3545 !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* Campos com erro */
+.form-control.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Mensagens de erro não relacionadas a campos específicos */
+.alert-danger {
+    color: #721c24 !important;
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+}
+
+/* Mensagens de erro em formulários Django */
+.errorlist {
+    color: #dc3545 !important;
+    font-weight: 500;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.errorlist li {
+    color: #dc3545 !important;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Garantir que mensagens de erro sejam sempre vermelhas */
+.text-danger,
+.text-danger * {
+    color: #dc3545 !important;
+}
+
+/* Mensagens de erro em campos específicos do Django */
+.field-error {
+    color: #dc3545 !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Mensagens de erro em validação JavaScript */
+.field-error-js {
+    color: #dc3545 !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}

@@ -10,7 +10,7 @@
     {% csrf_token %}
     
     <div class="mb-3">
-        <label for="{{ form.username.id_for_label }}" class="form-label {% if form.username.errors %}has-error{% endif %}">
+        <label for="{{ form.username.id_for_label }}" class="form-label">
             <i class="fas fa-user me-2"></i>Usuário
         </label>
         <input type="text" 
@@ -21,8 +21,7 @@
                placeholder="Digite seu usuário"
                required>
         {% if form.username.errors %}
-            <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
+            <div class="invalid-feedback">
                 {% for error in form.username.errors %}
                     {{ error }}
                 {% endfor %}
@@ -31,7 +30,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="{{ form.password.id_for_label }}" class="form-label {% if form.password.errors %}has-error{% endif %}">
+        <label for="{{ form.password.id_for_label }}" class="form-label">
             <i class="fas fa-lock me-2"></i>Senha
         </label>
         <div class="input-group">
@@ -47,7 +46,6 @@
         </div>
         {% if form.password.errors %}
             <div class="invalid-feedback d-block">
-                <i class="fas fa-exclamation-circle me-1"></i>
                 {% for error in form.password.errors %}
                     {{ error }}
                 {% endfor %}

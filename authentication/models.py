@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class PreferenciasUsuario(models.Model):
@@ -27,8 +29,6 @@ class PreferenciasUsuario(models.Model):
         max_length=10, choices=MODO_CHOICES, default="light"
     )  # NOVO
     # criado_em = models.DateTimeField(auto_now_add=True)
-    from django.utils import timezone
-    from datetime import timedelta
 
     criado_em = models.DateTimeField(
         default=lambda: timezone.now() - timedelta(days=15)

@@ -15,7 +15,7 @@
     
     <!-- CSS Customizado -->
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
-    <link rel="stylesheet" href="{% static 'css/form-validation.css' %}">
+    <link rel="stylesheet" href="{% static 'css/error-messages.css' %}">
     
     <style>
         body {
@@ -85,6 +85,21 @@
         
         .auth-links a:hover {
             color: #764ba2;
+        }
+        
+        /* Mensagens de erro em vermelho */
+        .invalid-feedback {
+            color: #dc3545 !important;
+            font-weight: 500;
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545 !important;
+        }
+        
+        .form-control.is-invalid:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
         }
     </style>
     
