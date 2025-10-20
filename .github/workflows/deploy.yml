@@ -49,7 +49,7 @@ jobs:
             sleep 10
             sudo systemctl status gunicorn --no-pager
             sudo systemctl status nginx --no-pager
-            echo "✅ Deploy concluído - Redirecionamento para dashboard configurado"
+            echo "✅ Deploy concluído - Redirecionamento para dashboard e avisos em vermelho configurados"
 
       - name: Health Check
         run: |

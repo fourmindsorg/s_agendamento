@@ -26,7 +26,13 @@ class PreferenciasUsuario(models.Model):
     modo = models.CharField(
         max_length=10, choices=MODO_CHOICES, default="light"
     )  # NOVO
-    criado_em = models.DateTimeField(auto_now_add=True)
+    # criado_em = models.DateTimeField(auto_now_add=True)
+    from django.utils import timezone
+    from datetime import timedelta
+
+    criado_em = models.DateTimeField(
+        default=lambda: timezone.now() - timedelta(days=15)
+    )
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
