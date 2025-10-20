@@ -240,7 +240,7 @@ class RegisterView(CreateView):
     model = User
     form_class = CustomUserCreationForm
     template_name = "authentication/register.html"
-    success_url = reverse_lazy("authentication:plan_selection")
+    success_url = reverse_lazy("agendamentos:dashboard")
 
     def form_valid(self, form):
         """Processa o formulário válido com tratamento de erros"""
@@ -265,9 +265,9 @@ class RegisterView(CreateView):
 
             messages.success(
                 self.request,
-                f"Bem-vindo, {user.first_name or user.username}! Agora escolha seu plano.",
+                f"Bem-vindo, {user.first_name or user.username}! Seu cadastro foi realizado com sucesso.",
             )
-            return super().form_valid(form)
+            return redirect("agendamentos:dashboard")
 
         except IntegrityError as e:
             logging.error(f"Erro de integridade ao criar usuário: {e}")
