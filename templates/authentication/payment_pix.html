@@ -4,11 +4,11 @@
 
 {% block extra_css %}
 <style>
-    .pix-container {
+    {% comment %} .pix-container {
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem;
-    }
+    } {% endcomment %}
     
     .pix-header {
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -33,6 +33,11 @@
         padding: 2rem;
         background: #f8f9fa;
         border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* centraliza verticalmente */
+        align-items: center;     /* centraliza horizontalmente */
+        text-align: center;
     }
     
     .qr-code-image {
@@ -179,16 +184,16 @@
     }
     
     @media (max-width: 768px) {
-        .pix-container {
+        {% comment %} .pix-container {
             padding: 1rem;
         }
-        
+         {% endcomment %}
         .pix-header {
             padding: 1.5rem;
         }
         
         .pix-content {
-            padding: 1.5rem;
+            padding: 0.5rem;
         }
         
         .qr-code-image {
@@ -304,11 +309,16 @@
             </ol>
         </div>
         
-        <!-- Aviso de Modo Simulação -->
+        <!-- Aviso de Erro ou Modo Simulação -->
         {% if pix_data.erro %}
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Modo Simulação:</strong> {{ pix_data.erro }}
+            <strong>Atenção:</strong> {{ pix_data.erro }}
+            <br>
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                O sistema está funcionando em modo simulação. O pagamento será processado manualmente.
+            </small>
         </div>
         {% endif %}
         

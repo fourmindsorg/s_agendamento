@@ -48,7 +48,7 @@ O script irá:
 1. Solicitar sua API key
 2. Testar se a chave está válida
 3. Opcionalmente criar um pagamento de teste
-4. Salvar a configuração em `env.asaas.real`
+4. Salvar a configuração em `.env`
 
 ## 🔍 Teste Manual da API Key
 
@@ -68,7 +68,7 @@ python testar_asaas_integracao.py
 
 ## 📁 Arquivos de Configuração
 
-### `env.asaas.real`
+### `.env`
 ```ini
 # Configurações para testes de integração
 ASAAS_API_KEY=sua_api_key_aqui

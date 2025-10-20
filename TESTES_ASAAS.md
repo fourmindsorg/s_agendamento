@@ -32,7 +32,7 @@ Crie um arquivo `.env.asaas` baseado no exemplo:
 
 ```bash
 # Copiar arquivo de exemplo
-cp env.asaas.example .env.asaas
+cp .env
 ```
 
 Configure suas credenciais no arquivo `.env.asaas`:

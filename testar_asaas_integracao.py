@@ -16,7 +16,7 @@ def setup_django():
 
 def load_real_api_config():
     """Carrega configurações da API real do arquivo"""
-    config_file = "env.asaas.real"
+    config_file = ".env"
     if os.path.exists(config_file):
         print(f"✅ Carregando configurações de {config_file}")
         with open(config_file, "r") as f:
@@ -26,7 +26,7 @@ def load_real_api_config():
                         key, value = line.strip().split("=", 1)
                         os.environ[key] = value
     else:
-        print("❌ Arquivo env.asaas.real não encontrado")
+        print("❌ Arquivo .env não encontrado")
         return False
 
     return True

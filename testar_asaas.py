@@ -52,7 +52,7 @@ def setup_environment():
                     os.environ[key] = value
     else:
         print("⚠️ Arquivo .env.asaas não encontrado")
-        print("Crie o arquivo baseado em env.asaas.example")
+        print("Crie o arquivo baseado em .env")
 
 
 def run_tests():

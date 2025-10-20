@@ -59,18 +59,18 @@ body {
 
 /* Logo da Sidebar */
 .sidebar-logo {
-    padding: 20px;
+    /* padding: 20px; */
     border-bottom: 1px solid var(--border-color);
     text-align: center;
     transition: all var(--transition-speed) ease;
 }
 
 .sidebar.collapsed .sidebar-logo {
-    padding: 20px 10px;
+    padding: 13px 10px;
 }
 
 .logo-text {
-    font-size: 1.5rem;
+    font-size: 1.08rem;
     font-weight: 700;
     color: var(--primary-color) !important;
     text-decoration: none;

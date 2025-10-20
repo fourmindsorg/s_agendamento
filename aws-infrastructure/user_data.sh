@@ -109,7 +109,7 @@ cat > /home/django/app/.env.production <<EOF
 DEBUG=False
 SECRET_KEY=TEMPORARY_KEY_WILL_BE_REPLACED_AFTER_SSH
 ALLOWED_HOSTS=$DOMAIN_NAME,www.$DOMAIN_NAME
-DJANGO_SETTINGS_MODULE=core.settings_production
+DJANGO_SETTINGS_MODULE_PROD=core.settings_production
 ENVIRONMENT=production
 
 DB_NAME=$DB_NAME
@@ -195,7 +195,7 @@ autostart=true
 autorestart=true
 redirect_stderr=true
 stdout_logfile=/var/log/gunicorn/gunicorn.log
-environment=DJANGO_SETTINGS_MODULE="core.settings_production"
+environment=DJANGO_SETTINGS_MODULE_PROD="core.settings_production"
 stopasgroup=true
 killasgroup=true
 EOF

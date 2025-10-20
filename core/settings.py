@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 
+# Load environment variables from .env if present
+try:
+    from dotenv import load_dotenv  # type: ignore
+
+    load_dotenv()
+except Exception:
+    pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,9 +24,13 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "fourmindstech.com.br"]
+# Optionally extend from env (comma-separated)
+_env_hosts = os.environ.get("ALLOWED_HOSTS", "")
+if _env_hosts:
+    ALLOWED_HOSTS.extend([h.strip() for h in _env_hosts.split(",") if h.strip()])
 
 # Application definition
 INSTALLED_APPS = [

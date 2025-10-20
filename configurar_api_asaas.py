@@ -154,9 +154,9 @@ DB_PORT=5432
 """
 
     try:
-        with open("env.asaas.real", "w") as f:
+        with open(".env", "w") as f:
             f.write(config_content)
-        print("✅ Configuração salva em env.asaas.real")
+        print("✅ Configuração salva em .env")
         return True
     except Exception as e:
         print(f"❌ Erro ao salvar configuração: {e}")

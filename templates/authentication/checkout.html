@@ -7,7 +7,7 @@
     .checkout-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 2rem;
+        {% comment %} padding: 2rem; {% endcomment %}
     }
     
     .checkout-header {
@@ -670,11 +670,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.querySelector('input[name="telefone"]');
     if (phoneInput) {
         phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            value = value.replace(/(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{4})(\d)/, '$1-$2');
-            value = value.replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3');
-            e.target.value = value;
+            let digits = e.target.value.replace(/\D/g, '');
+            // limitar a 11 dígitos
+            if (digits.length > 11) digits = digits.slice(0, 11);
+            // formato: (11) 99999-9999
+            let formatted = '';
+            if (digits.length > 0) {
+                if (digits.length <= 2) {
+                    formatted = `(${digits}`;
+                } else if (digits.length <= 7) {
+                    formatted = `(${digits.slice(0,2)}) ${digits.slice(2)}`;
+                } else {
+                    formatted = `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+                }
+            }
+            e.target.value = formatted;
         });
     }
     

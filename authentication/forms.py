@@ -320,7 +320,7 @@ class BillingInfoForm(forms.Form):
     )
 
     telefone = forms.CharField(
-        max_length=20,
+        max_length=15,  # (11) 99999-9999 => 15 caracteres no formato
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",

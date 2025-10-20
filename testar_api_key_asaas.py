@@ -9,7 +9,7 @@ import os
 def test_api_key():
     """Testa se a API key está funcionando com uma requisição simples"""
 
-    # API key do arquivo env.example
+    # API key do arquivo .env
     api_key = "aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjRiY2RkYjY2LWU0ZDAtNDlkOC04ZGNhLTFlODJlYjY1M2UxZTo6JGFhY2hfNWM4NGU4ZjEtMzUwNi00NjMzLTg2NmEtYzNlZmEzNWVhZDc4"
 
     # URL base do sandbox

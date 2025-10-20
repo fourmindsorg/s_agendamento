@@ -695,7 +695,9 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 assinatura.valor_pago,
                 {
                     "cpf": "00000000000",  # Em um sistema real, pegaria dos dados de cobrança
-                    "nome": assinatura.usuario.get_full_name(),
+                    "nome_completo": assinatura.usuario.get_full_name(),
+                    "email": assinatura.usuario.email or "contato@sistema.com.br",
+                    "telefone": "11999999999",  # Em um sistema real, pegaria dos dados de cobrança
                 },
             )
             # Manter ambas as chaves por compatibilidade com templates existentes
@@ -753,19 +755,35 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             }
 
         except Exception as e:
-            logging.error(f"Erro ao gerar PIX via Asaas: {str(e)}")
+            error_msg = str(e)
+            logging.error(f"Erro ao gerar PIX via Asaas: {error_msg}")
+
+            # Determinar tipo de erro para mensagem mais específica
+            if "401" in error_msg:
+                error_detail = "Chave API do Asaas inválida ou expirada. Entre em contato com o suporte."
+            elif "403" in error_msg:
+                error_detail = (
+                    "Acesso negado à API do Asaas. Verifique as permissões da conta."
+                )
+            elif "404" in error_msg:
+                error_detail = "Recurso não encontrado na API do Asaas."
+            elif "500" in error_msg or "502" in error_msg or "503" in error_msg:
+                error_detail = "Serviço do Asaas temporariamente indisponível. Tente novamente em alguns minutos."
+            else:
+                error_detail = f"Erro na integração com Asaas: {error_msg}"
+
             # Fallback para simulação em caso de erro
             return {
                 "payment_id": f"sim_{plano.id}_{int(timezone.now().timestamp())}",
                 "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
                 "qr_code_image": "",
                 "chave_pix": "contato@sistema.com.br",
-                "valor": valor,
+                "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
                 "status": "PENDING",
                 "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}5204000053039865405{valor:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
-                "erro": "Modo simulação ativado",
+                "erro": error_detail,
             }
 
 
