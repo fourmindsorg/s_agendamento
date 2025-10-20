@@ -263,9 +263,38 @@ class RegisterView(CreateView):
                     f"Erro ao criar preferências para usuário {user.username}: {e}"
                 )
 
+            # Criar assinatura gratuita automaticamente
+            try:
+                from .models import Plano, AssinaturaUsuario
+                from datetime import timedelta
+                
+                # Buscar plano gratuito
+                plano_gratuito = Plano.objects.filter(tipo="gratuito", ativo=True).first()
+                
+                if plano_gratuito:
+                    # Calcular data de fim (14 dias)
+                    data_fim = timezone.now() + timedelta(days=plano_gratuito.duracao_dias)
+                    
+                    # Criar assinatura gratuita
+                    AssinaturaUsuario.objects.create(
+                        usuario=user,
+                        plano=plano_gratuito,
+                        status="ativa",
+                        data_fim=data_fim,
+                        valor_pago=0.00,
+                        metodo_pagamento="gratuito"
+                    )
+                    
+                    logging.info(f"Assinatura gratuita criada para usuário {user.username}")
+                else:
+                    logging.warning("Plano gratuito não encontrado no sistema")
+                    
+            except Exception as e:
+                logging.error(f"Erro ao criar assinatura gratuita para usuário {user.username}: {e}")
+
             messages.success(
                 self.request,
-                f"Bem-vindo, {user.first_name or user.username}! Seu cadastro foi realizado com sucesso.",
+                f"Bem-vindo, {user.first_name or user.username}! Seu cadastro foi realizado com sucesso. Você tem 14 dias gratuitos para testar o sistema.",
             )
             return redirect("agendamentos:dashboard")
 

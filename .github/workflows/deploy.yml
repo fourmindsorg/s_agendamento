@@ -42,6 +42,7 @@ jobs:
             source .venv/bin/activate
             pip install -r requirements.txt
             python manage.py migrate
+            python manage.py ensure_free_plan
             python manage.py collectstatic --noinput
             sudo systemctl daemon-reload
             sudo systemctl restart gunicorn
@@ -49,7 +50,7 @@ jobs:
             sleep 10
             sudo systemctl status gunicorn --no-pager
             sudo systemctl status nginx --no-pager
-            echo "✅ Deploy concluído - Redirecionamento para dashboard e avisos em vermelho configurados"
+            echo "✅ Deploy concluído - Redirecionamento para dashboard, avisos em vermelho e plano gratuito automático configurados"
 
       - name: Health Check
         run: |
