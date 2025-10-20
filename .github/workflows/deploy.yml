@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     # Só executa se não for pull_request
     if: github.event_name != 'pull_request'
 
@@ -43,51 +43,103 @@ jobs:
           script: |
             echo "🚀 Iniciando deploy..."
             cd /home/ubuntu/s_agendamento
-            
+
             # Verificar branch atual
             echo "📍 Branch atual: $(git branch --show-current)"
-            
+
             # Fazer pull da branch main do GitHub
             echo "📥 Fazendo pull da branch main..."
             git fetch origin
             git reset --hard origin/main
-            
+
             # Verificar commit atual
             echo "📝 Commit atual: $(git log --oneline -1)"
-            
+
             # Ativar ambiente virtual
             source .venv/bin/activate
-            
+
             # Instalar dependências
             echo "📦 Instalando dependências..."
             pip install -r requirements.txt
-            
+
             # Executar migrações
             echo "🗄️ Executando migrações..."
             python manage.py migrate
+            
+            # Verificar configuração do Django
+            echo "🔧 Verificando configuração do Django..."
+            python manage.py check --deploy
             
             # Coletar arquivos estáticos
             echo "📁 Coletando arquivos estáticos..."
             python manage.py collectstatic --noinput
             
+            # Testar se o Django está funcionando
+            echo "🧪 Testando Django..."
+            python manage.py check --settings=core.settings_production
+
+            # Parar serviços antes de reiniciar
+            echo "🛑 Parando serviços..."
+            sudo systemctl stop gunicorn || true
+            sudo systemctl stop nginx || true
+            
+            # Aguardar parada completa
+            sleep 5
+            
             # Reiniciar serviços
             echo "🔄 Reiniciando serviços..."
             sudo systemctl daemon-reload
-            sudo systemctl restart gunicorn
-            sudo systemctl restart nginx
+            sudo systemctl start gunicorn
+            sudo systemctl start nginx
             
             # Aguardar serviços iniciarem
-            sleep 10
+            echo "⏳ Aguardando serviços iniciarem..."
+            sleep 15
             
             # Verificar status dos serviços
             echo "✅ Verificando status dos serviços..."
             sudo systemctl status gunicorn --no-pager -l
             sudo systemctl status nginx --no-pager -l
             
-            echo "🎉 Deploy concluído com sucesso!"
+            # Verificar se os serviços estão realmente rodando
+            echo "🔍 Verificando processos..."
+            ps aux | grep gunicorn | grep -v grep || echo "❌ Gunicorn não está rodando"
+            ps aux | grep nginx | grep -v grep || echo "❌ Nginx não está rodando"
+            
+            # Testar conectividade local
+            echo "🧪 Testando conectividade local..."
+            curl -f http://localhost:8000/ || echo "❌ Gunicorn não responde localmente"
+            
+            echo "🎉 Deploy concluído!"
 
       - name: Health Check
         run: |
           echo "🏥 Verificando saúde do servidor..."
-          curl -f https://fourmindstech.com.br/s_agendamentos/ || exit 1
-          echo "✅ Servidor respondendo normalmente"
+          
+          # Aguardar um pouco mais para os serviços estabilizarem
+          sleep 30
+          
+          # Tentar múltiplas vezes
+          for i in {1..5}; do
+            echo "Tentativa $i/5..."
+            if curl -f -s https://fourmindstech.com.br/s_agendamentos/ > /dev/null; then
+              echo "✅ Servidor respondendo normalmente!"
+              exit 0
+            else
+              echo "❌ Tentativa $i falhou, aguardando 10 segundos..."
+              sleep 10
+            fi
+          done
+          
+          echo "❌ Servidor não respondeu após 5 tentativas"
+          echo "Verificando status dos serviços..."
+          
+          # Verificar logs do gunicorn
+          echo "📋 Logs do Gunicorn:"
+          sudo journalctl -u gunicorn --no-pager -n 20
+          
+          # Verificar logs do nginx
+          echo "📋 Logs do Nginx:"
+          sudo journalctl -u nginx --no-pager -n 20
+          
+          exit 1
