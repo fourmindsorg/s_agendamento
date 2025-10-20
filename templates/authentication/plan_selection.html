@@ -274,6 +274,72 @@
 
                                 <!-- Informações adicionais -->
                                 <div class="col-12 mt-5">
+                                    <div class="row justify-content-center mb-4">
+                                        <div class="col">
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-body p-4">
+                                                    <h5 class="card-title mb-3">
+                                                        <i class="fas fa-history text-primary me-2"></i>
+                                                        Histórico de Assinaturas
+                                                    </h5>
+
+                                                    {% if assinaturas_historico %}
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped align-middle">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Plano</th>
+                                                                    <th>Tipo</th>
+                                                                    <th>Status</th>
+                                                                    <th>Valor Pago</th>
+                                                                    <th>Início</th>
+                                                                    <th>Fim</th>
+                                                                    <th>Método</th>
+                                                                    <th>Pagamento</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for a in assinaturas_historico %}
+                                                                <tr>
+                                                                    <td>{{ a.plano.nome }}</td>
+                                                                    <td>{{ a.plano.get_tipo_display }}</td>
+                                                                    <td>
+                                                                        <span class="badge {% if a.status == 'ativa' %}bg-success{% elif a.status == 'expirada' %}bg-secondary{% elif a.status == 'cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                                                            {{ a.get_status_display }}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        {% if a.valor_pago %}
+                                                                            R$ {{ a.valor_pago|floatformat:2 }}
+                                                                        {% else %}
+                                                                            -
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td>{{ a.data_inicio|date:'d/m/Y H:i' }}</td>
+                                                                    <td>{{ a.data_fim|date:'d/m/Y H:i' }}</td>
+                                                                    <td>{{ a.metodo_pagamento|default:'-' }}</td>
+                                                                    <td>
+                                                                        {% if a.asaas_payment_id %}
+                                                                            <span class="text-muted">{{ a.asaas_payment_id }}</span>
+                                                                        {% else %}
+                                                                            -
+                                                                        {% endif %}
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    {% else %}
+                                                        <div class="alert alert-info mb-0">
+                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            Nenhuma assinatura anterior encontrada para este usuário.
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="row justify-content-center">
                                         <div class="col-lg-8">
                                         <div class="card border-0 bg-light">

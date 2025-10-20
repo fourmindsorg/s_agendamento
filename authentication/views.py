@@ -535,6 +535,16 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
         # Verificar se o usuário já usou o período gratuito
         context["ja_usou_gratuito"] = self.verificar_ja_usou_gratuito()
 
+        # Histórico de assinaturas do usuário (inclui planos anteriores)
+        try:
+            context["assinaturas_historico"] = (
+                AssinaturaUsuario.objects.filter(usuario=self.request.user)
+                .select_related("plano")
+                .order_by("-data_inicio")
+            )
+        except Exception:
+            context["assinaturas_historico"] = []
+
         return context
 
     def verificar_ja_usou_gratuito(self):

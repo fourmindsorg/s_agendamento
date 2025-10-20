@@ -137,8 +137,8 @@ curl -I http://fourmindstech.com.br/
 
 Após atualizar o DNS:
 - ✅ **DNS**: fourmindstech.com.br → 3.80.178.120
-- ✅ **Aplicação**: http://fourmindstech.com.br → AgendaFácil
-- ✅ **WWW**: http://www.fourmindstech.com.br → AgendaFácil
+- ✅ **Aplicação**: http://fourmindstech.com.br → AgenTech
+- ✅ **WWW**: http://www.fourmindstech.com.br → AgenTech
 
 ---
 

@@ -1,7 +1,7 @@
 # 🌐 CONFIGURAR DNS PARA FOURMINDSTECH.COM.BR
 
 ## ✅ **Status Atual:**
-- ✅ **Aplicação funcionando**: http://3.80.178.120/ → AgendaFácil
+- ✅ **Aplicação funcionando**: http://3.80.178.120/ → AgenTech
 - ✅ **GitHub Actions corrigido**: Health check funcionando
 - ⏳ **DNS pendente**: Configurar fourmindstech.com.br → 3.80.178.120
 
@@ -150,9 +150,9 @@ sudo certbot --nginx -d fourmindstech.com.br -d www.fourmindstech.com.br
 ## 🎯 **RESULTADO FINAL:**
 
 Após configurar o DNS:
-- ✅ **Domínio**: http://fourmindstech.com.br → AgendaFácil
-- ✅ **WWW**: http://www.fourmindstech.com.br → AgendaFácil
-- ✅ **IP**: http://3.80.178.120 → AgendaFácil (continua funcionando)
+- ✅ **Domínio**: http://fourmindstech.com.br → AgenTech
+- ✅ **WWW**: http://www.fourmindstech.com.br → AgenTech
+- ✅ **IP**: http://3.80.178.120 → AgenTech (continua funcionando)
 
 ---
 
