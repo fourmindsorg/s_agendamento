@@ -33,7 +33,7 @@ class SubscriptionRequiredMixin:
             if self.is_write_operation():
                 messages.warning(
                     request,
-                    "Sua assinatura expirou. Para criar, editar ou excluir dados, contrate um plano.",
+                    "Seu período gratuito expirou. Para criar, editar ou excluir dados, contrate um plano.",
                 )
                 return redirect("authentication:plan_selection")
 
@@ -112,9 +112,9 @@ class ReadOnlyForExpiredMixin:
         if assinatura_status == "expirada":
             # Adicionar contexto para mostrar que está em modo somente leitura
             self.request.read_only_mode = True
-            messages.info(
+            messages.warning(
                 request,
-                "Você está visualizando em modo somente leitura. Sua assinatura expirou.",
+                "Seu período gratuito expirou. Você está visualizando em modo somente leitura. Contrate um plano para editar dados.",
             )
 
         elif assinatura_status == "sem_assinatura":

@@ -151,7 +151,9 @@ class RegisterView(CreateView):
     model = User
     form_class = CustomUserCreationForm
     template_name = "authentication/register.html"
-    success_url = reverse_lazy("authentication:plan_selection")
+    success_url = reverse_lazy(
+        "agendamentos:dashboard"
+    )  # Mudança: redirecionar para dashboard
 
     def form_valid(self, form):
         """Processa o formulário válido com tratamento de erros"""
@@ -167,16 +169,21 @@ class RegisterView(CreateView):
             # Criar preferências padrão para o usuário
             try:
                 PreferenciasUsuario.objects.create(
-                    usuario=user, tema="claro", modo="normal"
+                    usuario=user,
+                    tema="default",
+                    modo="light",  # Corrigido valores padrão
                 )
             except Exception as e:
                 logging.warning(
                     f"Erro ao criar preferências para usuário {user.username}: {e}"
                 )
 
+            # Criar plano gratuito de 14 dias automaticamente
+            self.criar_plano_gratuito(user)
+
             messages.success(
                 self.request,
-                f"Bem-vindo, {user.first_name or user.username}! Agora escolha seu plano.",
+                f"Bem-vindo, {user.first_name or user.username}! Você tem 14 dias gratuitos para testar o sistema.",
             )
             return super().form_valid(form)
 
@@ -195,6 +202,55 @@ class RegisterView(CreateView):
                 "Dados inválidos. Verifique as informações e tente novamente.",
             )
             return self.form_invalid(form)
+
+        except Exception as e:
+            logging.error(f"Erro inesperado ao criar usuário: {e}")
+            messages.error(
+                self.request,
+                "Erro interno do sistema. Tente novamente ou entre em contato com o suporte.",
+            )
+            return self.form_invalid(form)
+
+    def criar_plano_gratuito(self, user):
+        """Cria automaticamente um plano gratuito de 14 dias para o usuário"""
+        try:
+            # Buscar plano gratuito
+            plano_gratuito = Plano.objects.filter(tipo="gratuito").first()
+
+            if not plano_gratuito:
+                # Criar plano gratuito se não existir
+                plano_gratuito = Plano.objects.create(
+                    nome="Período Gratuito",
+                    tipo="gratuito",
+                    descricao="Período de teste gratuito de 14 dias",
+                    preco_cartao=0.00,
+                    preco_pix=0.00,
+                    duracao_dias=14,
+                    ativo=True,
+                    destaque=False,
+                    ordem=0,
+                )
+
+            # Calcular data de fim (14 dias a partir de agora)
+            data_fim = timezone.now() + timedelta(days=14)
+
+            # Criar assinatura gratuita
+            AssinaturaUsuario.objects.create(
+                usuario=user,
+                plano=plano_gratuito,
+                status="ativa",
+                data_fim=data_fim,
+                valor_pago=0.00,
+                metodo_pagamento="gratuito",
+            )
+
+            logging.info(f"Plano gratuito criado para usuário {user.username}")
+
+        except Exception as e:
+            logging.error(
+                f"Erro ao criar plano gratuito para usuário {user.username}: {e}"
+            )
+            # Não falhar o cadastro se não conseguir criar o plano gratuito
 
         except Exception as e:
             logging.error(f"Erro inesperado ao criar usuário: {e}")

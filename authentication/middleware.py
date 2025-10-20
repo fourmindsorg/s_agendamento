@@ -47,6 +47,7 @@ class SubscriptionExpirationMiddleware:
             "/static/",
             "/media/",
             "/info/",
+            "/dashboard/",  # Permitir acesso ao dashboard mesmo expirado
         ]
 
         # URLs específicas que são exceções

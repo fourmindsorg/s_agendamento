@@ -1,121 +1,56 @@
-name: Deploy to AWS
+name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: # Execução manual também disponível
-
-env:
-  AWS_REGION: us-east-1
-  EC2_HOST: 13.221.138.11
-  PROJECT_NAME: sistema-agendamento-4minds
-  DOMAIN: fourmindstech.com.br
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   deploy:
-    name: Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          fetch-depth: 0
+          python-version: "3.11"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Setup SSH key
+      - name: Install dependencies
         run: |
-          mkdir -p ~/.ssh || true
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.EC2_HOST }} >> ~/.ssh/known_hosts
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Test SSH Connection
+      - name: Run tests
         run: |
-          echo "=== Testando conexão SSH ==="
-          ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 ubuntu@${{ env.EC2_HOST }} "echo 'SSH connection successful'"
+          python manage.py check
+          python manage.py test
 
       - name: Deploy to EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
-            set -e
-            
-            echo "=== Atualizando código do repositório ==="
-            cd /home/django/app
-            
-            # Fazer backup do .env (se existir)
-            if [ -f .env ]; then
-                cp .env .env.backup
-            fi
-            
-            # Atualizar código
-            sudo -u django git fetch origin
-            sudo -u django git reset --hard origin/main
-            
-            # Restaurar .env (se backup existir)
-            if [ -f .env.backup ]; then
-                cp .env.backup .env
-            fi
-            
-            # Ativar ambiente virtual
-            source venv/bin/activate
-            
-            # Instalar/atualizar dependências
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            cd /home/ubuntu/s_agendamento
+            git pull origin main
+            source .venv/bin/activate
             pip install -r requirements.txt
-            
-            # Executar migrações
-            export DB_NAME=agendamentos_db
-            export DB_USER=postgres
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_PORT=5432
-            
-            python manage.py migrate --settings=core.settings_production
-            
-            # Coletar arquivos estáticos
-            python manage.py collectstatic --noinput --settings=core.settings_production
-            
-            # Corrigir permissões
-            sudo chown -R django:django staticfiles/
-            sudo chmod -R 755 staticfiles/
-            
-            # Reiniciar serviços
-            sudo supervisorctl restart gunicorn
-            sudo systemctl reload nginx
-            
-            echo "=== Deploy concluído com sucesso! ==="
-          EOF
+            python manage.py migrate
+            python manage.py collectstatic --noinput
+            sudo systemctl daemon-reload
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
+            sleep 10
+            sudo systemctl status gunicorn --no-pager
+            sudo systemctl status nginx --no-pager
+            echo "✅ Deploy concluído - Redirecionamento para dashboard e avisos em vermelho configurados"
 
-      - name: Verificar status dos serviços
+      - name: Health Check
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_HOST }} << 'EOF'
-            echo "=== Status Gunicorn ==="
-            sudo supervisorctl status gunicorn
-            
-            echo ""
-            echo "=== Status Nginx ==="
-            sudo systemctl status nginx --no-pager | head -10
-            
-            echo ""
-            echo "=== Teste HTTP ==="
-            curl -I http://localhost:8000 | head -5
-          EOF
-
-      - name: Notificar sucesso
-        if: success()
-        run: |
-          echo "✅ Deploy realizado com sucesso!"
-          echo "🌐 Site: https://${{ env.DOMAIN }}"
-          echo "🔐 Admin: https://${{ env.DOMAIN }}/admin"
-
-      - name: Notificar falha
-        if: failure()
-        run: |
-          echo "❌ Deploy falhou! Verifique os logs acima."
+          curl -f http://3.80.178.120/ || exit 1
