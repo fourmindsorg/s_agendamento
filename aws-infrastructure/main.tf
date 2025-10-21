@@ -17,6 +17,19 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# Variables
+variable "create_key_pair" {
+  description = "Whether to create a new key pair or use existing one"
+  type        = bool
+  default     = false
+}
+
+variable "create_infrastructure" {
+  description = "Whether to create new infrastructure or use existing"
+  type        = bool
+  default     = false
+}
+
 # Data sources
 data "aws_availability_zones" "available" {
   state = "available"
@@ -88,8 +101,14 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Key Pair
+# Key Pair - Usar data source para key pair existente
+data "aws_key_pair" "existing" {
+  key_name = "agendamento-4minds-key"
+}
+
+# Se a key pair não existir, criar uma nova
 resource "aws_key_pair" "deployer" {
+  count      = var.create_key_pair ? 1 : 0
   key_name   = "agendamento-4minds-key"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9EDcKpFmkNctpBieANBmV3kq6mxd/u8xkKoC+h4dF5wcF/X5IatBNSYyl5KwkZymaXC4De+qcxGnwCoP6MtLEz2Js9hyjpT//sK8Lk+4+uU+RiwApXEAa0RzzpEQFXTxVu//tDyAmslvfOxSHf37wa93TRejB/hb8XZpNHkiOCaP13yEZxd2eZaDGpvHG6BMVBLTXfdhOx4ORCeuXvWQdML5uePOnonWFePc0lr9HrsImep3dJprl+6cpqczhU2OkF9AScIUB+1ZYJaCVbLGWJEenhoPT+Mfwbt8dVWBT73vcQWrZihznfIpPdZJqCuCy6oCCi1TNjrCiF+zmLRAw1yEeTjdP4ec2IYIR+2RS/V8Nnzz2sNObwMLx/5ASlqI+rTN3ko9vTDEAxE++TBDD3lo2D7wq8n6nJ0U2woE8o9qlEj+clvpb4RcCimvB6gaA3BDI/3PBd1VQu2aPI10lucJ85SPcMvV4HOahidvp1AHfM96d93Qm0mN2qDyykA6XSsws22j8bw5azGsrFDo62erIcUCkGSGreefE/k3bQnthfvJFEu6HWOaUC0pKamYEEInoBMVpq5jjfoRMzx9SfcZATmzwmpTFp3GMD/FEDlUzTFFxe/4HOzAI+y6HVmY4CcAVsF3JO+bQmpUdzHPWDa+hYjJ9qZhwLZQ73X2rDQ== carlos alberto@TheMachine"
 }
@@ -138,9 +157,10 @@ resource "aws_security_group" "ec2_sg" {
 
 # Instância EC2
 resource "aws_instance" "web_server" {
+  count                  = var.create_infrastructure ? 1 : 0
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.deployer.key_name
+  key_name               = "agendamento-4minds-key"
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   subnet_id              = aws_subnet.public.id
 
@@ -172,25 +192,25 @@ resource "aws_instance" "web_server" {
 # Outputs
 output "ec2_public_ip" {
   description = "IP público da instância EC2"
-  value       = aws_instance.web_server.public_ip
+  value       = var.create_infrastructure ? aws_instance.web_server[0].public_ip : "Infrastructure not created"
 }
 
 output "ec2_private_ip" {
   description = "IP privado da instância EC2"
-  value       = aws_instance.web_server.private_ip
+  value       = var.create_infrastructure ? aws_instance.web_server[0].private_ip : "Infrastructure not created"
 }
 
 output "ec2_instance_id" {
   description = "ID da instância EC2"
-  value       = aws_instance.web_server.id
+  value       = var.create_infrastructure ? aws_instance.web_server[0].id : "Infrastructure not created"
 }
 
 output "ssh_command" {
   description = "Comando SSH para conectar na instância"
-  value       = "ssh -i ~/.ssh/id_rsa ubuntu@${aws_instance.web_server.public_ip}"
+  value       = var.create_infrastructure ? "ssh -i ~/.ssh/id_rsa ubuntu@${aws_instance.web_server[0].public_ip}" : "Infrastructure not created"
 }
 
 output "application_url" {
   description = "URL da aplicação"
-  value       = "http://${aws_instance.web_server.public_ip}"
+  value       = var.create_infrastructure ? "http://${aws_instance.web_server[0].public_ip}" : "Infrastructure not created"
 }

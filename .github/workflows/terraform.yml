@@ -56,7 +56,15 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: |
+          # Verificar se infraestrutura já existe
+          if terraform show -json | jq -e '.values.root_module.resources[] | select(.type == "aws_instance")' > /dev/null 2>&1; then
+            echo "Infrastructure already exists. Skipping creation."
+            terraform plan -var="create_infrastructure=false" -no-color
+          else
+            echo "Creating new infrastructure."
+            terraform plan -var="create_infrastructure=true" -no-color
+          fi
         continue-on-error: true
 
       - name: Update Pull Request
@@ -91,7 +99,15 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
+        run: |
+          # Verificar se infraestrutura já existe
+          if terraform show -json | jq -e '.values.root_module.resources[] | select(.type == "aws_instance")' > /dev/null 2>&1; then
+            echo "Infrastructure already exists. No changes needed."
+            terraform apply -var="create_infrastructure=false" -auto-approve
+          else
+            echo "Creating new infrastructure."
+            terraform apply -var="create_infrastructure=true" -auto-approve
+          fi
 
       - name: Terraform Output
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
