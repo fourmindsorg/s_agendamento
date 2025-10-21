@@ -100,3 +100,5 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write("🎉 VERIFICAÇÃO CONCLUÍDA!")
 
+
+

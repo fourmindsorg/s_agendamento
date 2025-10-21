@@ -18,12 +18,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Setup environment variables
+        run: |
+          cp .env.example .env
+          echo "SECRET_KEY=test-secret-key-for-deploy" >> .env
+          echo "DEBUG=False" >> .env
+          echo "ENVIRONMENT=production" >> .env
 
       - name: Run Django checks
         run: |
@@ -48,12 +55,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Setup environment variables
+        run: |
+          cp .env.example .env
+          echo "SECRET_KEY=test-secret-key-for-deploy" >> .env
+          echo "DEBUG=False" >> .env
+          echo "ENVIRONMENT=production" >> .env
 
       - name: Run tests
         run: |
@@ -63,8 +77,8 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          host: ${{ secrets.EC2_HOST || '34.228.191.215' }}
+          username: ${{ secrets.EC2_USERNAME || 'ubuntu' }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "🚀 Iniciando deploy..."
@@ -77,16 +91,23 @@ jobs:
 
             echo "📝 Commit atual: $(git log --oneline -1)"
             source .venv/bin/activate
-            
+
             echo "📦 Instalando dependências..."
             pip install -r requirements.txt
-            
+
+            echo "🔧 Configurando variáveis de ambiente..."
+            cp .env.example .env
+            echo "SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" >> .env
+            echo "DEBUG=False" >> .env
+            echo "ENVIRONMENT=production" >> .env
+            echo "ALLOWED_HOSTS=fourmindstech.com.br,www.fourmindstech.com.br,${{ secrets.EC2_HOST || '34.228.191.215' }}" >> .env
+
             echo "🗄️ Executando migrações..."
             python manage.py migrate
-            
+
             echo "🔧 Verificando configuração do Django..."
             python manage.py check --deploy
-            
+
             echo "📁 Coletando arquivos estáticos..."
             python manage.py collectstatic --noinput
 
@@ -99,33 +120,33 @@ jobs:
             sudo systemctl daemon-reload
             sudo systemctl start gunicorn
             sudo systemctl start nginx
-            
+
             echo "⏳ Aguardando serviços iniciarem..."
             sleep 20
 
             echo "✅ Verificando status dos serviços..."
             sudo systemctl status gunicorn --no-pager -l
             sudo systemctl status nginx --no-pager -l
-            
+
             echo "🔍 Verificando processos..."
             ps aux | grep gunicorn | grep -v grep || echo "❌ Gunicorn não está rodando"
             ps aux | grep nginx | grep -v grep || echo "❌ Nginx não está rodando"
-            
+
             echo "🧪 Testando conectividade local..."
             curl -f http://localhost:8000/ || echo "❌ Gunicorn não responde localmente"
             curl -f http://localhost/ || echo "❌ Nginx não responde localmente"
-            
+
             echo "🌐 Testando conectividade externa..."
             curl -f http://fourmindstech.com.br/ || echo "❌ Site não responde via HTTP"
             curl -f https://fourmindstech.com.br/ || echo "❌ Site não responde via HTTPS"
-            
+
             echo "🎉 Deploy concluído!"
 
       - name: Health Check
         run: |
           echo "🏥 Verificando saúde do servidor..."
           sleep 30
-          
+
           # Testar HTTP primeiro
           echo "🔍 Testando HTTP..."
           if curl -f -s http://fourmindstech.com.br/ > /dev/null; then
@@ -133,7 +154,7 @@ jobs:
           else
             echo "❌ HTTP não funciona"
           fi
-          
+
           # Testar HTTPS
           echo "🔍 Testando HTTPS..."
           if curl -f -s https://fourmindstech.com.br/ > /dev/null; then
@@ -141,7 +162,7 @@ jobs:
           else
             echo "❌ HTTPS não funciona"
           fi
-          
+
           # Testar endpoint específico
           echo "🔍 Testando endpoint de planos..."
           if curl -f -s https://fourmindstech.com.br/authentication/planos/ > /dev/null; then
@@ -149,5 +170,5 @@ jobs:
           else
             echo "❌ Endpoint de planos não funciona"
           fi
-          
+
           echo "✅ Health check concluído!"

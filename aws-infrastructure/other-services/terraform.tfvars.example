@@ -29,10 +29,10 @@ memory_threshold = 80
 disk_threshold = 85
 
 # Email para alertas
-notification_email = "fourmindsorg@gmail.com"
+notification_email = "seu_email@gmail.com"
 
 # Database password (configure with your secure password)
-db_password = "YOUR_SECURE_DB_PASSWORD_HERE"
+db_password = "SUA_SENHA_SEGURA_DO_BANCO_AQUI"
 
 # Tags
 tags = {

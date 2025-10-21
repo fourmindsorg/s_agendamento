@@ -17,6 +17,13 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# Variables
+variable "db_password" {
+  description = "Password for the RDS database"
+  type        = string
+  sensitive   = true
+}
+
 # Data sources
 data "aws_availability_zones" "available" {
   state = "available"
@@ -112,7 +119,7 @@ resource "aws_db_instance" "postgres" {
 
   db_name  = "agendamentos_db"
   username = "postgres"
-  password = "4MindsAgendamento2025!SecureDB#Pass"
+  password = var.db_password
 
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
