@@ -1,27 +1,54 @@
-name: Deploy to EC2
+# .github/workflows/deploy.yml
+name: Deploy to Production
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Permite execução manual
+  workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Django checks
+        run: |
+          python manage.py check
+          python manage.py check --deploy
+
+      - name: Run tests
+        run: |
+          python manage.py test
+
   deploy:
     runs-on: ubuntu-latest
-
-    # Só executa se não for pull_request
+    needs: test
     if: github.event_name != 'pull_request'
 
     steps:
       - name: Checkout code from GitHub main branch
         uses: actions/checkout@v4
         with:
-          ref: main # Garantir que está usando a branch main do GitHub
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -39,107 +66,88 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
           script: |
             echo "🚀 Iniciando deploy..."
             cd /home/ubuntu/s_agendamento
 
-            # Verificar branch atual
             echo "📍 Branch atual: $(git branch --show-current)"
-
-            # Fazer pull da branch main do GitHub
             echo "📥 Fazendo pull da branch main..."
             git fetch origin
             git reset --hard origin/main
 
-            # Verificar commit atual
             echo "📝 Commit atual: $(git log --oneline -1)"
-
-            # Ativar ambiente virtual
             source .venv/bin/activate
-
-            # Instalar dependências
+            
             echo "📦 Instalando dependências..."
             pip install -r requirements.txt
-
-            # Executar migrações
+            
             echo "🗄️ Executando migrações..."
             python manage.py migrate
             
-            # Verificar configuração do Django
             echo "🔧 Verificando configuração do Django..."
             python manage.py check --deploy
             
-            # Coletar arquivos estáticos
             echo "📁 Coletando arquivos estáticos..."
             python manage.py collectstatic --noinput
-            
-            # Testar se o Django está funcionando
-            echo "🧪 Testando Django..."
-            python manage.py check --settings=core.settings_production
 
-            # Parar serviços antes de reiniciar
             echo "🛑 Parando serviços..."
             sudo systemctl stop gunicorn || true
             sudo systemctl stop nginx || true
-            
-            # Aguardar parada completa
-            sleep 5
-            
-            # Reiniciar serviços
+            sleep 10
+
             echo "🔄 Reiniciando serviços..."
             sudo systemctl daemon-reload
             sudo systemctl start gunicorn
             sudo systemctl start nginx
             
-            # Aguardar serviços iniciarem
             echo "⏳ Aguardando serviços iniciarem..."
-            sleep 15
-            
-            # Verificar status dos serviços
+            sleep 20
+
             echo "✅ Verificando status dos serviços..."
             sudo systemctl status gunicorn --no-pager -l
             sudo systemctl status nginx --no-pager -l
             
-            # Verificar se os serviços estão realmente rodando
             echo "🔍 Verificando processos..."
             ps aux | grep gunicorn | grep -v grep || echo "❌ Gunicorn não está rodando"
             ps aux | grep nginx | grep -v grep || echo "❌ Nginx não está rodando"
             
-            # Testar conectividade local
             echo "🧪 Testando conectividade local..."
             curl -f http://localhost:8000/ || echo "❌ Gunicorn não responde localmente"
+            curl -f http://localhost/ || echo "❌ Nginx não responde localmente"
+            
+            echo "🌐 Testando conectividade externa..."
+            curl -f http://fourmindstech.com.br/ || echo "❌ Site não responde via HTTP"
+            curl -f https://fourmindstech.com.br/ || echo "❌ Site não responde via HTTPS"
             
             echo "🎉 Deploy concluído!"
 
       - name: Health Check
         run: |
           echo "🏥 Verificando saúde do servidor..."
-          
-          # Aguardar um pouco mais para os serviços estabilizarem
           sleep 30
           
-          # Tentar múltiplas vezes
-          for i in {1..5}; do
-            echo "Tentativa $i/5..."
-            if curl -f -s https://fourmindstech.com.br/s_agendamentos/ > /dev/null; then
-              echo "✅ Servidor respondendo normalmente!"
-              exit 0
-            else
-              echo "❌ Tentativa $i falhou, aguardando 10 segundos..."
-              sleep 10
-            fi
-          done
+          # Testar HTTP primeiro
+          echo "🔍 Testando HTTP..."
+          if curl -f -s http://fourmindstech.com.br/ > /dev/null; then
+            echo "✅ HTTP funcionando!"
+          else
+            echo "❌ HTTP não funciona"
+          fi
           
-          echo "❌ Servidor não respondeu após 5 tentativas"
-          echo "Verificando status dos serviços..."
+          # Testar HTTPS
+          echo "🔍 Testando HTTPS..."
+          if curl -f -s https://fourmindstech.com.br/ > /dev/null; then
+            echo "✅ HTTPS funcionando!"
+          else
+            echo "❌ HTTPS não funciona"
+          fi
           
-          # Verificar logs do gunicorn
-          echo "📋 Logs do Gunicorn:"
-          sudo journalctl -u gunicorn --no-pager -n 20
+          # Testar endpoint específico
+          echo "🔍 Testando endpoint de planos..."
+          if curl -f -s https://fourmindstech.com.br/authentication/planos/ > /dev/null; then
+            echo "✅ Endpoint de planos funcionando!"
+          else
+            echo "❌ Endpoint de planos não funciona"
+          fi
           
-          # Verificar logs do nginx
-          echo "📋 Logs do Nginx:"
-          sudo journalctl -u nginx --no-pager -n 20
-          
-          exit 1
+          echo "✅ Health check concluído!"
