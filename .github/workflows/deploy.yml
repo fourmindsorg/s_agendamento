@@ -75,7 +75,7 @@ jobs:
           python manage.py test
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST || '34.228.191.215' }}
           username: ${{ secrets.EC2_USERNAME || 'ubuntu' }}
