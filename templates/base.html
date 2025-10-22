@@ -17,9 +17,27 @@
     
     <!-- CSS -->
     {% comment %} boostrap {% endcomment %}
+   
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/error-messages.css' %}" />
+
+   
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" /> 
+
+    <!-- AGENDAMENTOS -->
+
+    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_detail.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_form.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_status_form.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/cliente_confirm_delete.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/cliente_form.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/configuracoes.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agendamentos/relatorios.css' %}" />
+
+    <!-- serviços -->
+        <link rel="stylesheet" href="{% static 'css/agendamentos/servico_form.css' %}" />
+
     
     {% comment %} plot {% endcomment %}
     <script src="{% static 'js/vendor/plotly.min.js' %}"></script>
@@ -295,6 +313,7 @@
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="{% static 'js/agendamento_detail.js' %}"></script>
+     <script src="{% static 'js/agendamento_list.js' %}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
