@@ -1,0 +1,10 @@
+# Configuração simplificada para deploy robusto
+aws_region     = "us-east-1"
+project_name   = "s-agendamento"
+environment    = "prod"
+domain_name    = "fourmindstech.com.br"
+instance_type  = "t2.micro"
+db_name        = "agendamento_db"
+db_username    = "agendamento_user"
+db_password    = "4MindsAgendamento2025!SecureDB#Pass"
+secret_key     = "django-insecure-4minds-agendamento-2025-super-secret-key"

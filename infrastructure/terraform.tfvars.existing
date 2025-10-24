@@ -1,0 +1,63 @@
+# ========================================
+# CONFIGURAÇÃO PARA USAR RECURSOS EXISTENTES
+# Sistema de Agendamento 4Minds
+# ========================================
+
+# Configurações básicas
+aws_region     = "us-east-1"
+project_name   = "s-agendamento"
+environment    = "prod"
+domain_name    = "fourmindstech.com.br"
+
+# Configurações de rede
+vpc_cidr = "10.0.0.0/16"
+
+# Configurações de instância
+instance_type = "t2.micro"
+
+# Configurações de banco de dados
+db_instance_class    = "db.t4g.micro"
+db_allocated_storage = 20
+db_name              = "agendamento_db"
+db_username          = "agendamento_user"
+db_password          = "4MindsAgendamento2025!SecureDB#Pass"
+
+# Configurações de segurança
+secret_key = "django-insecure-4minds-agendamento-2025-super-secret-key-for-production-use-only-change-this-immediately"
+allowed_hosts = ["fourmindstech.com.br", "www.fourmindstech.com.br", "api.fourmindstech.com.br", "admin.fourmindstech.com.br"]
+allowed_ssh_cidrs = ["0.0.0.0/0"]
+
+# Configurações de notificação
+notification_email = "admin@fourmindstech.com.br"
+
+# Configurações de DNS
+hosted_zone_id = "Z07390493BQT3ED4UA3XK"
+create_hosted_zone = false
+
+# Configurações de monitoramento
+enable_detailed_monitoring = false
+log_retention_days = 7
+
+# Configurações de backup
+backup_retention_period = 7
+backup_window = "03:00-04:00"
+maintenance_window = "sun:04:00-sun:05:00"
+
+# ========================================
+# RECURSOS EXISTENTES PARA USAR
+# ========================================
+
+adopt_existing_resources = true
+
+# Usar recursos existentes para evitar conflitos
+existing_vpc_id = "vpc-0241a66c65638de63"
+existing_public_subnet_id = "subnet-0057559e127d38a38"
+existing_private_subnet_id = "subnet-08a827ac008fdf493"
+existing_ec2_sg_id = "sg-071cc3c07f4ea6a86"
+existing_rds_sg_id = "sg-00963bd36f63dcce0"
+existing_db_instance_id = "db-K5FEV3OYOC2BMRC6SWEHVRIWGQ"
+existing_static_bucket_name = "agendamento-4minds-static-djet24kp"
+existing_media_bucket_name = "agendamento-4minds-media-djet24kp"
+existing_igw_id = "igw-04002a8e32744d378"
+# existing_instance_id = null  # Criar nova instância EC2
+# existing_eip_id = null  # Criar novo Elastic IP

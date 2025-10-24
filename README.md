@@ -11,7 +11,7 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 - **Ícones:** Font Awesome 6.4.0
 - **Python:** 3.10+
 - **Servidor:** Nginx + Gunicorn
-- **Infraestrutura:** AWS (EC2, RDS, S3, CloudWatch)
+- **Infraestrutura:** AWS (EC2, RDS, S3) - Apenas serviços gratuitos
 - **Deploy:** GitHub Actions + Terraform
 
 ## ✨ Funcionalidades
@@ -107,7 +107,7 @@ O sistema possui 3 pipelines automatizadas:
 - **S3 Bucket:** Arquivos estáticos
 - **VPC:** Rede privada segura
 - **Security Groups:** Firewall configurado
-- **CloudWatch:** Monitoramento e logs
+- **Logs:** Sistema de logging nativo do Django
 - **SNS:** Notificações de alerta
 
 ### **URLs de Acesso**
@@ -130,7 +130,7 @@ Após o deploy, acesse:
 
 #### Comandos Terraform Locais
 ```bash
-cd aws-infrastructure
+cd infrastructure
 terraform init
 terraform plan
 terraform apply
@@ -143,7 +143,7 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_EC2]
 
 ### **Monitoramento**
 
-- **Logs:** CloudWatch Logs (`/aws/ec2/sistema-agendamento/`)
+- **Logs:** Sistema de logging nativo do Django (console)
 - **Métricas:** CPU, Memória, Disco
 - **Alertas:** Email quando CPU > 80%
 - **Health Check:** A cada 5 minutos
@@ -177,12 +177,12 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_EC2]
 - **Banco:** RDS PostgreSQL 15.4
 - **Domínio:** fourmindstech.com.br
 - **SSL:** ✅ Ativo (Let's Encrypt)
-- **Monitoramento:** CloudWatch + SNS
+- **Monitoramento:** Logs nativos do Django
 
-### **Documentação do Servidor**
-Para informações detalhadas sobre o servidor atual, consulte:
-- [SERVIDOR_ATUAL.md](./SERVIDOR_ATUAL.md) - Informações completas do servidor
-- [COMO_EXECUTAR.md](./COMO_EXECUTAR.md) - Guia de execução local e produção
+### **Documentação da Infraestrutura**
+Para informações detalhadas sobre a infraestrutura AWS, consulte:
+- [INFRASTRUCTURE_README.md](./INFRASTRUCTURE_README.md) - Visão geral da infraestrutura
+- [infrastructure/INFRASTRUCTURE_CONFIG.md](./infrastructure/INFRASTRUCTURE_CONFIG.md) - Configuração detalhada
 
 ---
 

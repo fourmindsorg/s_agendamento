@@ -1,0 +1,58 @@
+# ========================================
+# CONFIGURA��O GERADA AUTOMATICAMENTE
+# Sistema de Agendamento 4Minds
+# ========================================
+
+# Configura��es b�sicas
+aws_region     = "us-east-1"
+project_name   = "s-agendamento"
+environment    = "prod"
+domain_name    = "fourmindstech.com.br"
+
+# Configura��es de rede
+vpc_cidr = "10.0.0.0/16"
+
+# Configura��es de inst�ncia
+instance_type = "t2.micro"
+
+# Configura��es de banco de dados
+db_instance_class    = "db.t4g.micro"
+db_allocated_storage = 20
+db_name              = "agendamento_db"
+db_username          = "agendamento_user"
+db_password          = "4MindsAgendamento2025!SecureDB#Pass"
+
+# Configura��es de seguran�a
+secret_key = "django-insecure-4minds-agendamento-2025-super-secret-key-for-production-use-only-change-this-immediately"
+allowed_hosts = ["fourmindstech.com.br", "www.fourmindstech.com.br", "api.fourmindstech.com.br", "admin.fourmindstech.com.br"]
+allowed_ssh_cidrs = ["0.0.0.0/0"]
+
+# Configura��es de notifica��o
+notification_email = "admin@fourmindstech.com.br"
+
+# Configura��es de DNS
+hosted_zone_id = "Z07390493BQT3ED4UA3XK"
+create_hosted_zone = false
+
+# Configura��es de monitoramento
+enable_detailed_monitoring = false
+log_retention_days = 7
+
+# Configura��es de backup
+backup_retention_period = 7
+backup_window = "03:00-04:00"
+maintenance_window = "sun:04:00-sun:05:00"
+
+# ========================================
+# RECURSOS EXISTENTES DETECTADOS
+# ========================================
+
+adopt_existing_resources = true
+
+# Recursos detectados automaticamente
+# existing_vpc_id = null  # N�o encontrado
+# existing_instance_id = null  # N�o encontrado
+# existing_db_instance_id = null  # N�o encontrado
+# existing_static_bucket_name = null  # N�o encontrado
+# existing_media_bucket_name = null  # N�o encontrado
+# existing_eip_id = null  # N�o encontrado

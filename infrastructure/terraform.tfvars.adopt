@@ -1,0 +1,65 @@
+# ========================================
+# CONFIGURAÇÃO PARA ADOÇÃO DE RECURSOS EXISTENTES
+# Sistema de Agendamento 4Minds
+# ========================================
+
+# Configurações básicas
+aws_region     = "us-east-1"
+project_name   = "s-agendamento"
+environment    = "production"
+domain_name    = "fourmindstech.com.br"
+
+# Configurações de rede
+vpc_cidr = "10.0.0.0/16"
+
+# Configurações de instância
+instance_type = "t2.micro"
+
+# Configurações de banco de dados
+db_instance_class    = "db.t4g.micro"
+db_allocated_storage = 20
+db_name              = "agendamento_db"
+db_username          = "agendamento_user"
+db_password          = "4MindsAgendamento2025!SecureDB#Pass"
+
+# Configurações de segurança
+secret_key = "django-insecure-4minds-agendamento-2025-super-secret-key-for-production-use-only-change-this-immediately"
+allowed_hosts = ["fourmindstech.com.br", "www.fourmindstech.com.br", "api.fourmindstech.com.br", "admin.fourmindstech.com.br"]
+allowed_ssh_cidrs = ["0.0.0.0/0"]
+
+# Configurações de notificação
+notification_email = "admin@fourmindstech.com.br"
+
+# Configurações de DNS
+hosted_zone_id = "Z1D633PJN98FT9"  # Zona hospedada existente
+create_hosted_zone = false
+
+# Configurações de monitoramento
+enable_detailed_monitoring = false
+log_retention_days = 7
+
+# Configurações de backup
+backup_retention_period = 7
+backup_window = "03:00-04:00"
+maintenance_window = "sun:04:00-sun:05:00"
+
+# ========================================
+# CONFIGURAÇÕES PARA ADOÇÃO DE RECURSOS EXISTENTES
+# ========================================
+
+# Habilitar adoção de recursos existentes
+adopt_existing_resources = true
+
+# IDs de recursos existentes (opcional - deixe null para criar novos)
+# existing_vpc_id = "vpc-xxxxxxxxx"
+# existing_public_subnet_id = "subnet-xxxxxxxxx"
+# existing_private_subnet_id = "subnet-xxxxxxxxx"
+# existing_ec2_sg_id = "sg-xxxxxxxxx"
+# existing_rds_sg_id = "sg-xxxxxxxxx"
+# existing_instance_id = "i-xxxxxxxxx"
+# existing_db_instance_id = "agendamento-db"
+# existing_static_bucket_name = "s-agendamento-static-xxxxxxxx"
+# existing_media_bucket_name = "s-agendamento-media-xxxxxxxx"
+# existing_igw_id = "igw-xxxxxxxxx"
+# existing_eip_id = "eip-xxxxxxxxx"
+

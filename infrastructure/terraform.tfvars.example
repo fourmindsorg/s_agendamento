@@ -1,0 +1,114 @@
+# ========================================
+# CONFIGURAÇÕES TERRAFORM - EXEMPLO
+# Sistema de Agendamento 4Minds
+# ========================================
+
+# ========================================
+# CONFIGURAÇÕES GERAIS
+# ========================================
+
+# Região AWS
+aws_region = "us-east-1"
+
+# Nome do projeto
+project_name = "agendamento-4minds"
+
+# Ambiente
+environment = "prod"
+
+# Domínio principal
+domain_name = "fourmindstech.com.br"
+
+# ========================================
+# CONFIGURAÇÕES DE REDE
+# ========================================
+
+# CIDR da VPC
+vpc_cidr = "10.0.0.0/16"
+
+# ========================================
+# CONFIGURAÇÕES DE COMPUTE (FREE TIER)
+# ========================================
+
+# Tipo da instância EC2 (Free Tier)
+instance_type = "t2.micro"
+
+# ========================================
+# CONFIGURAÇÕES DE BANCO DE DADOS (FREE TIER)
+# ========================================
+
+# Classe da instância RDS (Free Tier)
+db_instance_class = "db.t4g.micro"
+
+# Armazenamento RDS (Free Tier: máximo 20GB)
+db_allocated_storage = 20
+
+# Nome do banco de dados
+db_name = "agendamentos_db"
+
+# Usuário do banco de dados
+db_username = "postgres"
+
+# Senha do banco de dados (CONFIGURE SUA SENHA SEGURA)
+db_password = "SUA_SENHA_SEGURA_AQUI"
+
+# ========================================
+# CONFIGURAÇÕES DE SEGURANÇA
+# ========================================
+
+# Chave secreta do Django (CONFIGURE SUA CHAVE SEGURA)
+secret_key = "SUA_CHAVE_SECRETA_DJANGO_AQUI"
+
+# Hosts permitidos
+allowed_hosts = [
+  "fourmindstech.com.br",
+  "www.fourmindstech.com.br",
+  "api.fourmindstech.com.br",
+  "admin.fourmindstech.com.br"
+]
+
+# CIDRs permitidos para SSH (deixe como ["0.0.0.0/0"] para permitir de qualquer lugar)
+allowed_ssh_cidrs = ["0.0.0.0/0"]
+
+# ========================================
+# CONFIGURAÇÕES DE NOTIFICAÇÃO
+# ========================================
+
+# Email para alertas
+notification_email = "fourmindsorg@gmail.com"
+
+# ========================================
+# CONFIGURAÇÕES DE DNS
+# ========================================
+
+# Usar zona hospedada existente (fourmindstech.com.br)
+# ID da zona hospedada configurado:
+hosted_zone_id = "Z07390493BQT3ED4UA3XK"  # ID real da zona fourmindstech.com.br
+
+# Criar nova zona hospedada (desabilitado - usar existente)
+create_hosted_zone = false
+
+# ========================================
+# CONFIGURAÇÕES DE MONITORAMENTO
+# ========================================
+
+# Monitoramento detalhado (desabilitado para Free Tier)
+enable_detailed_monitoring = false
+
+# Retenção de logs (Free Tier: 7 dias)
+log_retention_days = 7
+
+# ========================================
+# CONFIGURAÇÕES DE BACKUP
+# ========================================
+
+# Período de retenção de backup (Free Tier: 7 dias)
+backup_retention_period = 7
+
+# Janela de backup (UTC)
+backup_window = "03:00-04:00"
+
+# Janela de manutenção (UTC)
+maintenance_window = "sun:04:00-sun:05:00"
+
+
