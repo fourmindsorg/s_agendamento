@@ -1,27 +1,74 @@
 #!/bin/bash
-set -e
+# Script de configuração inicial da instância EC2 - Versão Simplificada
 
-# Log de inicialização
-echo "$(date): Iniciando configuração da instância EC2" >> /var/log/cloud-init-output.log
+echo "=== CONFIGURANDO INSTÂNCIA EC2 PARA DJANGO ==="
 
 # Atualizar sistema
-apt-get update
-apt-get upgrade -y
+echo "Atualizando sistema..."
+apt update -y
+apt upgrade -y
 
-# Instalar dependências básicas
-apt-get install -y python3 python3-pip python3-venv nginx git curl
+# Instalar dependências
+echo "Instalando dependências..."
+apt install -y python3 python3-pip python3-venv nginx supervisor postgresql-client libpq-dev git
 
-# Criar usuário para aplicação
-useradd -m -s /bin/bash django
+# Criar usuário para a aplicação
+echo "Criando usuário 'django'..."
+adduser --system --group django
 
-# Criar diretórios
-mkdir -p /var/www/agendamento
-mkdir -p /var/log/django
+# Criar diretório para a aplicação
+echo "Criando diretório da aplicação..."
+mkdir -p /opt/s-agendamento
+chown django:django /opt/s-agendamento
 
-# Configurar permissões
-chown -R django:django /var/www/agendamento
-chown -R django:django /var/log/django
+# Configurar ambiente virtual
+echo "Configurando ambiente virtual Python..."
+sudo -u django python3 -m venv /opt/s-agendamento/venv
 
-# Log de inicialização
-echo "$(date): Instância EC2 inicializada com sucesso" >> /var/log/django/startup.log
-echo "$(date): Configuração concluída" >> /var/log/cloud-init-output.log
+# Configurar Nginx
+echo "Configurando Nginx..."
+tee /etc/nginx/sites-available/s-agendamento > /dev/null <<EOF
+server {
+    listen 80;
+    server_name _;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        alias /opt/s-agendamento/staticfiles/;
+    }
+    location /media/ {
+        alias /opt/s-agendamento/mediafiles/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/opt/s-agendamento/s-agendamento.sock;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/s-agendamento /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl restart nginx
+
+# Configurar Supervisor
+echo "Configurando Supervisor..."
+tee /etc/supervisor/conf.d/s-agendamento.conf > /dev/null <<EOF
+[program:s-agendamento]
+command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock
+directory=/opt/s-agendamento
+user=django
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/opt/s-agendamento/logs/gunicorn.log
+environment=DJANGO_SETTINGS_MODULE="core.settings_production_aws"
+EOF
+
+mkdir -p /opt/s-agendamento/logs
+supervisorctl reread
+supervisorctl update
+
+echo "=== CONFIGURAÇÃO EC2 CONCLUÍDA ==="
+echo "A instância está pronta para receber o deploy da aplicação Django."
