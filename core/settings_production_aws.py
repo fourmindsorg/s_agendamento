@@ -62,6 +62,18 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
+# CSRF Trusted Origins - Necessário para forms POST funcionarem
+CSRF_TRUSTED_ORIGINS = [
+    "https://fourmindstech.com.br",
+    "https://www.fourmindstech.com.br",
+    "http://fourmindstech.com.br",  # Temporário durante transição HTTP->HTTPS
+]
+
+# HTTPS settings
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 # Logging
 LOGGING = {
     "version": 1,
