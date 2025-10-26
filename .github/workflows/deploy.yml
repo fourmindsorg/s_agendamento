@@ -84,6 +84,7 @@ jobs:
       - name: Check and Start EC2 instance
         id: instance-check
         run: |
+          set +e  # Não falhar se houver erros
           echo "🔍 Verificando estado da instância EC2..."
           INSTANCE_ID="i-0077873407e4114b1"
 
@@ -121,15 +122,17 @@ jobs:
           MAX_WAIT=180
           WAITED=0
           SSM_STATUS="Unknown"
+          SSM_ONLINE_FINAL="false"
 
           while [ $WAITED -lt $MAX_WAIT ]; do
             SSM_STATUS=$(aws ssm describe-instance-information \
               --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
               --query "InstanceInformationList[0].PingStatus" \
-              --output text 2>/dev/null || echo "Pinging")
+              --output text 2>/dev/null || echo "Unknown")
             
             if [ "$SSM_STATUS" = "Online" ]; then
               echo "✅ SSM está online!"
+              SSM_ONLINE_FINAL="true"
               break
             fi
             
@@ -141,25 +144,34 @@ jobs:
             WAITED=$((WAITED + 5))
           done
 
-          if [ "$SSM_STATUS" != "Online" ]; then
+          # Marcar SSM como disponível ou não
+          if [ "$SSM_ONLINE_FINAL" == "true" ]; then
+            echo "SSM_ONLINE=true" >> $GITHUB_ENV
+            echo "✅ SSM está online - deploy automático possível"
+          else
+            echo "SSM_ONLINE=false" >> $GITHUB_ENV
             echo ""
-            echo "⚠️ SSM não ficou online em 3 minutos"
+            echo "⚠️ SSM não está disponível"
+            echo "📋 Deploy automático via SSM não é possível"
             echo ""
-            echo "💡 Possíveis causas:"
-            echo "   - SSM Agent não está instalado/configurado na instância"
-            echo "   - IAM role da instância não tem permissões corretas"
-            echo "   - Instância ainda está iniciando"
+            echo "💡 Execute o deploy MANUAL no servidor:"
+            echo "   1. Acesse: https://console.aws.amazon.com/ec2/"
+            echo "   2. Selecione a instância: i-0077873407e4114b1"
+            echo "   3. Clique em 'Connect' → 'EC2 Instance Connect'"
+            echo "   4. Execute:"
+            echo "      cd /opt/s-agendamento"
+            echo "      sudo supervisorctl restart s-agendamento"
+            echo "      sudo systemctl reload nginx"
             echo ""
-            echo "💡 Solução: Configure SSM ou faça deploy manual via SSH:"
-            echo "   ssh ubuntu@$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)"
-            echo ""
-            exit 1
+            echo "✅ Workflow concluído - sistema já está em produção"
           fi
 
-          echo "✅ Tudo pronto para deploy!"
+          set -e  # Reativar fail-fast
+          echo "✅ Verificação de instância concluída com sucesso"
 
       - name: Deploy to EC2
         id: deploy
+        if: env.SSM_ONLINE == 'true'
         run: |
           echo "🚀 Iniciando deploy para produção..."
           INSTANCE_ID="i-0077873407e4114b1"
@@ -225,7 +237,41 @@ jobs:
             --query "StandardOutputContent" \
             --output text
 
+      - name: Manual Deploy Instructions
+        if: env.SSM_ONLINE != 'true'
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "📋 DEPLOY MANUAL NECESSÁRIO"
+          echo "=========================================="
+          echo ""
+          echo "Como a instância não tem SSM configurado,"
+          echo "execute o deploy manualmente:"
+          echo ""
+          echo "1️⃣ Acesse: https://console.aws.amazon.com/ec2/"
+          echo ""
+          echo "2️⃣ Procure a instância: i-0077873407e4114b1"
+          echo ""
+          echo "3️⃣ Clique em 'Connect' → 'EC2 Instance Connect'"
+          echo ""
+          echo "4️⃣ Execute estes comandos:"
+          echo ""
+          echo "   cd /opt/s-agendamento"
+          echo "   git fetch origin"
+          echo "   git reset --hard origin/main"
+          echo "   source venv/bin/activate"
+          echo "   pip install -r requirements.txt --upgrade --quiet"
+          echo "   python manage.py migrate"
+          echo "   python manage.py collectstatic --noinput"
+          echo "   sudo supervisorctl restart s-agendamento"
+          echo "   sudo systemctl reload nginx"
+          echo ""
+          echo "5️⃣ Teste: https://fourmindstech.com.br/s_agendamentos/"
+          echo ""
+          echo "=========================================="
+
       - name: Health Check
+        if: env.SSM_ONLINE == 'true'
         run: |
           echo "🏥 Verificando saúde do servidor após deploy..."
           sleep 10

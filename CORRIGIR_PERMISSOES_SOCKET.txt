@@ -1,0 +1,53 @@
+=================================================
+🔧 ERRO: Permission denied no socket
+=================================================
+
+Problema:
+- Gunicorn cria socket para usuário "django"
+- Nginx (usuário "www-data") não pode acessar
+
+Solução: Corrigir permissões
+
+=================================================
+COMANDOS PARA EXECUTAR:
+=================================================
+
+# 1. Ver dono do socket
+ls -la /opt/s-agendamento/s-agendamento.sock
+
+# 2. Mudar permissões do socket
+sudo chmod 666 /opt/s-agendamento/s-agendamento.sock
+
+# OU se quiser ser mais específico (recomendado):
+sudo chown django:www-data /opt/s-agendamento/s-agendamento.sock
+sudo chmod 660 /opt/s-agendamento/s-agendamento.sock
+
+# 3. Verificar configuração supervisor
+sudo cat /etc/supervisor/conf.d/s-agendamento.conf
+
+# 4. Reiniciar tudo
+sudo supervisorctl restart s-agendamento
+sudo systemctl restart nginx
+
+# 5. Verificar se funcionou
+sudo ls -la /opt/s-agendamento/s-agendamento.sock
+
+=================================================
+OU CORRIGIR DIRETO NO SUPERVISOR:
+=================================================
+
+Edite a configuração do supervisor:
+
+sudo nano /etc/supervisor/conf.d/s-agendamento.conf
+
+Garanta que tem esta linha:
+user=django
+
+E depois reinicie:
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl restart s-agendamento
+
+=================================================
+
+

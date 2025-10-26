@@ -1,0 +1,59 @@
+=================================================
+🔍 COMANDOS DE DIAGNÓSTICO
+=================================================
+
+Execute ESTES comandos no servidor:
+
+# Ver onde você está
+pwd
+
+# Ver o que tem no diretório
+ls -la
+
+# Verificar se existe requirements.txt
+ls -la requirements.txt
+
+# Ver o caminho completo
+find /opt -name "requirements.txt" 2>/dev/null
+
+# Ver estrutura do diretório atual
+find . -maxdepth 2 -type f -name "*.txt"
+
+# Verificar se está no diretório correto
+cat .git/config 2>/dev/null || echo "Não é um diretório Git"
+
+# Ver histórico do git
+git status 2>/dev/null || echo "Não é um repositório Git"
+
+=================================================
+SE NÃO TEM O CÓDIGO NO SERVIDOR
+=================================================
+
+Execute isto:
+
+# Ver onde está o projeto Django
+ls -la /opt/s-agendamento/
+
+# Ver o que está instalado
+pip list | grep django
+
+# Ver processos rodando
+ps aux | grep gunicorn
+ps aux | grep python
+
+# Ver configuração do supervisor
+sudo cat /etc/supervisor/conf.d/s-agendamento.conf
+
+=================================================
+SOLUÇÃO RÁPIDA SEM DEPLOY
+=================================================
+
+Se o servidor já estava funcionando antes,
+só precisa reiniciar:
+
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+
+=================================================
+
+

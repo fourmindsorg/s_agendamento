@@ -1,0 +1,106 @@
+=================================================
+✅ SOLUÇÃO PARA ERRO 502 BAD GATEWAY
+=================================================
+
+Sua instância está rodando, mas o Django parou.
+Você precisa reiniciar os serviços.
+
+
+=================================================
+SOLUÇÃO MAIS RÁPIDA (2 MINUTOS)
+=================================================
+
+1. ABRA ESTE LINK:
+   https://console.aws.amazon.com/ec2/
+
+2. ENCONTRE A INSTÂNCIA:
+   - Procure pelo ID: i-0077873407e4114b1
+   - Ou pelo IP: 52.91.139.151
+
+3. CLIQUE EM "Connect" (Conectar)
+
+4. ESCOLHA "EC2 Instance Connect"
+
+5. NO TERMINAL QUE ABRIR, DIGITE:
+
+   cd /opt/s-agendamento
+   sudo supervisorctl restart s-agendamento
+   sudo systemctl reload nginx
+   exit
+
+6. AGUARDE 15 SEGUNDOS E TESTE:
+   https://fourmindstech.com.br/s_agendamentos/
+
+
+=================================================
+SE O CONSOLE NÃO FUNCIONAR
+=================================================
+
+Opção A - Criar chave SSH e conectar:
+
+1. AWS Console → EC2 → Key Pairs → Create Key Pair
+2. Download da chave .pem
+3. Mover para: ~/.ssh/
+4. Conectar:
+   ssh -i ~/.ssh/sua-chave.pem ubuntu@52.91.139.151
+
+Opção B - Configurar SSM (para deploy automático):
+
+1. Console → EC2 → Instances → i-0077873407e4114b1
+2. Security → IAM role
+3. Criar/Editar IAM role com:
+   - AmazonSSMManagedInstanceCore
+4. Depois reconectar:
+   aws ssm start-session --target i-0077873407e4114b1
+
+
+=================================================
+TESTE SE FUNCIONOU
+=================================================
+
+Após executar os comandos acima, aguarde 30 segundos e acesse:
+
+✅ https://fourmindstech.com.br/s_agendamentos/
+
+Se mostrar a página (não 502) = RESOLVIDO!
+
+
+=================================================
+O QUE ACONTECEU
+=================================================
+
+❌ Erro 502 = Nginx funciona, Django parado
+✅ Solução = Reiniciar Django (supervisorctl restart)
+
+O erro acontece quando:
+- Servidor reinicia
+- Django crasha
+- Serviço para por erro
+- Deploy incompleto
+
+Proteção futura:
+Configure Systemd ou Supervisor para auto-restart.
+
+
+=================================================
+COMANDOS SALVOS PARA FUTURA REFERÊNCIA
+=================================================
+
+# Conectar no servidor
+aws ssm start-session --target i-0077873407e4114b1
+# ou
+ssh ubuntu@52.91.139.151
+
+# Dentro do servidor:
+cd /opt/s-agendamento
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+sudo supervisorctl status
+
+# Ver logs se houver problema
+sudo tail -50 /opt/s-agendamento/logs/gunicorn.log
+sudo tail -50 /var/log/nginx/error.log
+
+
+=================================================
+
