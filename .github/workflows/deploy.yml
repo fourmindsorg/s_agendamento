@@ -74,6 +74,22 @@ jobs:
           python manage.py check
           python manage.py test
 
+      - name: Check AWS credentials
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "::error::AWS credentials não configurados!"
+            echo ""
+            echo "Configure os secrets no GitHub:"
+            echo "Settings → Secrets and variables → Actions"
+            echo ""
+            echo "Secrets necessários:"
+            echo "  - AWS_ACCESS_KEY_ID"
+            echo "  - AWS_SECRET_ACCESS_KEY"
+            echo ""
+            echo "⚠️ Deploy será pulado."
+            exit 1
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -83,7 +99,7 @@ jobs:
 
       - name: Deploy to EC2 via SSM
         run: |
-          echo "🚀 Iniciando deploy..."
+          echo "🚀 Iniciando deploy via SSM..."
           
           INSTANCE_ID="i-0077873407e4114b1"
           
