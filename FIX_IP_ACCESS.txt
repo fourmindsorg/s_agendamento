@@ -1,0 +1,114 @@
+==============================================
+CORREÇÃO DE ACESSO VIA IP - Nginx SSL
+==============================================
+
+PROBLEMA:
+- Ao acessar https://52.91.139.151 retorna erro SSL
+- O certificado SSL é válido apenas para fourmindstech.com.br
+- O servidor está forçando HTTPS mesmo para IPs
+
+SOLUÇÃO:
+Configurar Nginx para aceitar HTTP no IP e HTTPS apenas no domínio
+
+==============================================
+INSTRUÇÕES PARA EXECUTAR NO SERVIDOR
+==============================================
+
+1. CONECTAR AO SERVIDOR:
+   ssh -i infrastructure/s_agendametnos_key_pairs_AWS.pem ec2-user@52.91.139.151
+
+2. COPIAR E EXECUTAR O SCRIPT:
+   
+   # Copie o conteúdo do arquivo infrastructure/fix_nginx_ip_access.sh
+   # Cole no servidor e execute:
+   
+   nano fix_nginx_ip_access.sh
+   # Cole o conteúdo e salve (Ctrl+X, Y, Enter)
+   
+   chmod +x fix_nginx_ip_access.sh
+   sudo ./fix_nginx_ip_access.sh
+
+3. OU EXECUTAR COMANDOS DIRETAMENTE:
+   
+   sudo tee /etc/nginx/sites-available/s-agendamento > /dev/null <<'SCRIPT_EOF'
+   # Servidor HTTP para acesso direto pelo IP (sem SSL)
+   server {
+       listen 80 default_server;
+       listen [::]:80 default_server;
+       server_name _;
+       
+       location /static/ {
+           alias /opt/s-agendamento/staticfiles/;
+           expires 1y;
+           add_header Cache-Control "public, immutable";
+       }
+       
+       location /media/ {
+           alias /opt/s-agendamento/mediafiles/;
+           expires 1y;
+           add_header Cache-Control "public, immutable";
+       }
+       
+       location / {
+           include proxy_params;
+           proxy_pass http://unix:/opt/s-agendamento/s-agendamento.sock;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   
+   # Servidor HTTPS apenas para domínio
+   server {
+       listen 443 ssl http2;
+       server_name fourmindstech.com.br www.fourmindstech.com.br;
+       
+       ssl_certificate /etc/letsencrypt/live/fourmindstech.com.br/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/fourmindstech.com.br/privkey.pem;
+       
+       ssl_protocols TLSv1.2 TLSv1.3;
+       ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+       ssl_prefer_server_ciphers off;
+       ssl_session_cache shared:SSL:10m;
+       ssl_session_timeout 10m;
+       
+       location /static/ {
+           alias /opt/s-agendamento/staticfiles/;
+           expires 1y;
+           add_header Cache-Control "public, immutable";
+       }
+       
+       location /media/ {
+           alias /opt/s-agendamento/mediafiles/;
+           expires 1y;
+           add_header Cache-Control "public, immutable";
+       }
+       
+       location / {
+           include proxy_params;
+           proxy_pass http://unix:/opt/s-agendamento/s-agendamento.sock;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   SCRIPT_EOF
+   
+   # Testar configuração
+   sudo nginx -t
+   
+   # Se ok, recarregar
+   sudo systemctl reload nginx
+
+4. VERIFICAR FUNCIONAMENTO:
+   curl -I http://52.91.139.151
+   curl -I https://fourmindstech.com.br
+
+5. TESTAR NO NAVEGADOR:
+   - http://52.91.139.151 (deve funcionar)
+   - https://fourmindstech.com.br (deve funcionar)
+
+==============================================
+
