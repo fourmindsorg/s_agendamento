@@ -1,0 +1,35 @@
+===============================================
+DEPLOY RÁPIDO - Sistema de Agendamento 4Minds
+===============================================
+
+SERVIDOR: i-0077873407e4114b1 (52.91.139.151)
+
+🚀 MÉTODO RÁPIDO (Copy/Paste):
+
+1. Conectar SSH:
+   ssh -i infrastructure/s_agendametnos_key_pairs_AWS.pem ec2-user@52.91.139.151
+
+2. No servidor, copie e cole este comando:
+
+curl -sSL https://raw.githubusercontent.com/gist/anonymous/deploy_script.sh | sudo bash
+
+OU copie todo o conteúdo do arquivo "deploy_manual.sh" e execute:
+
+===============================================
+
+TESTE RÁPIDO APÓS DEPLOY:
+- http://52.91.139.151
+- http://52.91.139.151/admin (admin/admin123)
+
+===============================================
+
+COMANDOS DE VERIFICAÇÃO:
+sudo systemctl status nginx
+sudo supervisorctl status s-agendamento
+curl -I http://localhost
+
+===============================================
+
+
+
+
