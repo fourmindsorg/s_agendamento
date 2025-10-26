@@ -74,73 +74,65 @@ jobs:
           python manage.py check
           python manage.py test
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST || '34.228.191.215' }}
-          username: ${{ secrets.EC2_USERNAME || 'ubuntu' }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            echo "🚀 Iniciando deploy..."
-            cd /home/ubuntu/s_agendamento
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-            echo "📍 Branch atual: $(git branch --show-current)"
-            echo "📥 Fazendo pull da branch main..."
-            git fetch origin
-            git reset --hard origin/main
-
-            echo "📝 Commit atual: $(git log --oneline -1)"
-            source .venv/bin/activate
-
-            echo "📦 Instalando dependências..."
-            pip install -r requirements.txt
-
-            echo "🔧 Configurando variáveis de ambiente..."
-            cp .env.example .env
-            echo "SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" >> .env
-            echo "DEBUG=False" >> .env
-            echo "ENVIRONMENT=production" >> .env
-            echo "ALLOWED_HOSTS=fourmindstech.com.br,www.fourmindstech.com.br,${{ secrets.EC2_HOST || '34.228.191.215' }}" >> .env
-
-            echo "🗄️ Executando migrações..."
-            python manage.py migrate
-
-            echo "🔧 Verificando configuração do Django..."
-            python manage.py check --deploy
-
-            echo "📁 Coletando arquivos estáticos..."
-            python manage.py collectstatic --noinput
-
-            echo "🛑 Parando serviços..."
-            sudo systemctl stop gunicorn || true
-            sudo systemctl stop nginx || true
-            sleep 10
-
-            echo "🔄 Reiniciando serviços..."
-            sudo systemctl daemon-reload
-            sudo systemctl start gunicorn
-            sudo systemctl start nginx
-
-            echo "⏳ Aguardando serviços iniciarem..."
-            sleep 20
-
-            echo "✅ Verificando status dos serviços..."
-            sudo systemctl status gunicorn --no-pager -l
-            sudo systemctl status nginx --no-pager -l
-
-            echo "🔍 Verificando processos..."
-            ps aux | grep gunicorn | grep -v grep || echo "❌ Gunicorn não está rodando"
-            ps aux | grep nginx | grep -v grep || echo "❌ Nginx não está rodando"
-
-            echo "🧪 Testando conectividade local..."
-            curl -f http://localhost:8000/ || echo "❌ Gunicorn não responde localmente"
-            curl -f http://localhost/ || echo "❌ Nginx não responde localmente"
-
-            echo "🌐 Testando conectividade externa..."
-            curl -f http://fourmindstech.com.br/ || echo "❌ Site não responde via HTTP"
-            curl -f https://fourmindstech.com.br/ || echo "❌ Site não responde via HTTPS"
-
-            echo "🎉 Deploy concluído!"
+      - name: Deploy to EC2 via SSM
+        run: |
+          echo "🚀 Iniciando deploy..."
+          
+          INSTANCE_ID="i-0077873407e4114b1"
+          
+          echo "📥 Fazendo pull da branch main..."
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              'cd /opt/s-agendamento',
+              'git fetch origin',
+              'git reset --hard origin/main',
+              'git log --oneline -1'
+            ]"
+          
+          echo "📦 Instalando dependências..."
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              'cd /opt/s-agendamento',
+              'source venv/bin/activate',
+              'pip install -r requirements.txt'
+            ]"
+          
+          echo "🗄️ Executando migrações..."
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              'cd /opt/s-agendamento',
+              'source venv/bin/activate',
+              'python manage.py migrate',
+              'python manage.py collectstatic --noinput'
+            ]"
+          
+          echo "🔄 Reiniciando serviços..."
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              'sudo supervisorctl restart s-agendamento',
+              'sudo systemctl reload nginx',
+              'sleep 5',
+              'sudo supervisorctl status',
+              'curl -I http://localhost',
+              'curl -I http://52.91.139.151'
+            ]"
+          
+          echo "🎉 Deploy concluído!"
 
       - name: Health Check
         run: |
