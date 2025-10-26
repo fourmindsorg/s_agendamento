@@ -1,0 +1,51 @@
+==============================================
+DIAGNOSTICO: SOCKET NAO ESTA SENDO CRIADO
+==============================================
+
+PROBLEMA:
+Gunicorn nao esta criando o socket Unix
+Status: STARTING (mas nao funciona)
+
+POSSIVEIS CAUSAS:
+1. Aplicacao Django nao esta instalada em /opt/s-agendamento
+2. Permissoes incorretas
+3. Diretorio nao existe
+4. Erro na aplicacao Django
+
+==============================================
+COMANDOS PARA DIAGNOSTICAR
+==============================================
+
+# 1. Ver se o socket foi criado
+ls -la /opt/s-agendamento/s-agendamento.sock
+
+# 2. Ver se o diretorio existe
+ls -la /opt/s-agendamento/
+
+# 3. Ver logs do Gunicorn
+sudo tail -50 /opt/s-agendamento/logs/gunicorn.log
+
+# 4. Verificar se venv existe
+ls -la /opt/s-agendamento/venv/
+
+# 5. Ver se aplicacao Django existe
+ls -la /opt/s-agendamento/core/
+
+# 6. Ver status detalhado do supervisor
+sudo supervisorctl status s-agendamento
+sudo supervisorctl tail -50 s-agendamento stderr
+
+==============================================
+VERIFICAR SE APLICACAO EXISTE
+==============================================
+
+# Ver se tem arquivos Django
+find /opt/s-agendamento -name "*.py" | head -20
+
+# Ver se tem manage.py
+ls -la /opt/s-agendamento/manage.py
+
+# Se nao existir, a aplicacao precisa ser instalada!
+
+==============================================
+
