@@ -74,45 +74,90 @@ jobs:
           python manage.py check
           python manage.py test
 
-      - name: Prepare deployment instructions
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to EC2 via SSM
         run: |
-          echo "# 🚀 Instruções para Deploy Manual" > DEPLOY_INSTRUCTIONS.md
-          echo "" >> DEPLOY_INSTRUCTIONS.md
-          echo "O deploy automático via SSM não está disponível no momento." >> DEPLOY_INSTRUCTIONS.md
-          echo "Execute o deploy manualmente no servidor:" >> DEPLOY_INSTRUCTIONS.md
-          echo "" >> DEPLOY_INSTRUCTIONS.md
-          echo "## Opção 1: Deploy via SSH" >> DEPLOY_INSTRUCTIONS.md
-          echo "\`\`\`bash" >> DEPLOY_INSTRUCTIONS.md
-          echo "ssh -i sua_chave.pem ubuntu@52.91.139.151" >> DEPLOY_INSTRUCTIONS.md
-          echo "cd /opt/s-agendamento" >> DEPLOY_INSTRUCTIONS.md
-          echo "sudo bash infrastructure/deploy_completo.sh" >> DEPLOY_INSTRUCTIONS.md
-          echo "\`\`\`" >> DEPLOY_INSTRUCTIONS.md
-          echo "" >> DEPLOY_INSTRUCTIONS.md
-          echo "## Opção 2: Deploy via AWS Session Manager" >> DEPLOY_INSTRUCTIONS.md
-          echo "\`\`\`bash" >> DEPLOY_INSTRUCTIONS.md
-          echo "aws ssm start-session --target i-0077873407e4114b1" >> DEPLOY_INSTRUCTIONS.md
-          echo "cd /opt/s-agendamento" >> DEPLOY_INSTRUCTIONS.md
-          echo "sudo bash infrastructure/deploy_completo.sh" >> DEPLOY_INSTRUCTIONS.md
-          echo "\`\`\`" >> DEPLOY_INSTRUCTIONS.md
-          echo "" >> DEPLOY_INSTRUCTIONS.md
-          echo "## Servidor:" >> DEPLOY_INSTRUCTIONS.md
-          echo "- IP: 52.91.139.151" >> DEPLOY_INSTRUCTIONS.md
-          echo "- Instância: i-0077873407e4114b1" >> DEPLOY_INSTRUCTIONS.md
-          echo "- Branch: main" >> DEPLOY_INSTRUCTIONS.md
-          
-          cat DEPLOY_INSTRUCTIONS.md
+          echo "🚀 Iniciando deploy para produção..."
+          INSTANCE_ID="i-0077873407e4114b1"
+
+          # Enviar comandos de deploy via SSM
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /opt/s-agendamento",
+              "git fetch origin",
+              "git reset --hard origin/main",
+              "source venv/bin/activate",
+              "pip install -r requirements.txt --upgrade --quiet",
+              "python manage.py migrate",
+              "python manage.py collectstatic --noinput",
+              "sudo supervisorctl restart s-agendamento",
+              "sudo systemctl reload nginx",
+              "echo Deploy completo concluído"
+            ]' \
+            --timeout-seconds 600 \
+            --query "Command.CommandId" \
+            --output text > /tmp/command-id.txt
+
+          COMMAND_ID=$(cat /tmp/command-id.txt)
+          echo "📋 Command ID: $COMMAND_ID"
+          echo "⏳ Aguardando execução (pode levar até 2 minutos)..."
+
+          # Aguardar até 2 minutos
+          for i in {1..24}; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "InProgress")
+            
+            if [ "$STATUS" = "Success" ]; then
+              echo "✅ Deploy concluído com sucesso!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "❌ Deploy falhou com status: $STATUS"
+              echo "📋 Erros:"
+              aws ssm get-command-invocation \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --query "StandardErrorContent" \
+                --output text
+              exit 1
+            fi
+            
+            if [ $((i % 4)) -eq 0 ]; then
+              echo "⏳ Status: $STATUS ($((i * 5))s)"
+            fi
+            sleep 5
+          done
+
+          # Mostrar output do comando
+          echo ""
+          echo "📊 Output do deploy:"
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text
 
       - name: Health Check
         run: |
-          echo "🏥 Verificando saúde do servidor..."
-          sleep 30
+          echo "🏥 Verificando saúde do servidor após deploy..."
+          sleep 10
 
           # Testar HTTP primeiro
           echo "🔍 Testando HTTP..."
           if curl -f -s http://fourmindstech.com.br/ > /dev/null; then
             echo "✅ HTTP funcionando!"
           else
-            echo "❌ HTTP não funciona"
+            echo "⚠️ HTTP não respondeu - servidor pode estar reiniciando"
           fi
 
           # Testar HTTPS
@@ -120,15 +165,16 @@ jobs:
           if curl -f -s https://fourmindstech.com.br/ > /dev/null; then
             echo "✅ HTTPS funcionando!"
           else
-            echo "❌ HTTPS não funciona"
+            echo "⚠️ HTTPS não respondeu - pode levar alguns minutos"
           fi
 
           # Testar endpoint específico
           echo "🔍 Testando endpoint de planos..."
+          sleep 5
           if curl -f -s https://fourmindstech.com.br/authentication/planos/ > /dev/null; then
             echo "✅ Endpoint de planos funcionando!"
           else
-            echo "❌ Endpoint de planos não funciona"
+            echo "⚠️ Endpoint de planos não respondeu ainda"
           fi
 
           echo "✅ Health check concluído!"
