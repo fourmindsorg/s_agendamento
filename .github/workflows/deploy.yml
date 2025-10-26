@@ -81,7 +81,72 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy to EC2 via SSM
+      - name: Check and Start EC2 instance
+        run: |
+          echo "🔍 Verificando estado da instância EC2..."
+          INSTANCE_ID="i-0077873407e4114b1"
+
+          STATE=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --query "Reservations[0].Instances[0].State.Name" \
+            --output text)
+
+          echo "📍 Estado atual da instância: $STATE"
+
+          if [ "$STATE" == "stopped" ]; then
+            echo "🔧 Instância parada. Tentando iniciar..."
+            aws ec2 start-instances --instance-ids "$INSTANCE_ID"
+            
+            echo "⏳ Aguardando instância iniciar (isso pode levar até 2 minutos)..."
+            aws ec2 wait instance-running --instance-ids "$INSTANCE_ID"
+            echo "✅ Instância iniciada com sucesso!"
+          elif [ "$STATE" != "running" ]; then
+            echo "❌ Instância está no estado: $STATE"
+            echo "⚠️ Estados suportados: running, stopped"
+            echo "💡 Ações:"
+            echo "  1. Verificar no console AWS: https://console.aws.amazon.com/ec2"
+            echo "  2. Iniciar manualmente se necessário"
+            echo ""
+            echo "Pulando deploy automático..."
+            exit 0
+          else
+            echo "✅ Instância já está rodando"
+          fi
+
+          echo "🔍 Aguardando SSM ficar disponível..."
+          # Aguardar SSM Agent ficar online (pode levar 30-60s após start)
+          MAX_WAIT=120
+          WAITED=0
+          while [ $WAITED -lt $MAX_WAIT ]; do
+            SSM_STATUS=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+              --query "InstanceInformationList[0].PingStatus" \
+              --output text 2>/dev/null || echo "Pinging")
+            
+            if [ "$SSM_STATUS" = "Online" ]; then
+              echo "✅ SSM está online!"
+              break
+            fi
+            
+            if [ $((WAITED % 15)) -eq 0 ]; then
+              echo "⏳ Aguardando SSM... ($WAITED/$MAX_WAIT)s (status: $SSM_STATUS)"
+            fi
+            
+            sleep 5
+            WAITED=$((WAITED + 5))
+          done
+
+          if [ "$SSM_STATUS" != "Online" ]; then
+            echo "⚠️ SSM não ficou online em 2 minutos"
+            echo "💡 Você pode tentar deploy manual:"
+            echo "   aws ssm start-session --target $INSTANCE_ID"
+            echo "   cd /opt/s-agendamento"
+            echo "   sudo bash infrastructure/deploy_completo.sh"
+            exit 0
+          fi
+
+      - name: Deploy to EC2
+        id: deploy
         run: |
           echo "🚀 Iniciando deploy para produção..."
           INSTANCE_ID="i-0077873407e4114b1"
