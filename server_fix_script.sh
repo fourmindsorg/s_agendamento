@@ -1,11 +1,23 @@
+#!/bin/bash
+echo "=== CORRIGINDO FRONTEND NO SERVIDOR ==="
+
+# Parar serviços
+sudo supervisorctl stop s-agendamento
+
+# Ir para o diretório do projeto
+cd /opt/s-agendamento
+
+# Backup do template atual
+sudo cp agendamentos/templates/agendamentos/home.html agendamentos/templates/agendamentos/home.html.backup
+
+# Aplicar template corrigido
+sudo -u django tee agendamentos/templates/agendamentos/home.html > /dev/null <<'TEMPLATE_EOF'
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Sistema de Agendamento - 4Minds</title>
-    
-    {% load static %}
+    <title>AgendaFácil - Sistema de Agendamento</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -207,29 +219,20 @@
             </div>
             
             <h1 class="hero-title">
-                🚀 Sistema de Agendamento - 4Minds
+                🚀 AgendaFácil
             </h1>
             
             <p class="hero-subtitle">
-                Bem-vindo ao sistema de agendamento da 4Minds.
+                Sistema de Agendamento - 4Minds
             </p>
 
             <div class="action-buttons">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'agendamentos:dashboard' %}" class="btn-action btn-primary-action">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn-action btn-outline-action">
-                        <i class="fas fa-calendar-alt"></i> Meus Agendamentos
-                    </a>
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="btn-action btn-primary-action">
-                        <i class="fas fa-sign-in-alt"></i> Entrar
-                    </a>
-                    <a href="{% url 'authentication:register' %}" class="btn-action btn-outline-action">
-                        <i class="fas fa-user-plus"></i> Criar Conta
-                    </a>
-                {% endif %}
+                <a href="/admin/" class="btn-action btn-primary-action">
+                    <i class="fas fa-cog"></i> Admin Django
+                </a>
+                <a href="/s_agendamentos/" class="btn-action btn-outline-action">
+                    <i class="fas fa-calendar-check"></i> Agendamentos
+                </a>
             </div>
 
             <div class="features-grid">
@@ -260,3 +263,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+TEMPLATE_EOF
+
+# Reiniciar serviços
+sudo supervisorctl start s-agendamento
+sudo systemctl reload nginx
+
+echo "=== CORREÇÃO APLICADA ==="

@@ -1,0 +1,30 @@
+{
+    "Changes": [
+        {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": "fourmindstech.com.br.",
+                "Type": "A",
+                "TTL": 60,
+                "ResourceRecords": [
+                    {
+                        "Value": "52.91.139.151"
+                    }
+                ]
+            }
+        },
+        {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": "www.fourmindstech.com.br.",
+                "Type": "A",
+                "TTL": 60,
+                "ResourceRecords": [
+                    {
+                        "Value": "52.91.139.151"
+                    }
+                ]
+            }
+        }
+    ]
+}
