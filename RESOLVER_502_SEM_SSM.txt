@@ -1,0 +1,81 @@
+=================================================
+✅ SOLUÇÃO FUNCIONA SEM SSM CONFIGURADO
+=================================================
+
+Execute ESTE comando (não precisa conectar):
+
+aws ssm send-command \
+  --instance-ids i-0077873407e4114b1 \
+  --document-name "AWS-RunShellScript" \
+  --parameters commands="cd /opt/s-agendamento && sudo supervisorctl restart s-agendamento && sudo systemctl reload nginx" \
+  --region us-east-1
+
+Copie o CommandId que aparecer, e depois execute:
+
+aws ssm get-command-invocation \
+  --command-id <COMMAND_ID_COPIADO> \
+  --instance-id i-0077873407e4114b1
+
+=================================================
+
+Se isso não funcionar, a melhor opção é via CONSOLE WEB da AWS:
+
+=================================================
+ACESSE O CONSOLE WEB
+=================================================
+
+1. Vá para: https://console.aws.amazon.com/ec2/
+
+2. Procure pela instância: i-0077873407e4114b1
+
+3. Clique com botão direito → "Connect"
+
+4. Escolha:
+   - "EC2 Instance Connect" (mais fácil)
+   - OU "Session Manager" 
+   - OU "EC2 Serial Console"
+
+5. Dentro do terminal web, execute:
+
+cd /opt/s-agendamento
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+sudo supervisorctl status
+
+
+=================================================
+ALTERNATIVA: CONFIGURAR SSH ACESSO
+=================================================
+
+No Console AWS:
+
+1. EC2 → Instances → i-0077873407e4114b1
+2. Security → Security groups
+3. Edite o Security Group
+4. Adicione regra:
+   - Type: SSH
+   - Port: 22
+   - Source: 0.0.0.0/0 (ou seu IP)
+
+5. Key Pairs:
+   - Actions → Security → Get Windows Password
+   - OU crie uma nova key pair:
+     EC2 → Key Pairs → Create Key Pair → Download
+
+6. Depois conecte:
+ssh -i caminho/para/chave.pem ubuntu@52.91.139.151
+
+
+=================================================
+SOLUÇÃO MAIS RÁPIDA AGORA
+=================================================
+
+Execute simplesmente:
+
+aws ec2 describe-instance-status \
+  --instance-ids i-0077873407e4114b1
+
+Se mostrar "running", acesse o console web da AWS.
+
+=================================================
+

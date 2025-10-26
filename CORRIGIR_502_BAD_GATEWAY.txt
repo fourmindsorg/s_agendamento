@@ -1,0 +1,168 @@
+==============================================
+🔧 CORRIGIR ERRO 502 BAD GATEWAY
+==============================================
+
+O erro 502 indica que:
+✅ Nginx está rodando (retornou resposta HTTP)
+❌ Django/Gunicorn NÃO está rodando ou não está acessível
+
+==============================================
+COMANDOS PARA EXECUTAR
+==============================================
+
+PASSO 1: Verificar Estado da Instância
+----------------------------------------
+aws ec2 describe-instances \
+  --instance-ids i-0077873407e4114b1 \
+  --query 'Reservations[0].Instances[0].[State.Name,PublicIpAddress]' \
+  --output table
+
+
+PASSO 2: Conectar no Servidor
+--------------------------------
+
+Opção A - Via SSM (se configurado):
+aws ssm start-session --target i-0077873407e4114b1
+
+Opção B - Via SSH:
+IP=$(aws ec2 describe-instances --instance-ids i-0077873407e4114b1 --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+ssh ubuntu@$IP
+
+
+PASSO 3: Diagnosticar no Servidor
+----------------------------------
+
+Uma vez conectado, execute estes comandos:
+
+# 1. Verificar status do Gunicorn
+sudo supervisorctl status s-agendamento
+
+# 2. Ver logs do Gunicorn
+sudo tail -f /opt/s-agendamento/logs/gunicorn.log
+
+# 3. Ver se o socket existe
+ls -la /opt/s-agendamento/s-agendamento.sock
+
+# 4. Verificar processos
+ps aux | grep gunicorn
+
+# 5. Verificar nginx
+sudo systemctl status nginx
+sudo nginx -t
+
+
+PASSO 4: Corrigir o Problema
+-------------------------------
+
+# Se o Gunicorn não estiver rodando:
+sudo supervisorctl restart s-agendamento
+
+# Ou reiniciar tudo:
+cd /opt/s-agendamento
+source venv/bin/activate
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+
+
+PASSO 5: Se persistir, fazer deploy completo
+---------------------------------------------
+
+cd /opt/s-agendamento
+sudo bash infrastructure/deploy_completo.sh
+
+
+==============================================
+COMANDO COMPLETO DE UMA SÓ VEZ
+==============================================
+
+Execute tudo de uma vez (copie e cole):
+
+# 1. Iniciar instância (se estiver parada)
+aws ec2 start-instances --instance-ids i-0077873407e4114b1
+aws ec2 wait instance-running --instance-ids i-0077873407e4114b1
+
+# 2. Obter IP
+export IP=$(aws ec2 describe-instances --instance-ids i-0077873407e4114b1 --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+echo "Conectando em: $IP"
+
+# 3. Conectar e corrigir
+ssh ubuntu@$IP "
+cd /opt/s-agendamento && \
+sudo supervisorctl restart s-agendamento && \
+sudo systemctl reload nginx && \
+sudo supervisorctl status s-agendamento
+"
+
+
+==============================================
+COMANDOS ALTERNATIVOS (Se o SSH não funcionar)
+==============================================
+
+# Tentar via SSM
+aws ssm send-command \
+  --instance-ids i-0077873407e4114b1 \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=[
+    "cd /opt/s-agendamento",
+    "sudo supervisorctl restart s-agendamento",
+    "sudo systemctl reload nginx",
+    "sudo supervisorctl status s-agendamento"
+  ]'
+
+
+==============================================
+DIAGNÓSTICO DETALHADO
+==============================================
+
+Para diagnosticar completamente, conecte e execute:
+
+# Verificar todos os serviços
+sudo supervisorctl status
+sudo systemctl status nginx
+sudo systemctl status gunicorn  # Se existir
+
+# Verificar logs
+sudo journalctl -u supervisor -n 50
+sudo tail -50 /opt/s-agendamento/logs/gunicorn.log
+sudo tail -50 /var/log/nginx/error.log
+
+# Verificar configuração nginx
+sudo cat /etc/nginx/sites-available/s-agendamento | grep proxy_pass
+
+# Testar se o Django está respondendo
+cd /opt/s-agendamento
+source venv/bin/activate
+python manage.py check
+
+# Verificar se há erros no código
+python manage.py check --deploy
+
+
+==============================================
+SOLUÇÃO RÁPIDA (Se você tem acesso SSH pronto)
+==============================================
+
+# Execute ESTES comandos diretamente (substitua IP):
+ssh ubuntu@IP_DO_SERVIDOR << 'EOF'
+cd /opt/s-agendamento
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+sudo supervisorctl status s-agendamento
+EOF
+
+
+==============================================
+TESTAR APÓS CORREÇÃO
+==============================================
+
+# Aguardar alguns segundos
+sleep 10
+
+# Testar HTTP
+curl -I http://52.91.139.151
+
+# Testar HTTPS
+curl -I https://fourmindstech.com.br
+
+# Se retornar 200 OK = ✅ Corrigido!
+

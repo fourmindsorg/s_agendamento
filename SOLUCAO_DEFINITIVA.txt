@@ -1,0 +1,64 @@
+=================================================
+🎯 SOLUÇÃO DEFINITIVA - ERRO 502
+=================================================
+
+A instância ESTÁ rodando (confirmado).
+Você precisa acessar o servidor para reiniciar Django.
+
+=================================================
+MELHOR SOLUÇÃO AGORA:
+=================================================
+
+1️⃣ ACESSE O CONSOLE WEB DA AWS:
+
+   https://console.aws.amazon.com/ec2/
+
+2️⃣ PROCURE A INSTÂNCIA:
+
+   - Clique em "Instances" (Instâncias)
+   - Procure ou filtre por: i-0077873407e4114b1
+   - Ou procure pelo IP: 52.91.139.151
+
+3️⃣ CONECTE NA INSTÂNCIA:
+
+   - Selecione a instância
+   - Clique no botão "Connect" (Conectar)
+   - Escolha "EC2 Instance Connect" ou "Browser-based SSH"
+
+4️⃣ DENTRO DO TERMINAL WEB, EXECUTE:
+
+   cd /opt/s-agendamento
+   sudo supervisorctl restart s-agendamento
+   sudo systemctl reload nginx
+   sudo supervisorctl status
+
+5️⃣ SAIA E TESTE:
+
+   - Pressione Ctrl+D ou digite: exit
+   - Aguarde 15 segundos
+   - Acesse: https://fourmindstech.com.br/s_agendamentos/
+
+=================================================
+ALTERNATIVA: Via GitHub Actions (Automático)
+=================================================
+
+Se preferir automatizar, faça isto:
+
+git add .
+git commit -m "fix: restart services to resolve 502"
+git push origin main
+
+O GitHub Actions vai tentar reiniciar automaticamente.
+
+=================================================
+TESTAR SE FUNCIONOU
+=================================================
+
+Aguarde 30 segundos após os comandos acima e acesse:
+
+https://fourmindstech.com.br/s_agendamentos/
+
+Se mostrar a página normal (não erro 502) = ✅ RESOLVIDO!
+
+=================================================
+

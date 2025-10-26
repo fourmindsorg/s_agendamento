@@ -1,0 +1,116 @@
+==============================================
+🚀 CORRIGIR DEPLOY AGORA - COMANDOS PRONTOS
+==============================================
+
+O erro ocorre porque a instância EC2 está PARADA ou o SSM não está configurado.
+
+COMANDOS PARA EXECUTAR NO TERMINAL (Git Bash):
+===============================================
+
+1️⃣ Verificar Estado da Instância:
+----------------------------------
+aws ec2 describe-instances \
+  --instance-ids i-0077873407e4114b1 \
+  --query 'Reservations[0].Instances[0].[State.Name,PublicIpAddress]' \
+  --output table
+
+
+2️⃣ Se a instância estiver PARADA (stopped):
+---------------------------------------------
+aws ec2 start-instances --instance-ids i-0077873407e4114b1
+
+# Aguardar iniciar (1-2 minutos)
+aws ec2 wait instance-running --instance-ids i-0077873407e4114b1
+
+
+3️⃣ Verificar SSM (Session Manager):
+------------------------------------
+aws ssm describe-instance-information \
+  --filters "Key=InstanceIds,Values=i-0077873407e4114b1" \
+  --query 'InstanceInformationList[0].PingStatus' \
+  --output text
+
+# Se mostrar "Online" = ✅ Pode usar SSM
+# Se mostrar erro = ❌ SSM não está configurado
+
+
+4️⃣ OPÇÃO A - Deploy via SSM (Recomendado):
+--------------------------------------------
+aws ssm start-session --target i-0077873407e4114b1
+
+# Dentro da sessão SSM:
+cd /opt/s-agendamento
+sudo bash infrastructure/deploy_completo.sh
+exit
+
+
+4️⃣ OPÇÃO B - Deploy via SSH (Alternativa):
+--------------------------------------------
+# 1. Obter IP:
+IP=$(aws ec2 describe-instances --instance-ids i-0077873407e4114b1 --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+echo $IP
+
+# 2. Conectar:
+ssh ubuntu@$IP
+
+# 3. Dentro do servidor:
+cd /opt/s-agendamento
+sudo bash infrastructure/deploy_completo.sh
+exit
+
+
+5️⃣ OPÇÃO C - Deploy via AWS CLI (Uma linha):
+---------------------------------------------
+aws ssm send-command \
+  --instance-ids i-0077873407e4114b1 \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=[cd /opt/s-agendamento, git fetch origin, git reset --hard origin/main, source venv/bin/activate, pip install -r requirements.txt --upgrade --quiet, python manage.py migrate, python manage.py collectstatic --noinput, sudo supervisorctl restart s-agendamento, sudo systemctl reload nginx]'
+
+
+==============================================
+💡 DIAGNÓSTICO
+==============================================
+
+Se o SSM não estiver funcionando, você precisa:
+
+1. Instalar SSM Agent na instância:
+   - Conecte via SSH
+   - Execute: sudo snap install amazon-ssm-agent --classic
+
+2. Ou configurar IAM role com permissões SSM:
+   - AWS Console → EC2 → Instances
+   - Selecione a instância → Actions → Security → Modify IAM role
+   - Adicione IAM role com AmazonSSMManagedInstanceCore policy
+
+3. Ou usar SSH (mais simples):
+   - Conecte via ssh ubuntu@IP
+   - Execute o script de deploy
+
+==============================================
+📝 DEPLOY MANUAL SIMPLES (RECOMENDADO)
+==============================================
+
+Execute estes comandos em sequência:
+
+# 1. Iniciar instância (se estiver parada)
+aws ec2 start-instances --instance-ids i-0077873407e4114b1
+
+# 2. Aguardar (1-2 minutos)
+aws ec2 wait instance-running --instance-ids i-0077873407e4114b1
+sleep 30
+
+# 3. Obter IP
+aws ec2 describe-instances --instance-ids i-0077873407e4114b1 --query 'Reservations[0].Instances[0].PublicIpAddress' --output text
+
+# 4. Conectar e fazer deploy
+# (Cole o IP do passo 3)
+ssh ubuntu@IP_AQUI
+cd /opt/s-agendamento
+sudo bash infrastructure/deploy_completo.sh
+
+==============================================
+✅ Após o deploy, teste:
+==============================================
+- http://52.91.139.151
+- https://fourmindstech.com.br
+

@@ -82,6 +82,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Check and Start EC2 instance
+        id: instance-check
         run: |
           echo "🔍 Verificando estado da instância EC2..."
           INSTANCE_ID="i-0077873407e4114b1"
@@ -103,20 +104,24 @@ jobs:
           elif [ "$STATE" != "running" ]; then
             echo "❌ Instância está no estado: $STATE"
             echo "⚠️ Estados suportados: running, stopped"
-            echo "💡 Ações:"
-            echo "  1. Verificar no console AWS: https://console.aws.amazon.com/ec2"
-            echo "  2. Iniciar manualmente se necessário"
             echo ""
-            echo "Pulando deploy automático..."
-            exit 0
+            echo "💡 Execute manualmente para fazer deploy:"
+            echo "   1. aws ec2 start-instances --instance-ids $INSTANCE_ID"
+            echo "   2. aws ssm start-session --target $INSTANCE_ID"
+            echo "   3. cd /opt/s-agendamento && sudo bash infrastructure/deploy_completo.sh"
+            echo ""
+            echo "❌ Pulando deploy automático..."
+            exit 1
           else
             echo "✅ Instância já está rodando"
           fi
 
-          echo "🔍 Aguardando SSM ficar disponível..."
+          echo "🔍 Verificando SSM disponibilidade..."
           # Aguardar SSM Agent ficar online (pode levar 30-60s após start)
-          MAX_WAIT=120
+          MAX_WAIT=180
           WAITED=0
+          SSM_STATUS="Unknown"
+
           while [ $WAITED -lt $MAX_WAIT ]; do
             SSM_STATUS=$(aws ssm describe-instance-information \
               --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
@@ -128,7 +133,7 @@ jobs:
               break
             fi
             
-            if [ $((WAITED % 15)) -eq 0 ]; then
+            if [ $((WAITED % 20)) -eq 0 ]; then
               echo "⏳ Aguardando SSM... ($WAITED/$MAX_WAIT)s (status: $SSM_STATUS)"
             fi
             
@@ -137,13 +142,21 @@ jobs:
           done
 
           if [ "$SSM_STATUS" != "Online" ]; then
-            echo "⚠️ SSM não ficou online em 2 minutos"
-            echo "💡 Você pode tentar deploy manual:"
-            echo "   aws ssm start-session --target $INSTANCE_ID"
-            echo "   cd /opt/s-agendamento"
-            echo "   sudo bash infrastructure/deploy_completo.sh"
-            exit 0
+            echo ""
+            echo "⚠️ SSM não ficou online em 3 minutos"
+            echo ""
+            echo "💡 Possíveis causas:"
+            echo "   - SSM Agent não está instalado/configurado na instância"
+            echo "   - IAM role da instância não tem permissões corretas"
+            echo "   - Instância ainda está iniciando"
+            echo ""
+            echo "💡 Solução: Configure SSM ou faça deploy manual via SSH:"
+            echo "   ssh ubuntu@$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)"
+            echo ""
+            exit 1
           fi
+
+          echo "✅ Tudo pronto para deploy!"
 
       - name: Deploy to EC2
         id: deploy

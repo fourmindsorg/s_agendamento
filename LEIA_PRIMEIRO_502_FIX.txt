@@ -1,0 +1,87 @@
+=================================================
+🚨 ERRO 502 - SOLUÇÃO EM 3 PASSOS
+=================================================
+
+Execute estes comandos na ordem:
+
+=================================================
+PASSO 1: Obter IP e Estado
+=================================================
+
+Copie e cole no terminal (Git Bash):
+
+aws ec2 describe-instances \
+  --instance-ids i-0077873407e4114b1 \
+  --query 'Reservations[0].Instances[0].[State.Name,PublicIpAddress]' \
+  --output table
+
+
+=================================================
+PASSO 2: Conectar no Servidor
+=================================================
+
+Anote o IP da tabela acima e substitua <IP> abaixo:
+
+ssh ubuntu@<IP>
+
+
+=================================================
+PASSO 3: Corrigir os Serviços
+=================================================
+
+Dentro do servidor, execute:
+
+cd /opt/s-agendamento
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+sudo supervisorctl status s-agendamento
+
+
+=================================================
+✅ SAIR E TESTAR
+=================================================
+
+Digite: exit
+
+Aguarde 15 segundos e acesse:
+https://fourmindstech.com.br/s_agendamentos/
+
+
+=================================================
+❌ SE NÃO CONSEGUIR CONECTAR
+=================================================
+
+Opção 1 - Via SSM:
+aws ssm start-session --target i-0077873407e4114b1
+
+Dentro da sessão:
+cd /opt/s-agendamento
+sudo supervisorctl restart s-agendamento
+exit
+
+
+Opção 2 - Comando Direto (se tem chave SSH):
+(S Substitua <IP> pelo IP da instância)
+
+ssh ubuntu@<IP> 'cd /opt/s-agendamento && sudo supervisorctl restart s-agendamento && sudo systemctl reload nginx'
+
+
+Opção 3 - Deploy Completo:
+aws ssm start-session --target i-0077873407e4114b1
+cd /opt/s-agendamento
+sudo bash infrastructure/deploy_completo.sh
+
+
+=================================================
+💡 EXPLICAÇÃO
+=================================================
+
+502 Bad Gateway = Nginx OK, mas Django parado
+Solução = Reiniciar Gunicorn (Django)
+
+Comandos mágicos:
+- sudo supervisorctl restart s-agendamento
+- sudo systemctl reload nginx
+
+=================================================
+
