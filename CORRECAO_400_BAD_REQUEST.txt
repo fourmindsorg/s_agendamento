@@ -1,0 +1,37 @@
+==============================================
+PROGRESSO: 400 BAD REQUEST
+==============================================
+
+STATUS:
+✅ Gunicorn: RUNNING
+✅ Nginx conectando ao Gunicorn
+❌ Django: retornando 400 Bad Request
+
+CAUSA:
+ALLOWED_HOSTS não inclui localhost ou 52.91.139.151
+
+==============================================
+VERIFICAR E CORRIGIR ALLOWED_HOSTS
+==============================================
+
+Execute no servidor:
+
+# Ver configuração atual do settings.py
+cat /opt/s-agendamento/s_agendamento/settings.py | grep ALLOWED_HOSTS -A 5
+
+# Ver conteúdo completo do settings.py
+cat /opt/s-agendamento/s_agendamento/settings.py
+
+==============================================
+CORRECAO
+==============================================
+
+# Fazer backup
+cp /opt/s-agendamento/s_agendamento/settings.py /opt/s-agendamento/s_agendamento/settings.py.backup
+
+# Corrigir ALLOWED_HOSTS
+# Procurar por: ALLOWED_HOSTS = [...]
+# E adicionar: localhost, 52.91.139.151, fourmindstech.com.br
+
+==============================================
+
