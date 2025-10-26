@@ -1,0 +1,70 @@
+==============================================
+PROBLEMA: PORTA 8000 EM USO
+==============================================
+
+O Gunicorn esta tentando usar TCP porta 8000, mas o Nginx
+espera um socket Unix (/opt/s-agendamento/s-agendamento.sock)
+
+CAUSA:
+Configuração incorreta do supervisor - Gunicorn deve usar socket Unix
+
+==============================================
+CORRECAO
+==============================================
+
+Execute no servidor:
+
+# 1. Ver configuração atual
+cat /etc/supervisor/conf.d/s-agendamento.conf
+
+# 2. Verificar se esta usando --bind unix: ao inves de --bind 127.0.0.1:8000
+
+# 3. Ver qual processo esta usando a porta 8000
+sudo lsof -i :8000
+
+# 4. Parar processo conflitante se existir
+sudo kill -9 <PID>
+
+==============================================
+CONFIGURACAO CORRETA DO SUPERVISOR
+==============================================
+
+A configuração correta deve ter:
+
+[program:s-agendamento]
+command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock
+directory=/opt/s-agendamento
+user=django
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/opt/s-agendamento/logs/gunicorn.log
+
+==============================================
+CORRECAO RAPIDA
+==============================================
+
+# Parar Gunicorn
+sudo supervisorctl stop s-agendamento
+
+# Matar processo na porta 8000
+sudo pkill -f gunicorn
+
+# Corrigir config do supervisor
+sudo nano /etc/supervisor/conf.d/s-agendamento.conf
+
+# Mudar de:
+# --bind 127.0.0.1:8000
+# Para:
+# --bind unix:/opt/s-agendamento/s-agendamento.sock
+
+# Depois:
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start s-agendamento
+
+# Testar
+curl -I http://localhost
+
+==============================================
+
