@@ -59,7 +59,13 @@
     background: var(--gradient-bg) !important;
     border: none;
     padding: 20px 30px;
+    color: #FFF !important;
 }
+
+.form-card .card-header * {
+    color: #FFF !important;
+}
+
 
 .form-card .card-body {
     padding: 30px;
@@ -145,16 +151,13 @@
     transition: all 0.3s ease;
 }
 
-.form-check:hover {
-    border-color: var(--primary-color);
-    background: var(--surface-color);
-}
+
 
 .form-check-input {
-    width: 1.5em;
-    height: 1.5em;
+    width: 25px !important;
+    height: 25px;
     margin-top: 0;
-    margin-right: 10px;
+    margin-right: 50px;
 }
 
 .form-check-input:checked {

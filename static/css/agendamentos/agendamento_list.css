@@ -1,0 +1,17 @@
+/* Força a cor branca para o texto dentro de todos os badges */
+.badge {
+    color: #FFF !important;
+}
+
+/* Força a cor branca para todos os ícones (<i>) dentro de qualquer badge */
+.badge i {
+    color: #FFF !important;
+}
+
+.texto-branco-agenda {
+    color: #FFF !important;
+}
+
+.month, .day{
+    color: #FFF !important;
+}

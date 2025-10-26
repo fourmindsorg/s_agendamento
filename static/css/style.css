@@ -1,3 +1,6 @@
+/* ========================================================================= */
+/* I. BASE E ESTRUTURA GLOBAL */
+/* ========================================================================= */
 * {
     margin: 0;
     padding: 0;
@@ -11,8 +14,6 @@ body {
     transition: all var(--transition-speed) ease;
     overflow-x: hidden;
 }
-
-
 
 /* Layout Principal */
 .main-wrapper {
@@ -39,14 +40,13 @@ body {
     width: var(--sidebar-collapsed-width);
 }
 
+/* Scrollbar Sidebar */
 .sidebar::-webkit-scrollbar {
     width: 6px;
 }
-
 .sidebar::-webkit-scrollbar-track {
     background: var(--light-color);
 }
-
 .sidebar::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 3px;
@@ -54,7 +54,6 @@ body {
 
 /* Logo da Sidebar */
 .sidebar-logo {
-    /* padding: 20px; */
     border-bottom: 1px solid var(--border-color);
     text-align: center;
     transition: all var(--transition-speed) ease;
@@ -72,15 +71,12 @@ body {
     transition: all var(--transition-speed) ease;
 }
 
-.sidebar.collapsed .logo-text {
+/* Colapsed State */
+.sidebar.collapsed .logo-text,
+#sidebar.collapsed .sidebar-logo .logo-text {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
-}
-
-/* Regra adicional para garantir que funcione - v2 */
-#sidebar.collapsed .sidebar-logo .logo-text {
-    display: none !important;
 }
 
 .logo-icon {
@@ -199,19 +195,6 @@ body {
     left: var(--sidebar-collapsed-width);
 }
 
-/* Responsividade da topbar */
-@media (max-width: 768px) {
-    .topbar {
-        left: 0 !important;
-        right: 0;
-        padding: 0 15px;
-    }
-
-    .sidebar.show+.topbar {
-        left: 0 !important;
-    }
-}
-
 /* Toggle Button */
 .sidebar-toggle {
     background: none;
@@ -243,7 +226,6 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
-    /* gap: 15px; */
 }
 
 .user-info {
@@ -300,11 +282,14 @@ body {
     width: calc(100% - var(--sidebar-collapsed-width));
 }
 
-/* CORREÇÃO: Conteúdo sempre visível */
 .content-body {
     opacity: 1 !important;
     visibility: visible !important;
 }
+
+/* ========================================================================= */
+/* II. ESTILOS DE COMPONENTES PADRÃO (Cards, Forms, Tabelas) */
+/* ========================================================================= */
 
 /* Cards */
 .card {
@@ -335,52 +320,29 @@ body {
 .card-header * {
     color: var(--text-color) !important;
 }
+/* 
 
-/* Card Headers com cores específicas */
-.card-header.bg-primary {
-    background-color: var(--primary-color) !important;
-    color: white !important;
-}
-
-.card-header.bg-primary * {
-    color: white !important;
-}
-
-.card-header.bg-success {
-    background-color: var(--success-color) !important;
-    color: white !important;
-}
-
-.card-header.bg-success * {
-    color: white !important;
-}
-
-.card-header.bg-info {
-    background-color: var(--info-color) !important;
-    color: white !important;
-}
-
-.card-header.bg-info * {
-    color: white !important;
-}
-
+.card-header.bg-primary,
+.card-header.bg-success,
+.card-header.bg-info,
 .card-header.bg-warning {
-    background-color: var(--warning-color) !important;
     color: white !important;
 }
 
+.card-header.bg-primary *,
+.card-header.bg-success *,
+.card-header.bg-info *,
 .card-header.bg-warning * {
     color: white !important;
 }
 
-.card-header.bg-light {
-    background-color: var(--light-color) !important;
-    color: var(--text-color) !important;
-}
+.card-header.bg-primary { background-color: var(--primary-color) !important; }
+.card-header.bg-success { background-color: var(--success-color) !important; }
+.card-header.bg-info { background-color: var(--info-color) !important; }
+.card-header.bg-warning { background-color: var(--warning-color) !important; }
+.card-header.bg-light { background-color: var(--light-color) !important; }
+.card-header.bg-light * { color: var(--text-color) !important; } */
 
-.card-header.bg-light * {
-    color: var(--text-color) !important;
-}
 
 /* Tabelas */
 .table {
@@ -392,11 +354,7 @@ body {
     color: var(--text-color) !important;
 }
 
-.table th {
-    color: var(--text-color) !important;
-    border-color: var(--border-color) !important;
-}
-
+.table th,
 .table td {
     color: var(--text-color) !important;
     border-color: var(--border-color) !important;
@@ -414,14 +372,17 @@ body {
     background-color: var(--light-color) !important;
 }
 
-/* Forms */
-.form-control {
+/* Forms (Global) */
+.form-control,
+.form-select {
     background-color: var(--surface-color) !important;
     border-color: var(--border-color) !important;
     color: var(--text-color) !important;
+    border-radius: 10px !important; /* Valor padrão global (original 10px) */
 }
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
     background-color: var(--surface-color) !important;
     border-color: var(--primary-color) !important;
     color: var(--text-color) !important;
@@ -432,12 +393,11 @@ body {
     color: var(--text-muted-color) !important;
 }
 
-/* Labels */
+/* Labels e Small text */
 .form-label {
     color: var(--text-color) !important;
 }
 
-/* Small text */
 small {
     color: var(--text-muted-color) !important;
 }
@@ -468,7 +428,7 @@ small {
     border-color: var(--border-color) !important;
 }
 
-/* Botões */
+/* Botões (Área Crítica - Mantendo a especificidade) */
 .btn {
     border-radius: 10px !important;
     font-weight: 600;
@@ -487,6 +447,29 @@ small {
     color: white !important;
 }
 
+/* Botão Custom (Regra Completa e Inviolável - Repetição justificada pela diferença de dimensões) */
+.btn-custom {
+    width: 134px !important;
+    height: 44px;
+    background: var(--gradient-bg);
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px var(--shadow-color);
+  color: white !important;
+}
+
+/* Botões Outline */
 .btn-outline-primary {
     border-color: var(--primary-color) !important;
     color: var(--primary-color) !important;
@@ -498,8 +481,10 @@ small {
     color: white !important;
 }
 
-/* Botão outline customizado - mesmo estilo dos botões outline */
+/* Botão Outline Customizado (Regras consolidadas) */
 .btn-outline-custom {
+    width: 134px;
+    height: 44px;
     background: transparent !important;
     border: 2px solid var(--primary-color) !important;
     color: var(--primary-color) !important;
@@ -519,7 +504,6 @@ small {
     color: white !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 5px 15px var(--shadow-color) !important;
-    text-decoration: none !important;
 }
 
 .btn-outline-custom:focus {
@@ -527,7 +511,28 @@ small {
     outline: none !important;
 }
 
-/* Garantir que os ícones herdem a cor do texto dos botões */
+/* Action buttons */
+.action-btn {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Garantir que os ícones herdem a cor (Consolidação) */
+.btn i,
+.btn .fas,
 .btn-custom i,
 .btn-outline-custom i,
 .btn-custom .fas,
@@ -535,26 +540,23 @@ small {
     color: inherit !important;
 }
 
-.btn-custom:hover i,
-.btn-outline-custom:hover i,
-.btn-custom:hover .fas,
-.btn-outline-custom:hover .fas {
-    color: inherit !important;
-}
 
-/* Regras específicas para ícones FontAwesome */
-.btn-custom .fas,
-.btn-outline-custom .fas {
-    color: inherit !important;
-}
+/* ========================================================================= */
+/* III. RESPONSIVIDADE E ANIMAÇÕES */
+/* ========================================================================= */
 
-.btn-custom:hover .fas,
-.btn-outline-custom:hover .fas {
-    color: inherit !important;
-}
-
-/* Responsividade */
 @media (max-width: 768px) {
+    /* Topbar */
+    .topbar {
+        left: 0 !important;
+        right: 0;
+        padding: 0 15px;
+    }
+    .sidebar.show+.topbar {
+        left: 0 !important;
+    }
+    
+    /* Sidebar */
     .sidebar {
         transform: translateX(-100%);
     }
@@ -562,13 +564,8 @@ small {
     .sidebar.show {
         transform: translateX(0);
     }
-
-    .topbar {
-        left: 0 !important;
-        right: 0;
-        padding: 0 15px;
-    }
-
+    
+    /* Content */
     .main-content {
         margin-left: 0 !important;
         width: 100% !important;
@@ -588,18 +585,23 @@ small {
     .sidebar-overlay.show {
         display: block;
     }
-}
-
-/* Animações CORRIGIDAS */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    
+    /* Responsive adjustments */
+    .date-badge {
+        width: 40px;
+        padding: 6px 2px;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .date-badge .day {
+        font-size: 14px;
+    }
+
+    .quick-filters {
+        justify-content: center;
+    }
+
+    .header-actions {
+        width: 100%;
     }
 }
 
@@ -625,9 +627,36 @@ small {
     }
 }
 
-/* ===== ESTILOS ESPECÍFICOS DO CLIENTE_LIST.HTML ===== */
+/* Animações */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
 
-/* Header personalizado */
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ========================================================================= */
+/* IV. ESTILOS ESPECÍFICOS DA PÁGINA (CLIENTE_LIST.HTML) */
+/* ========================================================================= */
+
 .list-header {
     margin-bottom: 30px;
     padding-bottom: 20px;
@@ -651,7 +680,6 @@ small {
     font-size: 1rem;
 }
 
-/* Ações no Header */
 .header-actions {
     position: absolute;
     top: 0;
@@ -676,7 +704,7 @@ small {
     }
 }
 
-/* Cards styling */
+/* Cards styling (Consolidação) */
 .filter-card,
 .list-card {
     border-radius: 15px;
@@ -684,9 +712,12 @@ small {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     margin-bottom: 20px;
+    animation: slideInUp 0.5s ease-out;
 }
 
-.filter-card .card-header {
+/* Consolidação dos headers de cards da lista */
+.filter-card .card-header,
+.list-card .card-header {
     background: var(--light-color) !important;
     border: none;
     padding: 15px 20px;
@@ -696,56 +727,19 @@ small {
     padding: 20px;
 }
 
-.list-card .card-header {
-    background: var(--light-color) !important;
-    border: none;
-    padding: 15px 20px;
-}
-
-/* Form controls */
+/* Forms (Ajustes finos para a lista - sobrescreve a regra global) */
 .form-control,
 .form-select {
-    border-radius: 8px !important;
+    border-radius: 8px !important; /* Ajuste específico para esta página */
     border: 2px solid var(--border-color) !important;
     padding: 10px 12px;
     transition: all 0.3s ease;
-    background-color: var(--surface-color) !important;
-    color: var(--text-color) !important;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 0.2rem var(--shadow-color) !important;
-    background-color: var(--surface-color) !important;
-    color: var(--text-color) !important;
 }
 
 .form-label {
     font-weight: 600;
-    color: var(--text-color) !important;
     margin-bottom: 5px;
     font-size: 0.9rem;
-}
-
-/* Buttons */
-.btn-custom {
-    background: var(--gradient-bg);
-    border: none;
-    color: white !important;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--shadow-color);
-    color: white !important;
 }
 
 /* Quick filters */
@@ -841,10 +835,6 @@ small {
 }
 
 /* Table styling */
-.table {
-    color: var(--text-color) !important;
-}
-
 .table th {
     border-top: none;
     font-weight: 600;
@@ -860,9 +850,15 @@ small {
     border-color: var(--border-color) !important;
 }
 
-.table-hover tbody tr:hover {
-    background-color: var(--light-color) !important;
+.agendamento-row,
+.agendamento-card {
+    transition: all 0.3s ease;
 }
+
+.agendamento-row:hover {
+    transform: translateX(5px);
+}
+
 
 /* Button groups */
 .btn-group-sm .btn {
@@ -940,51 +936,4 @@ small {
     border-left: 4px solid var(--primary-color);
     background: var(--light-color) !important;
     border-radius: 8px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-badge {
-        width: 40px;
-        padding: 6px 2px;
-    }
-
-    .date-badge .day {
-        font-size: 14px;
-    }
-
-    .quick-filters {
-        justify-content: center;
-    }
-
-    .header-actions {
-        width: 100%;
-    }
-}
-
-/* Animations */
-.list-card,
-.filter-card {
-    animation: slideInUp 0.5s ease-out;
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.agendamento-row,
-.agendamento-card {
-    transition: all 0.3s ease;
-}
-
-.agendamento-row:hover {
-    transform: translateX(5px);
 }
