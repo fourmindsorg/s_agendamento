@@ -90,3 +90,5 @@ echo "✅ HTTPS funcionando: https://fourmindstech.com.br/s_agendamentos/"
 echo "✅ Admin funcionando: https://fourmindstech.com.br/admin/"
 echo ""
 
+
+
