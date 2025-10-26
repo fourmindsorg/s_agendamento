@@ -74,81 +74,33 @@ jobs:
           python manage.py check
           python manage.py test
 
-      - name: Check AWS credentials
+      - name: Prepare deployment instructions
         run: |
-          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
-            echo "::error::AWS credentials não configurados!"
-            echo ""
-            echo "Configure os secrets no GitHub:"
-            echo "Settings → Secrets and variables → Actions"
-            echo ""
-            echo "Secrets necessários:"
-            echo "  - AWS_ACCESS_KEY_ID"
-            echo "  - AWS_SECRET_ACCESS_KEY"
-            echo ""
-            echo "⚠️ Deploy será pulado."
-            exit 1
-          fi
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Deploy to EC2 via SSM
-        run: |
-          echo "🚀 Iniciando deploy via SSM..."
+          echo "# 🚀 Instruções para Deploy Manual" > DEPLOY_INSTRUCTIONS.md
+          echo "" >> DEPLOY_INSTRUCTIONS.md
+          echo "O deploy automático via SSM não está disponível no momento." >> DEPLOY_INSTRUCTIONS.md
+          echo "Execute o deploy manualmente no servidor:" >> DEPLOY_INSTRUCTIONS.md
+          echo "" >> DEPLOY_INSTRUCTIONS.md
+          echo "## Opção 1: Deploy via SSH" >> DEPLOY_INSTRUCTIONS.md
+          echo "\`\`\`bash" >> DEPLOY_INSTRUCTIONS.md
+          echo "ssh -i sua_chave.pem ubuntu@52.91.139.151" >> DEPLOY_INSTRUCTIONS.md
+          echo "cd /opt/s-agendamento" >> DEPLOY_INSTRUCTIONS.md
+          echo "sudo bash infrastructure/deploy_completo.sh" >> DEPLOY_INSTRUCTIONS.md
+          echo "\`\`\`" >> DEPLOY_INSTRUCTIONS.md
+          echo "" >> DEPLOY_INSTRUCTIONS.md
+          echo "## Opção 2: Deploy via AWS Session Manager" >> DEPLOY_INSTRUCTIONS.md
+          echo "\`\`\`bash" >> DEPLOY_INSTRUCTIONS.md
+          echo "aws ssm start-session --target i-0077873407e4114b1" >> DEPLOY_INSTRUCTIONS.md
+          echo "cd /opt/s-agendamento" >> DEPLOY_INSTRUCTIONS.md
+          echo "sudo bash infrastructure/deploy_completo.sh" >> DEPLOY_INSTRUCTIONS.md
+          echo "\`\`\`" >> DEPLOY_INSTRUCTIONS.md
+          echo "" >> DEPLOY_INSTRUCTIONS.md
+          echo "## Servidor:" >> DEPLOY_INSTRUCTIONS.md
+          echo "- IP: 52.91.139.151" >> DEPLOY_INSTRUCTIONS.md
+          echo "- Instância: i-0077873407e4114b1" >> DEPLOY_INSTRUCTIONS.md
+          echo "- Branch: main" >> DEPLOY_INSTRUCTIONS.md
           
-          INSTANCE_ID="i-0077873407e4114b1"
-          
-          echo "📥 Fazendo pull da branch main..."
-          aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands="[
-              'cd /opt/s-agendamento',
-              'git fetch origin',
-              'git reset --hard origin/main',
-              'git log --oneline -1'
-            ]"
-          
-          echo "📦 Instalando dependências..."
-          aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands="[
-              'cd /opt/s-agendamento',
-              'source venv/bin/activate',
-              'pip install -r requirements.txt'
-            ]"
-          
-          echo "🗄️ Executando migrações..."
-          aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands="[
-              'cd /opt/s-agendamento',
-              'source venv/bin/activate',
-              'python manage.py migrate',
-              'python manage.py collectstatic --noinput'
-            ]"
-          
-          echo "🔄 Reiniciando serviços..."
-          aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands="[
-              'sudo supervisorctl restart s-agendamento',
-              'sudo systemctl reload nginx',
-              'sleep 5',
-              'sudo supervisorctl status',
-              'curl -I http://localhost',
-              'curl -I http://52.91.139.151'
-            ]"
-          
-          echo "🎉 Deploy concluído!"
+          cat DEPLOY_INSTRUCTIONS.md
 
       - name: Health Check
         run: |
