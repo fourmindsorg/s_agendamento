@@ -1,0 +1,47 @@
+==============================================
+TESTE FINAL - VERIFICAR SE FUNCIONOU
+==============================================
+
+Execute no servidor para verificar:
+
+1. Testar HTTP no IP:
+   curl -I http://52.91.139.151
+
+2. Testar HTTPS no dominio:
+   curl -I https://fourmindstech.com.br
+
+3. Testar localmente:
+   curl -I http://localhost
+
+==============================================
+RESULTADOS ESPERADOS
+==============================================
+
+✓ HTTP/1.1 200 OK -> FUNCIONANDO PERFEITAMENTE
+✓ HTTP/1.1 301/302 -> REDIRECIONAMENTO (ok)
+✗ HTTP/1.1 502/503 -> PROBLEMA NO GUNICORN
+
+==============================================
+SE DER 502/503 (Gunicorn nao esta rodando)
+==============================================
+
+# Verificar status do Gunicorn
+sudo supervisorctl status
+
+# Se nao estiver rodando, iniciar
+sudo supervisorctl start s-agendamento
+
+# Ver logs
+sudo tail -f /opt/s-agendamento/logs/gunicorn.log
+
+==============================================
+TESTE NO NAVEGADOR
+==============================================
+
+Depois de testar com curl, acesse no navegador:
+
+✓ http://52.91.139.151 (deve abrir sem aviso SSL)
+✓ https://fourmindstech.com.br (deve abrir com SSL válido)
+
+==============================================
+
