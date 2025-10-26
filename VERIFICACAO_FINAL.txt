@@ -1,0 +1,53 @@
+==============================================
+VERIFICACAO FINAL - Warnings do Nginx
+==============================================
+
+WARNINGS DETECTADOS:
+- conflicting server name "fourmindstech.com.br" on 0.0.0.0:443
+- conflicting server name "www.fourmindstech.com.br" on 0.0.0.0:443
+
+Isso significa que existem configuracoes DUPLICADAS.
+
+==============================================
+O QUE FAZER AGORA:
+==============================================
+
+1. TESTAR SE FUNCIONOU:
+   No navegador: http://52.91.139.151
+
+2. SE NAO FUNCIONOU, verificar servidor:
+   
+   # Ver IP do servidor atual
+   curl ifconfig.me
+   
+   # Se nao for 52.91.139.151, conectar no servidor correto
+
+3. CORRIGIR WARNINGS (no servidor correto):
+   
+   # Ver configuracoes ativas
+   ls -la /etc/nginx/sites-enabled/
+   
+   # Remover arquivos duplicados se necessario
+   sudo rm /etc/nginx/sites-enabled/arquivo-duplicado
+   
+   # Recarregar
+   sudo nginx -t && sudo systemctl reload nginx
+
+4. TESTAR NOVAMENTE:
+   
+   curl -I http://52.91.139.151
+   curl -I http://localhost
+
+==============================================
+IMPORTANTE
+==============================================
+
+O servidor ip-10-0-1-9 (ubuntu@ip-10-0-1-9) parece ser um
+servidor diferente da instancia de producao.
+
+A instancia de producao e: i-0077873407e4114b1 (52.91.139.151)
+
+Voce precisa conectar na instancia CORRETA para aplicar a correcao!
+
+==============================================
+
