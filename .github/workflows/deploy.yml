@@ -169,11 +169,11 @@ jobs:
           set -e  # Reativar fail-fast
           echo "✅ Verificação de instância concluída com sucesso"
 
-      - name: Deploy to EC2
-        id: deploy
+      - name: Deploy to EC2 via SSM
+        id: deploy-ssm
         if: env.SSM_ONLINE == 'true'
         run: |
-          echo "🚀 Iniciando deploy para produção..."
+          echo "🚀 Iniciando deploy para produção via SSM..."
           INSTANCE_ID="i-0077873407e4114b1"
 
           # Enviar comandos de deploy via SSM
@@ -237,48 +237,101 @@ jobs:
             --query "StandardOutputContent" \
             --output text
 
-      - name: Manual Deploy Instructions
+      - name: Get EC2 IP
         if: env.SSM_ONLINE != 'true'
+        run: |
+          echo "🔍 Obtendo IP público da instância..."
+          INSTANCE_ID="i-0077873407e4114b1"
+
+          PUBLIC_IP=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --query "Reservations[0].Instances[0].PublicIpAddress" \
+            --output text)
+
+          echo "Public IP: $PUBLIC_IP"
+          echo "EC2_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
+      - name: Setup SSH
+        if: env.SSM_ONLINE != 'true'
+        run: |
+          echo "🔐 Configurando SSH..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          # Adicionar host key para evitar interatividade
+          ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Testar conexão
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_IP }} echo "✅ SSH conectado com sucesso"
+
+      - name: Deploy to EC2 via SSH
+        if: env.SSM_ONLINE != 'true'
+        run: |
+          echo "🚀 Iniciando deploy via SSH..."
+
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
+            set -e
+            echo "📂 Entrando no diretório da aplicação..."
+            cd /opt/s-agendamento
+            
+            echo "📥 Atualizando código do repositório..."
+            sudo -u django git fetch origin
+            sudo -u django git reset --hard origin/main
+            echo "✓ Código atualizado: $(git log --oneline -1)"
+            
+            echo "📦 Instalando dependências..."
+            sudo -u django bash -c 'source venv/bin/activate && pip install -r requirements.txt --upgrade --quiet'
+            echo "✓ Dependências instaladas"
+            
+            echo "🔄 Aplicando migrações..."
+            sudo -u django bash -c 'source venv/bin/activate && python manage.py migrate'
+            echo "✓ Migrações aplicadas"
+            
+            echo "📁 Coletando arquivos estáticos..."
+            sudo -u django bash -c 'source venv/bin/activate && python manage.py collectstatic --noinput'
+            echo "✓ Arquivos estáticos coletados"
+            
+            echo "🔄 Reiniciando serviços..."
+            sudo supervisorctl restart s-agendamento
+            sudo systemctl reload nginx
+            echo "✓ Serviços reiniciados"
+            
+            echo ""
+            echo "=============================================="
+            echo "🎉 DEPLOY CONCLUÍDO COM SUCESSO!"
+            echo "=============================================="
+          EOF
+
+          echo "✅ Deploy via SSH concluído!"
+
+      - name: Deployment Summary
         run: |
           echo ""
           echo "=========================================="
-          echo "📋 DEPLOY MANUAL NECESSÁRIO"
+          echo "✅ DEPLOYMENT SUMMARY"
           echo "=========================================="
           echo ""
-          echo "Como a instância não tem SSM configurado,"
-          echo "execute o deploy manualmente:"
+          if [ "$SSM_ONLINE" = "true" ]; then
+            echo "✓ Deploy realizado via AWS SSM"
+          else
+            echo "✓ Deploy realizado via SSH"
+          fi
           echo ""
-          echo "1️⃣ Acesse: https://console.aws.amazon.com/ec2/"
-          echo ""
-          echo "2️⃣ Procure a instância: i-0077873407e4114b1"
-          echo ""
-          echo "3️⃣ Clique em 'Connect' → 'EC2 Instance Connect'"
-          echo ""
-          echo "4️⃣ Execute estes comandos:"
-          echo ""
-          echo "   cd /opt/s-agendamento"
-          echo "   git fetch origin"
-          echo "   git reset --hard origin/main"
-          echo "   source venv/bin/activate"
-          echo "   pip install -r requirements.txt --upgrade --quiet"
-          echo "   python manage.py migrate"
-          echo "   python manage.py collectstatic --noinput"
-          echo "   sudo supervisorctl restart s-agendamento"
-          echo "   sudo systemctl reload nginx"
-          echo ""
-          echo "5️⃣ Teste: https://fourmindstech.com.br/s_agendamentos/"
+          echo "🌐 URLs para testar:"
+          echo "  - https://fourmindstech.com.br/s_agendamentos/"
+          echo "  - https://fourmindstech.com.br/admin/"
           echo ""
           echo "=========================================="
 
       - name: Health Check
-        if: env.SSM_ONLINE == 'true'
         run: |
           echo "🏥 Verificando saúde do servidor após deploy..."
           sleep 10
 
           # Testar HTTP primeiro
           echo "🔍 Testando HTTP..."
-          if curl -f -s http://fourmindstech.com.br/ > /dev/null; then
+          if curl -f -s --max-time 10 http://fourmindstech.com.br/ > /dev/null 2>&1; then
             echo "✅ HTTP funcionando!"
           else
             echo "⚠️ HTTP não respondeu - servidor pode estar reiniciando"
@@ -286,7 +339,7 @@ jobs:
 
           # Testar HTTPS
           echo "🔍 Testando HTTPS..."
-          if curl -f -s https://fourmindstech.com.br/ > /dev/null; then
+          if curl -f -s --max-time 10 https://fourmindstech.com.br/ > /dev/null 2>&1; then
             echo "✅ HTTPS funcionando!"
           else
             echo "⚠️ HTTPS não respondeu - pode levar alguns minutos"
@@ -295,10 +348,12 @@ jobs:
           # Testar endpoint específico
           echo "🔍 Testando endpoint de planos..."
           sleep 5
-          if curl -f -s https://fourmindstech.com.br/authentication/planos/ > /dev/null; then
+          if curl -f -s --max-time 10 https://fourmindstech.com.br/authentication/planos/ > /dev/null 2>&1; then
             echo "✅ Endpoint de planos funcionando!"
           else
             echo "⚠️ Endpoint de planos não respondeu ainda"
           fi
 
+          echo ""
           echo "✅ Health check concluído!"
+          echo "💡 Se alguma verificação falhou, aguarde alguns minutos e teste manualmente."

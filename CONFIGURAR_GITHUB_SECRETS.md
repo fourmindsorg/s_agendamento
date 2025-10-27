@@ -25,7 +25,7 @@ Você precisa das suas credenciais AWS:
 1. Acesse o repositório: https://github.com/fourmindsorg/s_agendamento
 2. Vá em: **Settings** → **Secrets and variables** → **Actions**
 3. Clique em **New repository secret**
-4. Adicione dois secrets:
+4. Adicione os seguintes secrets:
 
 #### Secret 1:
 - **Name:** `AWS_ACCESS_KEY_ID`
@@ -35,7 +35,12 @@ Você precisa das suas credenciais AWS:
 - **Name:** `AWS_SECRET_ACCESS_KEY`
 - **Secret:** `<sua secret access key>`
 
-5. Clique em **Add secret**
+#### Secret 3 (para deploy via SSH):
+- **Name:** `EC2_SSH_KEY`
+- **Secret:** `<conteúdo da chave SSH privada (arquivo .pem)>`
+- **Como obter:** Exporte a chave SSH da EC2 ou crie uma nova chave
+
+5. Clique em **Add secret** para cada secret
 
 ### Passo 3: Verificar Permissões IAM
 
@@ -55,7 +60,8 @@ git push origin main
 O workflow vai:
 1. Verificar se os secrets existem ✅
 2. Configurar AWS credentials ✅
-3. Fazer deploy via SSM ✅
+3. Tentar deploy via SSM primeiro ✅
+4. Se SSM não estiver disponível, fazer deploy via SSH ✅
 
 ## 🔍 Troubleshooting
 
