@@ -84,13 +84,12 @@ class Plano(models.Model):
         preco = self.preco_pix if self.preco_pix is not None else 0
         return f"{self.nome} - R$ {preco} (PIX)"
 
-
-@property
-def economia_pix(self):
-    """Calcula a economia do PIX em relação ao cartão"""
-    preco_cartao = self.preco_cartao or 0
-    preco_pix = self.preco_pix or 0
-    return max(preco_cartao - preco_pix, 0)
+    @property
+    def economia_pix(self):
+        """Calcula a economia do PIX em relação ao cartão"""
+        preco_cartao = self.preco_cartao or 0
+        preco_pix = self.preco_pix or 0
+        return max(preco_cartao - preco_pix, 0)
 
 
 class AssinaturaUsuario(models.Model):

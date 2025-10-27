@@ -58,6 +58,7 @@ staticfiles/
 .Trashes
 ehthumbs.db
 Thumbs.db
+bash.exe.stackdump
 
 # AWS
 *.pem
