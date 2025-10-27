@@ -269,7 +269,7 @@ jobs:
         if: env.SSM_ONLINE != 'true'
         run: |
           echo "🚀 Iniciando deploy via SSH..."
-          
+
           ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
             set -e
             echo "📂 Entrando no diretório da aplicação..."

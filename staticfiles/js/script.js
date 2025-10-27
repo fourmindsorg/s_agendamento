@@ -2,6 +2,7 @@
 document.getElementById("sidebarToggle").addEventListener("click", function () {
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebarOverlay");
+  const topbar = document.querySelector(".topbar");
 
   if (window.innerWidth <= 768) {
     // Mobile
@@ -10,6 +11,15 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
   } else {
     // Desktop
     sidebar.classList.toggle("collapsed");
+
+    // Atualizar posição da topbar
+    if (topbar) {
+      if (sidebar.classList.contains("collapsed")) {
+        topbar.style.left = "var(--sidebar-collapsed-width)";
+      } else {
+        topbar.style.left = "var(--sidebar-width)";
+      }
+    }
   }
 });
 
@@ -20,6 +30,46 @@ document
     document.getElementById("sidebar").classList.remove("show");
     this.classList.remove("show");
   });
+
+// Ajustar topbar no redimensionamento da janela
+window.addEventListener("resize", function () {
+  const sidebar = document.getElementById("sidebar");
+  const topbar = document.querySelector(".topbar");
+
+  if (topbar) {
+    if (window.innerWidth <= 768) {
+      // Mobile - topbar sempre na posição 0
+      topbar.style.left = "0";
+    } else {
+      // Desktop - ajustar baseado no estado do sidebar
+      if (sidebar.classList.contains("collapsed")) {
+        topbar.style.left = "var(--sidebar-collapsed-width)";
+      } else {
+        topbar.style.left = "var(--sidebar-width)";
+      }
+    }
+  }
+});
+
+// Inicializar posição da topbar
+document.addEventListener("DOMContentLoaded", function () {
+  const sidebar = document.getElementById("sidebar");
+  const topbar = document.querySelector(".topbar");
+
+  if (topbar && sidebar) {
+    if (window.innerWidth <= 768) {
+      // Mobile - topbar sempre na posição 0
+      topbar.style.left = "0";
+    } else {
+      // Desktop - posição inicial baseada no estado do sidebar
+      if (sidebar.classList.contains("collapsed")) {
+        topbar.style.left = "var(--sidebar-collapsed-width)";
+      } else {
+        topbar.style.left = "var(--sidebar-width)";
+      }
+    }
+  }
+});
 
 // Função para alterar tema
 function alterarTema(tema, event) {
