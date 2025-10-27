@@ -255,49 +255,22 @@ jobs:
         if: env.SSM_ONLINE != 'true'
         run: |
           echo "🔐 Configurando SSH..."
-          
-          # Verificar se a chave SSH está configurada
-          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
-            echo "⚠️ Secret EC2_SSH_KEY não está configurado!"
-            echo ""
-            echo "📋 Para configurar:"
-            echo "1. Acesse: https://github.com/fourmindsorg/s_agendamento/settings/secrets/actions"
-            echo "2. Adicione um novo secret: EC2_SSH_KEY"
-            echo "3. Valor: conteúdo da chave SSH privada (.pem ou id_rsa)"
-            echo ""
-            echo "💡 Alternativa: Configure SSM Agent no servidor EC2 para usar deploy automático via SSM"
-            echo ""
-            echo "❌ Não é possível continuar sem chave SSH ou SSM"
-            exit 1
-          fi
-          
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          
+
           # Adicionar host key para evitar interatividade
           ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
-          
+
           # Testar conexão
-          echo "🔍 Testando conexão SSH..."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_IP }} echo "✅ SSH conectado com sucesso" || {
-            echo "❌ Falha na conexão SSH!"
-            echo ""
-            echo "Possíveis causas:"
-            echo "1. Chave SSH incorreta ou não corresponde ao servidor"
-            echo "2. Usuário incorreto (usando 'ubuntu' mas pode ser 'ec2-user' ou outro)"
-            echo "3. Security Group bloqueando conexão SSH"
-            echo ""
-            echo "💡 Solução: Configure SSM Agent no servidor para uso de deploy via SSM"
-            exit 1
-          }
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ env.EC2_IP }} echo "✅ SSH conectado com sucesso"
 
       - name: Deploy to EC2 via SSH
         if: env.SSM_ONLINE != 'true'
         run: |
           echo "🚀 Iniciando deploy via SSH..."
-
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
+          
+          ssh -i ~/.ssh/id_rsa ec2-user@${{ env.EC2_IP }} << 'EOF'
             set -e
             echo "📂 Entrando no diretório da aplicação..."
             cd /opt/s-agendamento
