@@ -263,14 +263,14 @@ jobs:
           ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
           # Testar conexão
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ env.EC2_IP }} echo "✅ SSH conectado com sucesso"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_IP }} echo "✅ SSH conectado com sucesso"
 
       - name: Deploy to EC2 via SSH
         if: env.SSM_ONLINE != 'true'
         run: |
           echo "🚀 Iniciando deploy via SSH..."
           
-          ssh -i ~/.ssh/id_rsa ec2-user@${{ env.EC2_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
             set -e
             echo "📂 Entrando no diretório da aplicação..."
             cd /opt/s-agendamento
