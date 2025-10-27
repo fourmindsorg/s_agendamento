@@ -176,6 +176,13 @@
                     <span class="menu-text">Relatórios</span>
                 </a>
             </div>
+
+            <div class="menu-item">
+                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'authentication' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="menu-icon fa-solid fa-business-time"></i>
+                    <span class="menu-text">Planos</span>
+                </a>
+            </div>
             
             <div class="menu-item">
                 <a href="{% url 'info:home' %}" class="menu-link {% if 'info' in request.resolver_match.namespace %}active{% endif %}">
@@ -184,12 +191,12 @@
                 </a>
             </div>
             
-            <div class="menu-item">
+            {% comment %} <div class="menu-item">
                 <a href="{% url 'agendamentos:configuracoes' %}" class="menu-link {% if 'configuracoes' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-user-cog"></i>
                     <span class="menu-text">Configurações</span>
                 </a>
-            </div>
+            </div> {% endcomment %}
         </div>
     </div>
     

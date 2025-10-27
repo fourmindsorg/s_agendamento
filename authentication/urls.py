@@ -47,4 +47,12 @@ urlpatterns = [
         views.PaymentSuccessView.as_view(),
         name="payment_success",
     ),
+    # Webhook Asaas
+    path("webhook/asaas/", views.asaas_webhook, name="asaas_webhook"),
+    # Deletar assinatura
+    path(
+        "assinatura/<int:assinatura_id>/delete/",
+        views.delete_assinatura,
+        name="delete_assinatura",
+    ),
 ]

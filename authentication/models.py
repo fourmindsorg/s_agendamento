@@ -81,13 +81,21 @@ class Plano(models.Model):
         ordering = ["ordem", "nome"]
 
     def __str__(self):
-        return f"{self.nome} - R$ {self.preco_pix} (PIX)"
+        preco = self.preco_pix if self.preco_pix is not None else 0
+        return f"{self.nome} - R$ {preco} (PIX)"
 
     @property
     def economia_pix(self):
         """Calcula a economia do PIX em relação ao cartão"""
-        if self.preco_cartao > self.preco_pix:
-            return self.preco_cartao - self.preco_pix
+        try:
+            if (
+                self.preco_cartao is not None
+                and self.preco_pix is not None
+                and self.preco_cartao > self.preco_pix
+            ):
+                return self.preco_cartao - self.preco_pix
+        except (TypeError, ValueError):
+            pass
         return 0
 
 
@@ -95,6 +103,7 @@ class AssinaturaUsuario(models.Model):
     """Modelo para assinaturas dos usuários"""
 
     STATUS_CHOICES = [
+        ("aguardando_pagamento", "Aguardando Pagamento"),
         ("ativa", "Ativa"),
         ("expirada", "Expirada"),
         ("cancelada", "Cancelada"),
@@ -107,7 +116,7 @@ class AssinaturaUsuario(models.Model):
     plano = models.ForeignKey(
         Plano, on_delete=models.CASCADE, related_name="assinaturas"
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ativa")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="aguardando_pagamento")
     data_inicio = models.DateTimeField(auto_now_add=True, verbose_name="Data de Início")
     data_fim = models.DateTimeField(verbose_name="Data de Fim")
     valor_pago = models.DecimalField(

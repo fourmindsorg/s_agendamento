@@ -1,0 +1,100 @@
+=================================================
+🚀 COMANDOS PARA EXECUTAR VIA SSH
+=================================================
+
+Execute este comando NO SEU COMPUTADOR:
+
+ssh -i "infrastructure/s-agendamento-key.pem" ubuntu@ec2-52-91-139-151.compute-1.amazonaws.com
+
+
+Depois que conectar, execute TUDO abaixo de uma vez:
+
+=================================================
+SCRIPT COMPLETO - COPIE E COLE:
+=================================================
+
+# === BACKUP ===
+echo "📦 Fazendo backup..."
+sudo cp -r /opt/s-agendamento /opt/s-agendamento-backup-$(date +%Y%m%d-%H%M%S) 2>/dev/null
+sudo cp /opt/s-agendamento/db.sqlite3 /opt/db.sqlite3.backup-$(date +%Y%m%d-%H%M%S) 2>/dev/null
+echo "✅ Backup criado"
+
+# === PARAR SERVIÇOS ===
+echo "🛑 Parando serviços..."
+sudo supervisorctl stop s-agendamento 2>/dev/null
+sudo pkill -9 gunicorn 2>/dev/null
+sudo pkill -9 python 2>/dev/null
+sleep 2
+
+# === REMOVER SISTEMA ANTIGO ===
+echo "🗑️ Removendo sistema antigo..."
+sudo rm -rf /opt/s-agendamento
+
+# === CLONAR REPOSITÓRIO ===
+echo "📥 Clonando repositório..."
+cd /opt
+sudo git clone https://github.com/fourmindsorg/s_agendamento.git s-agendamento
+echo "✅ Repositório clonado"
+
+# === CONFIGURAR AMBIENTE ===
+echo "🔧 Configurando ambiente..."
+cd /opt/s-agendamento
+sudo python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt --quiet
+
+# === BANCO DE DADOS ===
+echo "🗄️ Configurando banco de dados..."
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# === CRIAR LOGS DIR ===
+echo "📝 Criando diretório de logs..."
+sudo mkdir -p /opt/s-agendamento/logs
+
+# === CONFIGURAR SUPERVISOR ===
+echo "⚙️ Configurando Supervisor..."
+sudo tee /etc/supervisor/conf.d/s-agendamento.conf > /dev/null <<'EOF'
+[program:s-agendamento]
+command=/opt/s-agendamento/venv/bin/gunicorn s_agendamento.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3
+directory=/opt/s-agendamento
+user=django
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/opt/s-agendamento/logs/gunicorn.log
+environment=PATH="/opt/s-agendamento/venv/bin"
+EOF
+
+# === INICIAR SERVIÇOS ===
+echo "🚀 Iniciando serviços..."
+sudo chown -R django:www-data /opt/s-agendamento
+sudo chmod 755 /opt/s-agendamento
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start s-agendamento
+sleep 5
+sudo chmod 777 /opt/s-agendamento/s-agendamento.sock
+sudo systemctl reload nginx
+
+# === VERIFICAR ===
+echo ""
+echo "✅ Status:"
+sudo supervisorctl status
+ps aux | grep gunicorn | grep -v grep
+echo ""
+echo "🎉 Sistema recriado com sucesso!"
+echo "⏳ Aguarde 30 segundos e acesse:"
+echo "   https://fourmindstech.com.br/s_agendamentos/"
+
+
+=================================================
+ALTERNATIVA: Executar linha por linha
+=================================================
+
+Se preferir executar linha por linha, siga os comandos
+de RECRIAR_SISTEMA_COMPLETO.md
+
+=================================================
+

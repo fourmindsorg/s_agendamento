@@ -1,0 +1,149 @@
+=================================================
+🔍 DIAGNÓSTICO COMPLETO
+=================================================
+
+Execute no servidor para diagnóstico:
+
+1️⃣ VER ÚLTIMO COMMIT NO SERVIDOR (se tem Git):
+--------------------------------------
+cd /home/ubuntu/s_agendamento
+git log --oneline -5
+
+2️⃣ VER DATA DOS ARQUIVOS EM PRODUÇÃO:
+--------------------------------------
+ls -lth /opt/s-agendamento/agendamentos/templates/agendamentos/home.html
+
+3️⃣ COMPARAR DATA DO SISTEMA:
+--------------------------------------
+stat /opt/s-agendamento/manage.py
+stat /home/ubuntu/s_agendamento/manage.py
+
+4️⃣ VER QUANDO FOI MODIFICADO:
+--------------------------------------
+find /opt/s-agendamento -type f -name "*.py" -exec stat -c "%y %n" {} \; | sort | tail -20
+
+5️⃣ VER SE VENV ESTÁ ATIVO E QUAL PYTHON:
+--------------------------------------
+which python
+python --version
+which pip
+pip list | grep Django
+
+6️⃣ VER ESTRUTURA DO CÓDIGO:
+--------------------------------------
+ls -la /opt/s-agendamento/
+ls -la /opt/s-agendamento/agendamentos/
+ls -la /opt/s-agendamento/agendamentos/templates/
+
+7️⃣ VER ÚLTIMOS ARQUIVOS MODIFICADOS:
+--------------------------------------
+find /opt/s-agendamento -type f -mtime -7 -ls
+
+
+=================================================
+🎯 ANÁLISE
+=================================================
+
+Possíveis causas:
+
+1. Arquivos não foram copiados de fato
+2. Cache do navegador mostrando versão antiga
+3. Supervisor/Gunicorn está rodando código antigo em memória
+4. Permissões impedindo atualização
+5. Servidor não reiniciou corretamente
+
+=================================================
+✅ SOLUÇÃO DEFINITIVA
+=================================================
+
+Execute TUDO na ordem:
+
+# 1. PARAR COMPLETAMENTE O SISTEMA
+sudo supervisorctl stop s-agendamento
+sudo pkill -f gunicorn
+
+# 2. REMOVER CÓDIGO ANTIGO
+cd /opt
+sudo rm -rf s-agendamento/agendamentos
+sudo rm -rf s-agendamento/authentication
+sudo rm -rf s-agendamento/core
+sudo rm -rf s-agendamento/financeiro
+sudo rm -rf s-agendamento/info
+sudo rm -rf s-agendamento/templates
+sudo rm -f s-agendamento/manage.py
+sudo rm -f s-agendamento/requirements.txt
+
+# 3. COPIAR CÓDIGO NOVO (COMPLETO)
+sudo cp -r /home/ubuntu/s_agendamento/agendamentos /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/authentication /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/core /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/financeiro /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/info /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/templates /opt/s-agendamento/
+sudo cp /home/ubuntu/s_agendamento/manage.py /opt/s-agendamento/
+sudo cp /home/ubuntu/s_agendamento/requirements.txt /opt/s-agendamento/
+
+# 4. VERIFICAR SE ARQUIVOS FORAM COPIADOS
+ls -lth /opt/s-agendamento/agendamentos/templates/agendamentos/home.html
+# ^ Esse arquivo deve mostrar data RECENTE
+
+# 5. GARANTIR PERMISSÕES
+sudo chown -R django:www-data /opt/s-agendamento
+sudo chmod -R 755 /opt/s-agendamento
+
+# 6. ATUALIZAR DEPENDÊNCIAS
+cd /opt/s-agendamento
+source venv/bin/activate
+pip install -r requirements.txt --upgrade --quiet
+
+# 7. RODAR MIGRAÇÕES
+python manage.py migrate
+
+# 8. COLETAR STATIC
+python manage.py collectstatic --noinput
+
+# 9. LIMPAR CACHE PYTHON
+find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null
+
+# 10. REINICIAR TUDO
+sudo supervisorctl start s-agendamento
+sudo systemctl restart nginx
+
+# 11. AGUARDAR
+sleep 10
+
+# 12. TESTAR
+curl -I http://localhost
+
+
+=================================================
+🔐 SE NÃO FUNCIONAR, DEBUG:
+=================================================
+
+# Ver processos rodando
+ps aux | grep python
+
+# Ver qual código está sendo carregado
+sudo supervisorctl tail -f s-agendamento
+
+# Ver logs
+sudo tail -f /opt/s-agendamento/logs/gunicorn.log
+
+# Testar Django diretamente
+cd /opt/s-agendamento
+source venv/bin/activate
+python manage.py check
+
+
+=================================================
+🌐 TESTE NO NAVEGADOR:
+=================================================
+
+1. Abra em MODO ANÔNIMO/PRIVADO
+2. Ou limpe cache: Ctrl+Shift+Delete
+3. Ou Force Refresh: Ctrl+F5
+4. Acesse: https://fourmindstech.com.br/s_agendamentos/
+
+
+=================================================
+

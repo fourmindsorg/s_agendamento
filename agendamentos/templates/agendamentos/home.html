@@ -1043,70 +1043,43 @@
         <!-- Planos -->
         <div class="row g-4 justify-content-center fade-in-up">
 
-        <!-- PLANO MENSAL -->
+        {% for plano in planos %}
         <div class="col-md-6 col-lg-4">
-            <div class="pricing-card border rounded-4 shadow-sm p-4 text-center bg-white h-100">
-                <h3 class="pricing-title fw-bold mb-3">Plano Mensal</h3>
-                <p class="text-muted mb-4">
-                    Ideal para quem quer começar sem compromisso e testar nossos recursos.
-                </p>
+            <div class="pricing-card {% if plano.destaque %}featured{% endif %} border rounded-4 {% if plano.destaque %}border-2 border-primary{% endif %} shadow-{% if plano.destaque %}lg{% else %}sm{% endif %} p-4 text-center bg-white h-100 position-relative">
+                
+                {% if plano.destaque %}
+                <div class="position-absolute top-0 start-50 translate-middle badge pricing-badge text-white rounded-pill px-3 py-2">
+                    Mais Popular ⭐
+                </div>
+                {% endif %}
+
+                <h3 class="pricing-title fw-bold mb-3">{{ plano.nome }}</h3>
+                <p class="text-muted mb-4">{{ plano.descricao }}</p>
 
                 <div class="pricing-value mb-3">
-                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 49</h3>
+                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">
+                        R$ {{ plano.preco_cartao|floatformat:0 }}
+                    </h3>
                     <small class="text-muted">no cartão de crédito</small>
                 </div>
-                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 45</span> no Pix</p>
+                
+                {% if plano.economia_pix > 0 %}
+                <p class="text-muted my-2">
+                    ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no Pix
+                    <br><small class="text-success">Economia de R$ {{ plano.economia_pix|floatformat:0 }}</small>
+                </p>
+                {% else %}
+                <p class="text-muted my-2">
+                    ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no Pix
+                </p>
+                {% endif %}
 
-                <a href="{% url 'authentication:register' %}" class="btn btn-outline-primary btn-pricing">
+                <a href="{% url 'authentication:register' %}" class="btn {% if plano.destaque %}btn-teste{% else %}btn-outline-primary{% endif %} btn-pricing">
                     Começar Agora
                 </a>
             </div>
         </div>
-
-        <!-- PLANO SEMESTRAL - DESTAQUE -->
-        <div class="col-md-6 col-lg-4">
-            <div class="pricing-card featured fade-in-up border-2 rounded-4 shadow-lg p-4 text-center bg-white position-relative h-100">
-                <div class="position-absolute top-0 start-50 translate-middle badge pricing-badge text-white rounded-pill px-3 py-2">
-                    Mais Popular ⭐
-                </div>
-
-                <h3 class="pricing-title fw-bold mb-3">Plano Semestral</h3>
-                <p class="text-muted mb-4">
-                    O melhor custo-benefício! Mais economia e acesso completo por 6 meses.
-                </p>
-
-                <div class="pricing-value mb-3">
-                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 280</h3>
-                    <small class="text-muted">no cartão de crédito</small>
-                </div>
-                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 250</span> no Pix</p>
-
-                <a href="{% url 'authentication:register' %}" class="btn btn-teste btn-pricing">
-                    Teste Grátis por 14 Dias
-                </a>
-            </div>
-        </div>
-
-        <!-- PLANO ANUAL -->
-        <div class="col-md-6 col-lg-4">
-            <div class="pricing-card border rounded-4 shadow-sm p-4 text-center bg-white h-100">
-                <h3 class="pricing-title fw-bold mb-3">Plano Anual</h3>
-                <p class="text-muted mb-4">
-                    Para quem pensa a longo prazo. Pague menos e mantenha sua operação tranquila o ano inteiro.
-                </p>
-
-                <div class="pricing-value mb-3">
-                    <h3 class="pricing-price display-6 fw-bold text-dark mb-0">R$ 560</h3>
-                    <small class="text-muted">no cartão de crédito</small>
-                </div>
-                <p class="text-muted my-2">ou <span class="text-success fw-bold">R$ 500</span> no Pix</p>
-
-                <a href="{% url 'authentication:register' %}" class="btn btn-outline-primary btn-pricing">
-                    Uso Profissional
-                </a>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
 
         <!-- Chamada Final -->
         <div class="text-center mt-5 fade-in-up">

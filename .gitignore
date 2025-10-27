@@ -72,3 +72,5 @@ logs/
 *.temp
 temp/
 tmp/
+
+s-agendamento-key.pub

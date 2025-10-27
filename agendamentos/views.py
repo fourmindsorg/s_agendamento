@@ -31,6 +31,16 @@ class HomeView(TemplateView):
 
     template_name = "agendamentos/home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Importar Plano do módulo authentication
+        from authentication.models import Plano
+
+        # Filtrar apenas planos ativos, similar ao PlanSelectionView
+        context["planos"] = Plano.objects.filter(ativo=True).order_by("ordem")
+
+        return context
+
 
 class DashboardView(LoginRequiredMixin, ReadOnlyForExpiredMixin, TemplateView):
     """Dashboard principal com gráficos e KPIs"""

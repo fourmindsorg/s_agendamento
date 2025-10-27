@@ -1,0 +1,36 @@
+=================================================
+🔍 EXECUTE AGORA NO SERVIDOR
+=================================================
+
+Copie e cole cada linha:
+
+1. Listar arquivos em produção:
+ls -lth /opt/s-agendamento/agendamentos/templates/agendamentos/home.html
+
+2. Listar arquivos no clone:
+ls -lth /home/ubuntu/s_agendamento/agendamentos/templates/agendamentos/home.html
+
+3. Comparar datas:
+echo "PRODUÇÃO:"
+stat -c "%y - %n" /opt/s-agendamento/agendamentos/templates/agendamentos/home.html
+echo "CLONE:"
+stat -c "%y - %n" /home/ubuntu/s_agendamento/agendamentos/templates/agendamentos/home.html
+
+4. Ver se arquivos são diferentes:
+diff /opt/s-agendamento/agendamentos/templates/agendamentos/home.html /home/ubuntu/s_agendamento/agendamentos/templates/agendamentos/home.html | head -20
+
+5. Ver processos Gunicorn:
+ps aux | grep gunicorn | grep -v grep
+
+=================================================
+💡 APÓS VER OS RESULTADOS, DIGA:
+=================================================
+
+a) As datas são diferentes? (produção vs clone)
+b) Há diferenças no conteúdo? (diff mostrou algo?)
+c) Quantos processos gunicorn estão rodando?
+
+COM ISSO EU SABEREI EXATAMENTE O PROBLEMA!
+
+=================================================
+

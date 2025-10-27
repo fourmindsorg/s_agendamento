@@ -1,0 +1,78 @@
+=================================================
+✅ CÓDIGO CLONADO! Agora atualizar produção:
+=================================================
+
+Execute estes comandos NA ORDEM:
+
+1️⃣ VER O QUE TEM NO CLONE:
+--------------------------------------
+ls -la /home/ubuntu/s_agendamento/
+
+2️⃣ FAZER BACKUP DO CÓDIGO ATUAL:
+--------------------------------------
+sudo cp -r /opt/s-agendamento /opt/s-agendamento-backup
+
+3️⃣ COPIAR ARQUIVOS NOVOS (um de cada vez):
+--------------------------------------
+
+# Copiar pastas principais
+sudo cp -r /home/ubuntu/s_agendamento/agendamentos /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/authentication /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/core /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/financeiro /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/info /opt/s-agendamento/
+sudo cp -r /home/ubuntu/s_agendamento/templates /opt/s-agendamento/
+
+# Copiar arquivos principais
+sudo cp /home/ubuntu/s_agendamento/manage.py /opt/s-agendamento/
+sudo cp /home/ubuntu/s_agendamento/requirements.txt /opt/s-agendamento/
+
+4️⃣ VERIFICAR PERMISSÕES:
+--------------------------------------
+sudo chown -R django:www-data /opt/s-agendamento
+sudo chmod 755 /opt/s-agendamento
+
+5️⃣ ATUALIZAR DEPENDÊNCIAS:
+--------------------------------------
+cd /opt/s-agendamento
+source venv/bin/activate
+pip install -r requirements.txt --upgrade --quiet
+
+6️⃣ APLICAR MIGRAÇÕES:
+--------------------------------------
+python manage.py migrate
+
+7️⃣ COLETAR ARQUIVOS ESTÁTICOS:
+--------------------------------------
+python manage.py collectstatic --noinput
+
+8️⃣ REINICIAR SERVIÇOS:
+--------------------------------------
+sudo supervisorctl restart s-agendamento
+sudo systemctl reload nginx
+
+9️⃣ VERIFICAR STATUS:
+--------------------------------------
+sudo supervisorctl status s-agendamento
+
+=================================================
+TESTE FINAL:
+=================================================
+
+Aguarde 10 segundos e acesse:
+https://fourmindstech.com.br/s_agendamentos/
+
+=================================================
+🧹 LIMPEZA (OPCIONAL):
+=================================================
+
+Depois que confirmar que está funcionando:
+
+# Remover clone temporário
+rm -rf /home/ubuntu/s_agendamento
+
+# Se quiser remover backup também (só se tiver certeza):
+# sudo rm -rf /opt/s-agendamento-backup
+
+=================================================
+

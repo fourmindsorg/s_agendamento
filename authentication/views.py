@@ -535,6 +535,11 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
         # Verificar se o usuário já usou o período gratuito
         context["ja_usou_gratuito"] = self.verificar_ja_usou_gratuito()
 
+        # Verificar se tem assinatura aguardando pagamento
+        context["tem_assinatura_aguardando"] = (
+            self.tem_assinatura_aguardando_pagamento()
+        )
+
         # Histórico de assinaturas do usuário (inclui planos anteriores)
         try:
             context["assinaturas_historico"] = (
@@ -548,23 +553,43 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
         return context
 
     def verificar_ja_usou_gratuito(self):
-        """Verifica se o usuário já usou o período gratuito"""
+        """Verifica se o usuário já usou e expirou o período gratuito"""
         try:
             # Buscar plano gratuito
             plano_gratuito = Plano.objects.filter(tipo="gratuito", ativo=True).first()
             if not plano_gratuito:
                 return False
 
-            # Verificar se o usuário já teve alguma assinatura gratuita
-            assinaturas_gratuitas = AssinaturaUsuario.objects.filter(
-                usuario=self.request.user, plano=plano_gratuito
-            ).exists()
+            # Verificar se o usuário já teve alguma assinatura gratuita expirada
+            assinatura_gratuita = (
+                AssinaturaUsuario.objects.filter(
+                    usuario=self.request.user, plano=plano_gratuito
+                )
+                .order_by("-data_fim")
+                .first()
+            )
 
-            return assinaturas_gratuitas
+            # Só retorna True se tiver assinatura gratuita E a data fim for menor que hoje (expirado)
+            if assinatura_gratuita and assinatura_gratuita.data_fim < timezone.now():
+                return True
+
+            return False
 
         except Exception as e:
             logging.error(
                 f"Erro ao verificar período gratuito para usuário {self.request.user.id}: {e}"
+            )
+            return False
+
+    def tem_assinatura_aguardando_pagamento(self):
+        """Verifica se o usuário tem assinatura aguardando pagamento"""
+        try:
+            return AssinaturaUsuario.objects.filter(
+                usuario=self.request.user, status="aguardando_pagamento"
+            ).exists()
+        except Exception as e:
+            logging.error(
+                f"Erro ao verificar assinatura aguardando para usuário {self.request.user.id}: {e}"
             )
             return False
 
@@ -591,6 +616,20 @@ def select_plan(request, plano_id):
     try:
         plano = Plano.objects.get(id=plano_id, ativo=True)
         usuario = request.user
+
+        # Verificar se já tem assinatura aguardando pagamento
+        assinatura_aguardando = AssinaturaUsuario.objects.filter(
+            usuario=usuario, status="aguardando_pagamento"
+        ).first()
+
+        if assinatura_aguardando:
+            messages.warning(
+                request,
+                "Você tem uma assinatura aguardando pagamento. Finalize o pagamento antes de assinar outro plano.",
+            )
+            return redirect(
+                "authentication:payment_pix", assinatura_id=assinatura_aguardando.id
+            )
 
         # Verificar se já tem assinatura ativa
         assinatura_ativa = AssinaturaUsuario.objects.filter(
@@ -766,21 +805,34 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         else:
             valor = plano.preco_cartao
 
-        # Criar assinatura
-        data_fim = timezone.now() + timedelta(days=plano.duracao_dias)
+        # Verificar se já existe assinatura ativa
+        assinatura_ativa = AssinaturaUsuario.objects.filter(
+            usuario=request.user, status="ativa"
+        ).first()
+
+        # Se já tem assinatura ativa, começar nova assinatura no dia seguinte ao término da atual
+        if assinatura_ativa and assinatura_ativa.data_fim:
+            data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
+        else:
+            data_inicio = timezone.now()
+
+        # Criar assinatura com status aguardando_pagamento
+        data_fim = data_inicio + timedelta(days=plano.duracao_dias)
 
         assinatura = AssinaturaUsuario.objects.create(
             usuario=request.user,
             plano=plano,
             data_fim=data_fim,
-            status="ativa",
+            status="aguardando_pagamento",
             valor_pago=valor,
             metodo_pagamento=metodo_pagamento,
         )
 
         if metodo_pagamento == "pix":
             # Gerar QR Code PIX via Asaas
-            qr_code_data = self.gerar_qr_code_pix(plano, valor, billing_data)
+            qr_code_data = self.gerar_qr_code_pix(
+                plano, valor, billing_data, assinatura
+            )
 
             # Armazenar dados do PIX na sessão
             request.session["pix_data"] = qr_code_data
@@ -791,13 +843,13 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             # Simular processamento de cartão
             return self.processar_cartao(request, assinatura, card_data, billing_data)
 
-    def gerar_qr_code_pix(self, plano, valor, billing_data):
+    def gerar_qr_code_pix(self, plano, valor, billing_data, assinatura):
         """Gera dados para QR Code PIX (simulado)"""
         # Em um sistema real, aqui seria feita a integração com gateway de pagamento
         return {
             "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
             "chave_pix": "contato@sistema.com.br",
-            "valor": valor,
+            "valor": float(valor),
             "descricao": f"Pagamento - {plano.nome}",
         }
 
@@ -830,8 +882,12 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 assinatura.valor_pago,
                 {
                     "cpf": "00000000000",  # Em um sistema real, pegaria dos dados de cobrança
-                    "nome": assinatura.usuario.get_full_name(),
+                    "nome_completo": assinatura.usuario.get_full_name()
+                    or assinatura.usuario.username,
+                    "email": assinatura.usuario.email or "",
+                    "telefone": "",
                 },
+                assinatura,
             )
             context["qr_data"] = qr_data
 
@@ -841,8 +897,24 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
 
         return context
 
-    def gerar_qr_code_pix(self, plano, valor, billing_data):
+    def gerar_qr_code_pix(self, plano, valor, billing_data, assinatura):
         """Gera dados para QR Code PIX usando API Asaas"""
+
+        # Se já tem payment_id, não precisa criar novamente
+        if assinatura.asaas_payment_id:
+            logging.info(f"Usando payment_id existente: {assinatura.asaas_payment_id}")
+            return {
+                "payment_id": assinatura.asaas_payment_id,
+                "qr_code": "qr_code_existente",
+                "qr_code_image": "",
+                "chave_pix": "chave_pix_existente",
+                "valor": float(valor),
+                "descricao": f"Pagamento - {plano.nome}",
+                "vencimento": "",
+                "status": "PENDING",
+                "pix_copia_cola": "qr_code_existente",
+            }
+
         if not ASAAS_AVAILABLE:
             raise RuntimeError("Serviço de pagamento Asaas não está configurado")
 
@@ -878,12 +950,16 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             # Obter QR Code PIX
             pix_data = asaas_client.get_pix_qr(payment_data["id"])
 
+            # Salvar payment_id na assinatura
+            assinatura.asaas_payment_id = payment_data["id"]
+            assinatura.save()
+
             return {
                 "payment_id": payment_data["id"],
                 "qr_code": pix_data.get("payload", ""),
                 "qr_code_image": pix_data.get("encodedImage", ""),
                 "chave_pix": pix_data.get("payload", ""),
-                "valor": valor,
+                "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": due_date,
                 "status": payment_data.get("status", "PENDING"),
@@ -893,16 +969,17 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
         except Exception as e:
             logging.error(f"Erro ao gerar PIX via Asaas: {str(e)}")
             # Fallback para simulação em caso de erro
+            valor_float = float(valor)
             return {
                 "payment_id": f"sim_{plano.id}_{int(timezone.now().timestamp())}",
-                "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}",
+                "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor_float}-{billing_data['cpf']}",
                 "qr_code_image": "",
                 "chave_pix": "contato@sistema.com.br",
-                "valor": valor,
+                "valor": valor_float,
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
                 "status": "PENDING",
-                "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor}-{billing_data['cpf']}5204000053039865405{valor:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
+                "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor_float}-{billing_data['cpf']}5204000053039865405{valor_float:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
                 "erro": "Modo simulação ativado",
             }
 
@@ -926,3 +1003,121 @@ class PaymentSuccessView(LoginRequiredMixin, TemplateView):
             return redirect("authentication:plan_selection")
 
         return context
+
+
+# ========================================
+# GERENCIAMENTO DE ASSINATURAS
+# ========================================
+
+
+@login_required
+@require_POST
+def delete_assinatura(request, assinatura_id):
+    """Deleta uma assinatura com validação de status"""
+    try:
+        # Buscar assinatura do usuário
+        assinatura = AssinaturaUsuario.objects.get(
+            id=assinatura_id, usuario=request.user
+        )
+
+        # Não permitir deletar se estiver ativa ou expirada
+        if assinatura.status in ["ativa", "expirada"]:
+            messages.error(
+                request,
+                f"Não é possível deletar uma assinatura com status '{assinatura.get_status_display()}'.",
+            )
+            return redirect("authentication:plan_selection")
+
+        # Permitir deletar apenas se estiver aguardando pagamento, cancelada ou suspensa
+        assinatura.delete()
+        messages.success(request, "Assinatura deletada com sucesso.")
+
+        return redirect("authentication:plan_selection")
+
+    except AssinaturaUsuario.DoesNotExist:
+        messages.error(request, "Assinatura não encontrada.")
+        return redirect("authentication:plan_selection")
+    except Exception as e:
+        logging.error(f"Erro ao deletar assinatura {assinatura_id}: {e}")
+        messages.error(request, "Erro ao deletar assinatura.")
+        return redirect("authentication:plan_selection")
+
+
+# ========================================
+# WEBHOOK PARA CONFIRMAÇÃO DE PAGAMENTO
+# ========================================
+
+
+@csrf_protect
+@require_POST
+def asaas_webhook(request):
+    """
+    Webhook para receber notificações de pagamento do Asaas.
+    Atualiza o status da assinatura quando o pagamento é confirmado.
+    """
+    try:
+        import json
+
+        # Receber dados do Asaas
+        if request.content_type == "application/json":
+            data = json.loads(request.body)
+        else:
+            data = request.POST.dict()
+
+        event_type = data.get("event")
+        payment_data = data.get("payment", {})
+
+        logging.info(f"Webhook Asaas recebido: {event_type}")
+        logging.info(f"Dados: {data}")
+
+        if event_type not in [
+            "PAYMENT_CONFIRMED",
+            "PAYMENT_RECEIVED",
+            "PAYMENT_OVERDUE",
+        ]:
+            return JsonResponse(
+                {"status": "ignored", "message": f"Evento {event_type} ignorado"}
+            )
+
+        # Buscar assinatura pelo ID do pagamento Asaas
+        payment_id = payment_data.get("id")
+        if not payment_id:
+            return JsonResponse(
+                {"status": "error", "message": "ID do pagamento não encontrado"}
+            )
+
+        # Buscar assinatura correspondente
+        assinatura = AssinaturaUsuario.objects.filter(
+            asaas_payment_id=payment_id
+        ).first()
+
+        if not assinatura:
+            logging.warning(f"Assinatura não encontrada para payment_id: {payment_id}")
+            return JsonResponse(
+                {"status": "error", "message": "Assinatura não encontrada"}
+            )
+
+        # Atualizar status da assinatura baseado no evento
+        if event_type in ["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]:
+            # Pagamento confirmado - ativar assinatura
+            assinatura.status = "ativa"
+            assinatura.save()
+            logging.info(f"Assinatura {assinatura.id} ativada - Pagamento confirmado")
+
+            # Notificar usuário (opcional)
+            # Aqui você pode enviar email, notificação push, etc.
+
+        elif event_type == "PAYMENT_OVERDUE":
+            # Pagamento vencido - manter como aguardando_pagamento
+            logging.warning(f"Assinatura {assinatura.id} - Pagamento vencido")
+
+        return JsonResponse(
+            {"status": "success", "message": "Webhook processado com sucesso"}
+        )
+
+    except json.JSONDecodeError:
+        logging.error("Erro ao decodificar JSON do webhook")
+        return JsonResponse({"status": "error", "message": "JSON inválido"})
+    except Exception as e:
+        logging.error(f"Erro no webhook Asaas: {str(e)}")
+        return JsonResponse({"status": "error", "message": str(e)})

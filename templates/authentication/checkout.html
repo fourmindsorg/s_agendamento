@@ -668,16 +668,35 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // Format phone
+    // Format phone - formato (xx) xxxxx-xxxx
     const phoneInput = document.querySelector('input[name="telefone"]');
     if (phoneInput) {
         phoneInput.addEventListener('input', function(e) {
+            // Remove tudo que não é dígito
             let value = e.target.value.replace(/\D/g, '');
-            value = value.replace(/(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{4})(\d)/, '$1-$2');
-            value = value.replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3');
-            e.target.value = value;
+            
+            // Limita a 11 dígitos
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            // Aplica a máscara baseada no número de dígitos
+            let maskedValue = '';
+            if (value.length > 0) {
+                maskedValue = '(' + value.substring(0, 2);
+            }
+            if (value.length > 2) {
+                maskedValue += ') ' + value.substring(2, 7);
+            }
+            if (value.length > 7) {
+                maskedValue += '-' + value.substring(7, 11);
+            }
+            
+            e.target.value = maskedValue;
         });
+        
+        // Limitar tamanho máximo
+        phoneInput.setAttribute('maxlength', '15');
     }
     
     // Format CEP
