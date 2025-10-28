@@ -68,7 +68,7 @@
             --shadow-color: {{ paleta_cores.shadow }};
             
             /* Layout Variables */
-            --sidebar-width: 280px;
+            --sidebar-width: 220px;
             --sidebar-collapsed-width: 70px;
             --topbar-height: 70px;
             --transition-speed: 0.3s;
@@ -191,7 +191,7 @@ body {
     @media screen and (min-width: 1200px) {
         body {
             background-color: #d0ffe0; 
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .container {
@@ -239,7 +239,7 @@ body {
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-calendar-check"></i>
-                    <span class="menu-text">Agendamentos</span>
+                    <span class="menu-text me-2">Agendamentos</span>
                     {% if agendamentos_pendentes > 0 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>
                     {% endif %}
@@ -300,7 +300,7 @@ body {
         </button>
         
         <h1 class="d-block d-md-none page-title">Agenda Online</h1>
-        <h1 class="d-none d-md-block page-title">Sistema de Agendamentos Online</h1>
+        <h4 class="d-none d-md-block pt-2">Sistema de Agendamentos Online</h4>
         
         <div class="user-area">
       

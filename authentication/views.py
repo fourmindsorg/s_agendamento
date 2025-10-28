@@ -529,7 +529,12 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["planos"] = Plano.objects.filter(ativo=True).order_by("ordem")
+        # Buscar os 3 últimos planos ativos ordenados do menor valor para o maior (excluindo o gratuito)
+        context["planos"] = (
+            Plano.objects.filter(ativo=True)
+            .exclude(tipo="gratuito")
+            .order_by("preco_cartao")[:3]
+        )
         context["usuario"] = self.request.user
 
         # Verificar se o usuário já usou o período gratuito

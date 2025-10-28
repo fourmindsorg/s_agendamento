@@ -36,8 +36,12 @@ class HomeView(TemplateView):
         # Importar Plano do módulo authentication
         from authentication.models import Plano
 
-        # Filtrar apenas planos ativos, similar ao PlanSelectionView
-        context["planos"] = Plano.objects.filter(ativo=True).order_by("ordem")
+        # Filtrar apenas planos ativos, similar ao PlanSelectionView - limitar a 3 planos ordenados pelo preço
+        context["planos"] = (
+            Plano.objects.filter(ativo=True)
+            .exclude(tipo="gratuito")
+            .order_by("preco_cartao")[:3]
+        )
 
         return context
 

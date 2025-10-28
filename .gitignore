@@ -75,3 +75,4 @@ temp/
 tmp/
 
 s-agendamento-key.pub
+.venv

@@ -326,12 +326,12 @@ body {
     border-radius: 15px !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
     transition: all var(--transition-speed) ease;
-    color: var(--text-color);
+    /* color: var(--text-color); */
 }
 
-.card * {
+/* .card * {
     color: var(--text-color) !important;
-}
+} */
 
 .card:hover {
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1) !important;

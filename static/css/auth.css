@@ -415,3 +415,110 @@ a:hover {
 .btn-outline-primary:hover {
     color: white !important;
 }
+
+/* Estilos para tabela de assinaturas (mesmo padrão da lista de agendamentos) */
+
+/* Date badge */
+.date-badge {
+    width: 50px;
+    padding: 8px 4px;
+    font-size: 12px;
+    line-height: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+.date-badge .day {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.date-badge .month {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: white !important;
+}
+
+.date-badge .day {
+    color: white !important;
+}
+
+/* Avatar */
+.avatar-sm {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+    font-weight: bold;
+    background: #667eea !important;
+    color: white !important;
+}
+
+/* Status rows */
+.assinatura-row[data-status="ativa"] {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.assinatura-row[data-status="cancelada"] {
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.assinatura-row[data-status="expirada"] {
+    background-color: rgba(108, 117, 125, 0.05);
+}
+
+.assinatura-card[data-status="ativa"] {
+    border-left: 4px solid #28a745;
+}
+
+.assinatura-card[data-status="cancelada"] {
+    border-left: 4px solid #dc3545;
+}
+
+.assinatura-card[data-status="expirada"] {
+    border-left: 4px solid #6c757d;
+}
+
+.assinatura-card[data-status="aguardando_pagamento"] {
+    border-left: 4px solid #ffc107;
+}
+
+/* Table styling */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background-color: #f8f9fa !important;
+    color: #1e293b !important;
+    padding: 15px 12px;
+}
+
+.table td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    border-color: #dee2e6 !important;
+}
+
+.assinatura-row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* Badge styling */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Mobile card styling */
+.assinatura-card {
+    margin-bottom: 12px;
+    padding: 15px !important;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.assinatura-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
