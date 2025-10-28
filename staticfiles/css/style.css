@@ -1,6 +1,14 @@
 @import url("dashboard.css");
+
 @import url("agendamentos/agendamento_detail.css");
 @import url('agendamentos/agendamento_form.CSS');
+@import url('agendamentos/agendamento_status_form.css');
+@import url('agendamentos/cliente_confirm_delete.css');
+@import url('agendamentos/agendamento_detail.css');
+@import url('agendamentos/cliente_form.css');
+@import url('agendamentos/configuracoes.css');
+@import url('agendamentos/relatorios.css');
+
 
 
 * {

@@ -5,39 +5,47 @@
 {% block content %}
 
 <!-- Header da Lista -->
-<div class="list-header p-3">
-  <h1 class="list-title">
-    <i class="fas fa-users"></i>
-    Gerenciar Clientes
-  </h1>
-  <p class="list-subtitle">
-    Total de {{ total_clientes }} cliente{{ total_clientes|pluralize }}
-    {% if search or status %}
-    <span class="text-primary">• Filtros aplicados</span>
-    {% endif %}
-  </p>
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
   
-  <!-- Ações no Header -->
-  <div class="header-actions">
+  <div class="header-text-group mb-2 mb-md-0">
+      <h1 class="list-title h5 mb-0"> 
+        <i class="fas fa-users me-2"></i>
+        Gerenciar Clientes
+      </h1>
+      <p class="list-subtitle text-muted mb-0 d-none d-sm-block">
+        Total de {{ total_clientes }} cliente{{ total_clientes|pluralize }}
+        {% if search or status %}
+        <span class="text-primary">• Filtros aplicados</span>
+        {% endif %}
+      </p>
+  </div>
+  
+<div class="header-actions d-flex gap-2 align-items-center mt-2 mt-md-0">
+    
     {% if not read_only_mode %}
-    <a href="{% url 'agendamentos:cliente_create' %}" class="btn btn-custom">
-      <i class="fas fa-user-plus"></i>Novo Cliente
+    <a href="{% url 'agendamentos:cliente_create' %}" class="btn btn-custom btn-sm btn-icon-responsive">
+      <i class="fas fa-user-plus me-1"></i>
+      <span class="d-none d-md-inline-block">Novo</span>
     </a>
     {% else %}
-    <button class="btn btn-secondary" disabled title="Modo somente leitura - contrate um plano para editar">
-      <i class="fas fa-lock"></i>Modo Somente Leitura
+    <button class="btn btn-secondary btn-sm btn-icon-responsive" disabled title="Modo somente leitura - contrate um plano para editar">
+      <i class="fas fa-lock me-1"></i>
+      <span class="d-none d-md-inline-block">Modo Somente Leitura</span>
     </button>
     {% endif %}
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
-      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
-    </a>
-  </div>
+
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary btn-md btn-icon-responsive">
+    <i class="fas fa-arrow-left me-1"></i>
+    <span class="d-none d-md-inline-block">Dashboard</span>
+</a>
+</div>
 </div>
 
 <!-- Filtros e Busca -->
 <div class="card filter-card">
   <div class="card-body">
-    <form method="get" class="row g-3">
+    <form method="get" class="row g-3 align-items-end"> 
+      
       <div class="col-md-4">
         <label for="search" class="form-label">
           <i class="fas fa-search me-1"></i>Buscar Cliente
@@ -63,28 +71,30 @@
       
       <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
         <div class="d-flex gap-2">
-          <a type="submit" class="btn btn-custom justify-content-center">
-            <i class="fas fa-search"></i>Filtrar
-          </a>
+         <a type="submit" class="btn btn-outline-primary justify-content-center p-2 p-md-3">
+            <i class="fas fa-search"></i>
+            <span class="d-none d-lg-inline">&nbsp;Filtrar</span>
+        </a>
 
-          <a href="{% url 'agendamentos:cliente_list' %}" class="btn btn-outline-custom justify-content-center p-2">
-            <i class="fas fa-times fa-lg"></i>Limpar
+          <a href="{% url 'agendamentos:cliente_list' %}" class="btn btn-outline-primary justify-content-center p-2 p-md-3">
+            <i class="fas fa-times fs-6 fs-md-5 me-md-2"></i>
+            <span class="d-none d-md-inline">Limpar</span>
           </a>
         </div>
 
         <div class="dropdown m-0">
-          <a type="button" class="btn btn-outline-custom dropdown-toggle p-2" data-bs-toggle="dropdown">
-            <i class="fas fa-download fa-lg"></i>Exportar
+          <a type="button" class="btn btn-outline-primary dropdown-toggle p-2 p-md-3" data-bs-toggle="dropdown">
+            <i class="fas fa-download fs-6 fs-md-5 me-md-2"></i>
+            <span class="d-none d-md-inline">Exportar</span>
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
           </ul>
-          </div>
         </div>
       </div>
-
+      
     </form>
   </div>
 </div>

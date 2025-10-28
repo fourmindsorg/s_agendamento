@@ -239,44 +239,7 @@
   color: var(--text-muted-color) !important;
 }
 
-/* Buttons */
-.btn-custom {
-  background: var(--gradient-bg);
-  border: none;
-  color: white !important;
-  font-weight: 600;
-  padding: 12px 20px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.btn-custom:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px var(--shadow-color);
-  color: white !important;
-}
-
-/* Action buttons */
-.action-btn {
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
 
 /* Status badge */
 .status-badge {

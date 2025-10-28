@@ -4,45 +4,18 @@
 
 {% block content %}
 
-<!-- Header da Lista -->
-<div class="list-header">
-  <h1 class="list-title">
-    <i class="fas fa-calendar-alt"></i>
-    Gerenciar Agendamentos
-  </h1>
-  <p class="list-subtitle">
-    Total de {{ total_agendamentos }} agendamento{{ total_agendamentos|pluralize }}
-    {% if search or status or data_inicio or data_fim %}
-    <span class="text-primary">• Filtros aplicados</span>
-    {% endif %}
-  </p>
-  
-  <!-- Ações no Header -->
-  <div class="header-actions">
-    <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom">
-      <i class="fas fa-calendar-plus"></i>Novo Agendamento
-    </a>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
-      <i class="fas fa-arrow-left me-2"></i>Dashboard
-    </a>
-    <div class="dropdown">
-      <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <i class="fas fa-cog me-2"></i>Ações
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="{% url 'agendamentos:cliente_list' %}">
-          <i class="fas fa-users me-2"></i>Clientes
-        </a></li>
-        <li><a class="dropdown-item" href="{% url 'agendamentos:servico_list' %}">
-          <i class="fas fa-cogs me-2"></i>Serviços
-        </a></li>
-        <li><a class="dropdown-item" href="{% url 'agendamentos:relatorios' %}">
-          <i class="fas fa-chart-bar me-2"></i>Relatórios
-        </a></li>
-      </ul>
+
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+
     </div>
   </div>
 </div>
+
+<!-- Header da Lista -->
+
 
 <!-- Filtros Rápidos -->
 <div class="quick-filters">
@@ -74,30 +47,33 @@
 
 <!-- Filtros Avançados -->
 <div class="card filter-card">
-  <div class="card-header">
+  
+  <div class="card-header d-flex justify-content-center align-items-center">
     <h6 class="mb-0">
       <i class="fas fa-filter me-2"></i>Filtros de Busca
     </h6>
   </div>
+  
   <div class="card-body">
-    <form method="get" class="row g-3">
-      <div class="col-md-3">
-        <label for="search" class="form-label">
+    <form method="get" class="row g-2 align-items-end"> 
+      
+      <div class="col-md-2">
+        <label for="search" class="form-label mb-1">
           <i class="fas fa-search me-1"></i>Buscar
         </label>
         <input type="text" 
-               class="form-control" 
+               class="form-control form-control-sm" 
                id="search" 
                name="search" 
                value="{{ search }}"
-               placeholder="Cliente, serviço ou observações">
+               placeholder="Cliente, serviço ou obs">
       </div>
       
       <div class="col-md-2">
-        <label for="status" class="form-label">
+        <label for="status" class="form-label mb-1">
           <i class="fas fa-flag me-1"></i>Status
         </label>
-        <select class="form-select" id="status" name="status">
+        <select class="form-select form-select-sm" id="status" name="status">
           <option value="">Todos</option>
           {% for value, label in status_choices %}
             <option value="{{ value }}" {% if status == value %}selected{% endif %}>
@@ -107,42 +83,44 @@
         </select>
       </div>
       
-      <div class="col-md-2" style="max-width:150px;">
-        <label for="data_inicio" class="form-label">
-          <i class="fas fa-calendar me-1"></i>Data Início
+      <div class="col-md-2 col-data">
+        <label for="data_inicio" class="form-label mb-1">
+          <i class="fas fa-calendar me-1"></i>Início
         </label>
         <input type="date" 
-               class="form-control" 
+               class="form-control form-control-sm" 
                id="data_inicio" 
                name="data_inicio" 
                value="{{ data_inicio }}">
       </div>
       
-      <div class="col-md-2" style="max-width:150px;">
-        <label for="data_fim" class="form-label">
-          <i class="fas fa-calendar me-1"></i>Data Fim
+      <div class="col-md-2 col-data">
+        <label for="data_fim" class="form-label mb-1">
+          <i class="fas fa-calendar me-1"></i>Fim
         </label>
         <input type="date" 
-               class="form-control" 
+               class="form-control form-control-sm" 
                id="data_fim" 
                name="data_fim" 
                value="{{ data_fim }}">
       </div>
       
-      <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
-        <div class="d-flex gap-2">
-          <a type="submit" class="btn btn-custom justify-content-center">
-            <i class="fas fa-search"></i>Filtrar
-          </a>
+      <div class="col-12 col-md-4 d-flex gap-2 justify-content-center justify-content-md-end">
+        
+        <a type="submit" class="btn btn-outline-primary" btn-sm text-white"> 
+            <i class="fas fa-search me-1"></i>
+            <span class="d-none d-lg-inline">&nbsp;Filtrar</span>
+        </a>
 
-          <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom justify-content-center p-2">
-            <i class="fas fa-times fa-lg"></i>Limpar
-          </a>
-        </div>
+        <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom btn-sm">
+          <i class="fas fa-times me-1"></i>
+          <span class="d-none d-lg-inline">Limpar</span>
+        </a>
         
         <div class="dropdown m-0">
-          <a class="btn btn-outline-custom dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
-            <i class="fas fa-download fa-lg"></i>Exportar
+          <a class="btn btn-outline-custom dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-download me-1"></i>
+            <span class="d-none d-lg-inline">Exportar</span>
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
@@ -232,7 +210,7 @@
               <td>
                 <span class="badge {{ agendamento.status_badge_class }}">
                   {% if agendamento.status == 'agendado' %}
-                    <i class="fas fa-clock me-1"></i>
+                    <i class="fas fa-clock me-1" style="color: #FFF !;"></i>
                   {% elif agendamento.status == 'confirmado' %}
                     <i class="fas fa-check me-1"></i>
                   {% elif agendamento.status == 'em_andamento' %}

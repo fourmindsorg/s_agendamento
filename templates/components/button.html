@@ -1,0 +1,17 @@
+<a href="{% url link_name %}" 
+   class="btn {{ estilo|default:'btn-primary' }} {{ classes_extra|default:'' }} d-flex align-items-center justify-content-center">
+    
+    {% if icone %}
+        {# ATENÇÃO: Verifique se você usou 'icone' aqui: #}
+        <i class="fas {{ icone }} {% if texto %}me-2{% endif %}"></i>
+    {% endif %}
+    
+    {% if texto %}
+        {# ATENÇÃO: Verifique se você usou 'texto' aqui: #}
+        <strong>{{ texto }}</strong>
+    {% endif %}
+
+</a>
+
+<!-- {% include 'components/button.html' with link_name='agendamentos:agendamento_create' texto="Botão Teste" classes_extra="w-100 py-2" icone="fa-calendar-plus fa-lg" estilo="btn-primary" %}
+ -->

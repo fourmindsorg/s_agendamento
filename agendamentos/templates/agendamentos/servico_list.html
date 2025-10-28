@@ -5,34 +5,43 @@
 {% block content %}
 
 <!-- Header da Lista -->
-<div class="list-header">
-  <h1 class="list-title">
-    <i class="fas fa-cogs"></i>
-    Gerenciar Serviços
-  </h1>
-  <p class="list-subtitle">
-    Total de {{ total_servicos }} serviço{{ total_servicos|pluralize }}
-    {% if search or status %}
-    <span class="text-primary">• Filtros aplicados</span>
-    {% endif %}
-  </p>
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
   
-  <!-- Ações no Header -->
-  <div class="header-actions">
-    <a href="{% url 'agendamentos:servico_create' %}" class="btn btn-custom me-4 m-sm-0">
-      <i class="fas fa-plus"></i>Novo Serviço
+  <div class="header-text-group mb-2 mb-md-0">
+      <h1 class="list-title h5 mb-0"> 
+        <i class="fas fa-cogs me-2"></i>
+        Gerenciar Serviços
+      </h1>
+      
+      <p class="list-subtitle text-muted mb-0 d-none d-sm-block">
+        Total de {{ total_servicos }} serviço{{ total_servicos|pluralize }}
+        {% if search or status %}
+        <span class="text-primary">• Filtros aplicados</span>
+        {% endif %}
+      </p>
+  </div>
+  
+  <div class="header-actions d-flex gap-2 align-items-center mt-2 mt-md-0">
+    
+    <a href="{% url 'agendamentos:servico_create' %}" class="btn btn-custom btn-md btn-icon-responsive">
+      <i class="fas fa-plus me-md-1"></i>
+      <span class="d-none d-md-inline-block">Novo</span>
     </a>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
-      <i class="fas fa-arrow-left fa-lg me-2"></i>Dashboard
+    
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary btn-md btn-icon-responsive">
+      <i class="fas fa-arrow-left me-md-1"></i>
+      <span class="d-none d-md-inline-block">Dashboard</span>
     </a>
   </div>
 </div>
 
 <!-- Filtros e Busca -->
+ 
 <div class="card filter-card">
   <div class="card-body">
-    <form method="get" class="row g-3">
-      <div class="col-md-5">
+    <form method="get" class="row g-3 align-items-end">
+      
+      <div class="col-12 col-md-5">
         <label for="search" class="form-label">
           <i class="fas fa-search me-1"></i>Buscar Serviço
         </label>
@@ -44,7 +53,7 @@
                placeholder="Nome ou descrição do serviço">
       </div>
       
-      <div class="col-md-3">
+      <div class="col-12 col-md-3">
         <label for="status" class="form-label">
           <i class="fas fa-filter me-1"></i>Status
         </label>
@@ -55,22 +64,24 @@
         </select>
       </div>
       
-      <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
-        <div class="d-flex gap-2">
-          <a type="submit" class="btn btn-custom justify-content-center">
-            <i class="fas fa-search"></i>Filtrar
-          </a>
+      <div class="col-12 col-md-4 d-flex gap-2 justify-content-start justify-content-md-end">
+        
+        <button type="submit" class="btn btn-custom btn-icon-responsive">
+          <i class="fas fa-search me-md-2"></i>
+          <span class="d-none d-md-inline-block">Filtrar</span>
+        </button>
 
-          <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-custom justify-content-center p-2">
-            <i class="fas fa-times"></i>Limpar
-          </a>
-        </div>
-
+        <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-custom btn-icon-responsive">
+          <i class="fas fa-times me-md-2"></i>
+          <span class="d-none d-md-inline-block">Limpar</span>
+        </a>
+        
         <div class="dropdown m-0">
-          <a type="button" class="btn btn-outline-custom dropdown-toggle p-2" data-bs-toggle="dropdown">
-            <i class="fas fa-download fa-lg"></i>Exportar
+          <button type="button" class="btn btn-outline-custom dropdown-toggle btn-icon-responsive" data-bs-toggle="dropdown">
+            <i class="fas fa-download me-md-2"></i>
+            <span class="d-none d-md-inline-block">Exportar</span>
           </button>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
             <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Imprimir</a></li>
@@ -81,6 +92,7 @@
     </form>
   </div>
 </div>
+
 
 <!-- Lista de Serviços -->
 {% if servicos %}
@@ -125,20 +137,20 @@
   </div>
 
   <div class="card list-card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">
-        <i class="fas fa-list me-2"></i>Lista de Serviços
-      </h5>
-      <small class="text-muted">
-        Mostrando {{ servicos|length }} de {{ total_servicos }} serviço{{ total_servicos|pluralize }}
-      </small>
-    </div>
-    
-    <!-- Versão Desktop -->
-    <div class="d-none d-lg-block">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
+  
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="fas fa-list me-2"></i>Lista de Serviços
+    </h5>
+    <small class="text-muted">
+      Mostrando {{ servicos|length }} de {{ total_servicos }} serviço{{ total_servicos|pluralize }}
+    </small>
+  </div>
+  
+  <div class="d-none d-lg-block">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
             <tr>
               <th>Serviço</th>
               <th>Duração</th>
@@ -148,141 +160,156 @@
               <th>Criado em</th>
               <th class="text-center">Ações</th>
             </tr>
-          </thead>
-          <tbody>
-            {% for servico in servicos %}
-            <tr>
-              <td>
-                <div class="d-flex align-items-center">
-                  <div class="service-icon d-flex align-items-center justify-content-center me-3">
-                    <i class="fas fa-cog"></i>
-                  </div>
-                  <div>
-                    <strong>{{ servico.nome }}</strong>
-                    {% if servico.descricao %}
-                      <br><small class="text-muted">{{ servico.descricao|truncatechars:50 }}</small>
-                    {% endif %}
-                  </div>
+        </thead>
+        <tbody>
+          {% for servico in servicos %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="service-icon d-flex align-items-center justify-content-center me-3">
+                  <i class="fas fa-cog"></i>
                 </div>
-              </td>
-              <td>
-                <span class="duration-badge">
-                  <i class="fas fa-clock me-1"></i>{{ servico.duracao_formatada }}
-                </span>
-              </td>
-              <td>
-                <span class="price-display">
-                  R$ {{ servico.preco|floatformat:2 }}
-                </span>
-              </td>
-              <td>
-                {% if servico.ativo %}
-                  <span class="badge bg-success">
-                    <i class="fas fa-check-circle me-1"></i>Ativo
-                  </span>
-                {% else %}
-                  <span class="badge bg-secondary">
-                    <i class="fas fa-times-circle me-1"></i>Inativo
-                  </span>
-                {% endif %}
-              </td>
-              <td>
-                <span class="stats-badge">
-                  {{ servico.agendamento_set.count }} agendamento{{ servico.agendamento_set.count|pluralize }}
-                </span>
-              </td>
-              <td>
-                <small class="text-muted">{{ servico.criado_em|date:"d/m/Y" }}</small>
-              </td>
-              <td class="text-center">
-                <div class="btn-group btn-group-sm">
-                  <a href="{% url 'agendamentos:servico_update' servico.pk %}" 
-                     class="btn btn-outline-warning" 
-                     title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="{% url 'agendamentos:agendamento_create' %}?servico={{ servico.pk }}" 
-                     class="btn btn-outline-success" 
-                     title="Novo agendamento">
-                    <i class="fas fa-calendar-plus"></i>
-                  </a>
-                  <button type="button" 
-                          class="btn btn-outline-danger" 
-                          title="Excluir"
-                          data-bs-toggle="modal" 
-                          data-bs-target="#deleteModal{{ servico.pk }}">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                <div>
+                  <strong>{{ servico.nome }}</strong>
+                  {% if servico.descricao %}
+                    <br><small class="text-muted">{{ servico.descricao|truncatechars:50 }}</small>
+                  {% endif %}
                 </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+            <td>
+              <span class="duration-badge">
+                <i class="fas fa-clock me-1"></i>{{ servico.duracao_formatada }}
+              </span>
+            </td>
+            <td>
+              <span class="price-display">
+                R$ {{ servico.preco|floatformat:2 }}
+              </span>
+            </td>
+            <td>
+              {% if servico.ativo %}
+                <span class="badge bg-success">
+                  <i class="fas fa-check-circle me-1"></i>Ativo
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">
+                  <i class="fas fa-times-circle me-1"></i>Inativo
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="stats-badge">
+                {{ servico.agendamento_set.count }} agendamento{{ servico.agendamento_set.count|pluralize }}
+              </span>
+            </td>
+            <td>
+              <small class="text-muted">{{ servico.criado_em|date:"d/m/Y" }}</small>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'agendamentos:servico_update' servico.pk %}" 
+                   class="btn btn-outline-warning" 
+                   title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'agendamentos:agendamento_create' %}?servico={{ servico.pk }}" 
+                   class="btn btn-outline-success" 
+                   title="Novo agendamento">
+                  <i class="fas fa-calendar-plus"></i>
+                </a>
+                <button type="button" 
+                        class="btn btn-outline-danger" 
+                        title="Excluir"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteModal{{ servico.pk }}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    
-    <!-- Versão Mobile -->
-    <div class="d-lg-none">
-      <div class="row g-3 p-3">
-        {% for servico in servicos %}
-        <div class="col-12">
-          <div class="card service-card h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="d-flex align-items-center">
-                  <div class="service-icon d-flex align-items-center justify-content-center me-3">
-                    <i class="fas fa-cog"></i>
-                  </div>
-                  <div>
-                    <h6 class="mb-1">{{ servico.nome }}</h6>
-                    {% if servico.ativo %}
-                      <span class="badge bg-success">Ativo</span>
-                    {% else %}
-                      <span class="badge bg-secondary">Inativo</span>
-                    {% endif %}
-                  </div>
+  </div>
+  
+  <div class="d-lg-none">
+    <div class="row g-3 p-3">
+      {% for servico in servicos %}
+      <div class="col-12">
+        <div class="card service-card h-100">
+          <div class="card-body">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex align-items-center">
+                <div class="service-icon d-flex align-items-center justify-content-center me-3">
+                  <i class="fas fa-cog"></i>
                 </div>
-                <div class="text-end">
-                  <div class="price-display mb-1">R$ {{ servico.preco|floatformat:2 }}</div>
-                  <span class="duration-badge">{{ servico.duracao_formatada }}</span>
+                <div>
+                  <h6 class="mb-1 text-dark"><strong>{{ servico.nome }}</strong></h6>
+                  {% if servico.ativo %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>Ativo
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-times-circle me-1"></i>Inativo
+                    </span>
+                  {% endif %}
                 </div>
               </div>
               
-              {% if servico.descricao %}
-              <p class="text-muted small mb-3">{{ servico.descricao|truncatechars:100 }}</p>
-              {% endif %}
-              
-              <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">
-                  <span class="stats-badge">
+              <div class="text-end">
+                <div class="price-display mb-1 h6">R$ {{ servico.preco|floatformat:2 }}</div>
+                <span class="duration-badge">
+                    <i class="fas fa-clock me-1"></i>{{ servico.duracao_formatada }}
+                </span>
+              </div>
+            </div>
+            
+            {% if servico.descricao %}
+            <p class="text-muted small mb-3 border-top pt-2">
+                {{ servico.descricao|truncatechars:100 }}
+            </p>
+            {% endif %}
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <span class="stats-badge">
+                    <i class="fas fa-calendar-alt me-1"></i>
                     {{ servico.agendamento_set.count }} agendamento{{ servico.agendamento_set.count|pluralize }}
-                  </span>
-                </small>
-                <div class="btn-group btn-group-sm">
-                  <a href="{% url 'agendamentos:servico_update' servico.pk %}" 
-                     class="btn btn-outline-warning btn-sm">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="{% url 'agendamentos:agendamento_create' %}?servico={{ servico.pk }}" 
-                     class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-calendar-plus"></i>
-                  </a>
-                  <button type="button" 
-                          class="btn btn-outline-danger btn-sm" 
-                          data-bs-toggle="modal" 
-                          data-bs-target="#deleteModal{{ servico.pk }}">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
+                </span>
+                <br>
+                Criado em: {{ servico.criado_em|date:"d/m/Y" }}
+              </small>
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'agendamentos:servico_update' servico.pk %}" 
+                   class="btn btn-outline-warning btn-sm"
+                   title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'agendamentos:agendamento_create' %}?servico={{ servico.pk }}" 
+                   class="btn btn-outline-success btn-sm"
+                   title="Novo agendamento">
+                  <i class="fas fa-calendar-plus"></i>
+                </a>
+                <button type="button" 
+                        class="btn btn-outline-danger btn-sm" 
+                        title="Excluir"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteModal{{ servico.pk }}">
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </div>
           </div>
         </div>
-        {% endfor %}
       </div>
+      {% endfor %}
     </div>
   </div>
+</div>
   
   <!-- Paginação -->
   {% if is_paginated %}
