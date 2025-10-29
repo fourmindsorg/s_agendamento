@@ -24,24 +24,24 @@
   }
   
   /* Ações no Header */
-  .header-actions {
+  /* .header-actions {
     position: absolute;
     top: 0;
     right: 0;
     display: flex;
     gap: 10px;
     align-items: flex-start;
-  }
+  } */
   
   @media (max-width: 768px) {
-    .header-actions {
+    /* .header-actions {
       position: relative;
       top: auto;
       right: auto;
       margin-top: 15px;
       justify-content: flex-start;
       flex-wrap: wrap;
-    }
+    } */
     
     .form-title {
       font-size: 1.5rem;
@@ -209,7 +209,7 @@
   }
 
   /* Buttons */
-  .btn-custom {
+  /* .btn-custom {
     background: var(--gradient-bg);
     border: none;
     color: white !important;
@@ -220,13 +220,13 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-  }
+  } */
 
-  .btn-custom:hover {
+  /* .btn-custom:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px var(--shadow-color);
     color: white !important;
-  }
+  } */
 
   .btn-outline-secondary {
     border: 2px solid var(--border-color) !important;
@@ -347,10 +347,10 @@
       padding: 15px;
     }
 
-    .header-actions {
+    /* .header-actions {
       width: 100%;
       justify-content: center;
-    }
+    } */
 
     .tips-card .card-body {
       padding: 15px;

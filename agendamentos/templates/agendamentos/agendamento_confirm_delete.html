@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - Agendamento{% endblock %}
+
+{% block extra_css %}
+
+
+
+{% endblock %}
+
+{% block content %}
+<!-- Header da Exclusão -->
+<div class="delete-header">
+  <h1 class="delete-title">
+    <i class="fas fa-exclamation-triangle"></i>
+    Confirmar Exclusão do Agendamento
+  </h1>
+  <p class="delete-subtitle">
+    Esta ação não pode ser desfeita. Revise cuidadosamente antes de prosseguir.
+  </p>
+  <div class="header-actions">
+    <a href="{% url 'agendamentos:agendamento_detail' agendamento.pk %}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+</div>
+
+<!-- Card de Aviso -->
+<div class="card warning-card">
+  <div class="card-header">
+    <h4 class="mb-0">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Atenção: Exclusão Permanente
+    </h4>
+  </div>
+  <div class="card-body text-center">
+    <i class="fas fa-calendar-times warning-icon"></i>
+    <h5 class="mb-3">Você está prestes a excluir permanentemente este agendamento</h5>
+    <p class="text-muted">
+      Esta ação removerá o agendamento selecionado e não poderá ser desfeita.
+    </p>
+  </div>
+</div>
+
+<!-- Informações do Agendamento -->
+<div class="card client-info-card">
+  <div class="card-body">
+    <div class="d-flex align-items-center">
+      <div class="client-avatar">
+        {{ agendamento.cliente.nome|first|upper }}{{ agendamento.cliente.nome|last|upper }}
+      </div>
+      <div class="client-details flex-grow-1">
+        <h4>{{ agendamento.cliente.nome }}</h4>
+        <div class="client-meta">
+          <i class="fas fa-briefcase"></i>
+          <span>{{ agendamento.servico.nome }}</span>
+        </div>
+        <div class="client-meta">
+          <i class="fas fa-calendar-day"></i>
+          <span>{{ agendamento.data_agendamento|date:"d/m/Y" }} de {{ agendamento.hora_inicio }} a {{ agendamento.hora_fim }}</span>
+        </div>
+        <div class="client-meta">
+          <i class="fas fa-info-circle"></i>
+          <span>Status: {{ agendamento.get_status_display }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmação -->
+<div class="confirmation-section">
+  <form method="post" id="deleteForm">
+    {% csrf_token %}
+    <div class="confirmation-checkbox">
+      <label>
+        <input type="checkbox" id="confirmDelete" required>
+        <span>
+          Eu entendo que esta ação é irreversível e confirmo que desejo excluir permanentemente 
+          o agendamento do cliente <strong>{{ agendamento.cliente.nome }}</strong>.
+        </span>
+      </label>
+    </div>
+    <div class="action-buttons">
+      <a href="{% url 'agendamentos:agendamento_detail' agendamento.pk %}" class="btn-cancel">
+        <i class="fas fa-times"></i>Cancelar
+      </a>
+      <button type="submit" class="btn-danger-custom" id="deleteButton" disabled>
+        <i class="fas fa-trash"></i>Excluir Permanentemente
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const confirmCheckbox = document.getElementById('confirmDelete');
+  const deleteButton = document.getElementById('deleteButton');
+  const deleteForm = document.getElementById('deleteForm');
+
+  confirmCheckbox.addEventListener('change', function() {
+    deleteButton.disabled = !this.checked;
+    if (this.checked) {
+      deleteButton.classList.remove('btn-secondary');
+      deleteButton.classList.add('btn-danger-custom');
+    } else {
+      deleteButton.classList.remove('btn-danger-custom');
+      deleteButton.classList.add('btn-secondary');
+    }
+  });
+
+  deleteForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!confirmCheckbox.checked) {
+      alert('Por favor, confirme que você entende as consequências desta ação.');
+      return;
+    }
+    const nome = '{{ agendamento.cliente.nome }}';
+    const confirmation = confirm(
+      `ÚLTIMA CONFIRMAÇÃO:\n\n` +
+      `Você tem certeza absoluta que deseja excluir permanentemente o agendamento do cliente "${nome}"?\n\n` +
+      `Esta ação NÃO PODE ser desfeita!`
+    );
+    if (confirmation) {
+      deleteButton.classList.add('btn-loading');
+      deleteButton.innerHTML = '<span class="loading-spinner"></span>Excluindo...';
+      deleteButton.disabled = true;
+      this.submit();
+    }
+  });
+});
+</script>
+{% endblock %}
+
+
+

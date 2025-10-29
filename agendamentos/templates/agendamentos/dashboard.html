@@ -8,9 +8,7 @@
 
 {% block content %}
 
-
-
-<section class="dashboard-header p-2 d-flex justify-content-between flex-wrap align-items-center">
+<section class="dashboard-header p-3 d-flex justify-content-center justify-content-md-between flex-wrap align-items-center">
 
   <div class="header-greeting mb-2 mb-lg-0">
     <h1 class="dashboard-title">
@@ -25,7 +23,7 @@
     </p>
   </div>
 
-  <div class="header-actions d-flex flex-wrap gap-2">
+  <div class="header-actions d-flex justify-content-end justify-content-md-between">
     
     {% comment %} <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-outline-primary">
       <i class="fas fa-calendar-plus"></i>
@@ -39,7 +37,7 @@
     
     <div class="dropdown">
       <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <i class="fas fa-cog me-2"></i><span class="d-none d-md-inline">Ações</span>
+        <i class="fas fa-cog me-2"></i><span>Ações</span>
       </button>
       <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px;">
         {% comment %} <li>
@@ -136,11 +134,10 @@
   </div>
 </section>
 
-
 <section>
   <!-- Ações Rápidas -->
   <div class="row mb-2">
-    <div class="col-12 p-1">
+    <div class="col-12">
       <div class="card shadow-sm theme-card">
         <div class="card-header bg-light">
           <h5 class="mb-0">
@@ -169,7 +166,7 @@
             <div class="col-md-3">
               <a href="{% url 'agendamentos:servico_create' %}" 
                 class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-wrench fa-lg me-2"></i> 
+                <i class="fas fa-cogs fa-lg me-2"></i> 
                 <strong>Novo Serviço</strong>
               </a>
               {% comment %} <a href="{% url 'agendamentos:relatorios' %}" 
@@ -189,8 +186,7 @@
   </div>
 </section>
 
-
-<section class="row g-3 mb-2">
+<section class="row g-3 px-2 mb-2">
 
   <!-- CARD 1: Agendamentos Hoje -->
   <div class="col-6 col-md-3 p-3 bg-body-tertiary rounded"> 
@@ -349,7 +345,7 @@
 <!-- Seção do Gráfico de Agendamentos -->
 <section class="row mb-2">
 
-  <div class="col-12 p-1">
+  <div class="col-12">
     <div class="card shadow-sm theme-card">
       <div class="card-header bg-light">
         <h5 class="mb-0">

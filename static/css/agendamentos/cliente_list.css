@@ -4,11 +4,11 @@
 
 .service-icon {
     /* Define uma área de tamanho padrão para o contêiner do ícone em telas maiores (Desktop/Tablet) */
-    width: 40px; 
+    width: 40px;
     height: 40px;
-    font-size: 1.5rem; 
+    font-size: 1.5rem;
     border-radius: 6px;
-    flex-shrink: 0; 
+    flex-shrink: 0;
 }
 
 
@@ -17,25 +17,26 @@
 /* ========================================================= */
 
 @media (max-width: 991.98px) {
-    
+
     /* A. Diminui o contêiner do ícone e o ícone interno no mobile (service-icon) */
     .d-lg-none .service-icon {
-        width: 30px; 
+        width: 30px;
         height: 30px;
-        font-size: 1.1rem; 
+        font-size: 1.1rem;
         /* Reduz a margem para liberar espaço (me-3 do HTML é 1rem) */
-        margin-right: 0.5rem !important; 
+        margin-right: 0.5rem !important;
     }
-    
+
     /* B. Ajusta o tamanho do título H6 para não ficar muito grande */
     .d-lg-none .card-body h6 {
         font-size: 1rem;
         line-height: 1.2;
     }
-    
+
     /* C. Estiliza a linha divisória da descrição no mobile */
     .d-lg-none .card-body .border-top {
-        border-color: #eee !important; /* Cor mais clara para o divisor */
+        border-color: #eee !important;
+        /* Cor mais clara para o divisor */
     }
 }
 
@@ -46,25 +47,25 @@
 /* ========================================================= */
 
 @media (max-width: 767.98px) {
-    
+
     .btn-icon-responsive {
         /* Torna os botões compactos (Ícone-only) e Centraliza o Ícone */
-        padding: 0.5rem 0.5rem !important; 
+        padding: 0.5rem 0.5rem !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
     }
-    
+
     .btn-icon-responsive i {
         /* Força o tamanho e remove margens do ícone no botão */
-        font-size: 1.2rem !important; 
+        font-size: 1.2rem !important;
         margin-right: 0 !important;
         margin-left: 0 !important;
-        line-height: 1; 
+        line-height: 1;
     }
-    
+
     .btn-icon-responsive.dropdown-toggle::after {
         /* Esconde a seta do dropdown no mobile */
-        display: none !important; 
+        display: none !important;
     }
 }

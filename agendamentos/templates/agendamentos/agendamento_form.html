@@ -11,7 +11,7 @@
 {% block content %}
 
 <!-- Header do Formulário -->
-<div class="form-header">
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
   <h1 class="form-title">
     <i class="fas fa-calendar-plus"></i>
     {% if object %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
@@ -25,24 +25,24 @@
   </p>
   
   <!-- Ações no Header -->
-  <div class="header-actions">
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+  <div class="header-actions d-flex justify-content-center gap-2">
+    {% comment %} <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
       <i class="fas fa-arrow-left fa-lg me-2"></i>
-    </a>
+    </a> {% endcomment %}
     <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-primary">
-      <i class="fas fa-list me-2"></i>Agendamentos
+      <i class="fas fa-arrow-left me-2"></i>Voltar
     </a>
   </div>
 </div>
 
 <!-- Formulário -->
-<div class="row mt-5 mb-4">
-  <div class="col-lg-8 mx-auto">
+<div class="row mb-2">
+  <div class="col">
     <div class="card form-card">
-      <div class="card-header card-agendamentos-form">
+      <div class="card-header card-agendamentos-form px-3">
         <h4 class="mb-0 text-white">
-          <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2 text-white"></i>
-          Dados do Agendamentossss
+          <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-1 text-white"></i>
+          Dados do Agendamentos
         </h4>
       </div>
       <div class="card-body">
@@ -139,7 +139,7 @@
                 Valor a Cobrar
               </label>
               <div class="input-group">
-                <span class="input-group-text">R\$</span>
+                <span class="input-group-text">R$</span>
                 {{ form.valor_cobrado }}
               </div>
               {% if form.valor_cobrado.errors %}
@@ -202,13 +202,13 @@
 
           <!-- Botões de ação -->
           <div class="d-flex gap-3 justify-content-end align-items-center mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-custom">
+              <i class="fas fa-{% if object %}save{% else %}plus{% endif %} me-2"></i>
+              {% if object %}Atualizar Agendamento{% else %}Salvar{% endif %}
+            </button>
             <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-secondary">
               <i class="fas fa-times me-2"></i>Cancelar
             </a>
-            <button type="submit" class="btn btn-custom">
-              <i class="fas fa-{% if object %}save{% else %}plus{% endif %} me-2"></i>
-              {% if object %}Atualizar Agendamento{% else %}Criar{% endif %}
-            </button>
           </div>
         </form>
       </div>
@@ -217,68 +217,68 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-preencher data com hoje se estiver vazio
-    const dataInput = document.getElementById('{{ form.data_agendamento.id_for_label }}');
-    if (!dataInput.value) {
-        const hoje = new Date();
-        const dataFormatada = hoje.toISOString().split('T')[0];
-        dataInput.value = dataFormatada;
-    }
-    
-    // Máscara para hora
-    const horaInput = document.getElementById('{{ form.hora_inicio.id_for_label }}');
-    if (horaInput) {
-        horaInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + ':' + value.substring(2, 4);
-            }
-            e.target.value = value;
-        });
-    }
-    
-    // Auto-calcular valor baseado no serviço selecionado
-    const servicoSelect = document.getElementById('{{ form.servico.id_for_label }}');
-    const valorInput = document.getElementById('{{ form.valor_cobrado.id_for_label }}');
-    
-    if (servicoSelect && valorInput) {
-        servicoSelect.addEventListener('change', function() {
-            if (this.value && !valorInput.value) {
-                // Aqui você pode fazer uma requisição AJAX para buscar o preço do serviço
-                // Por enquanto, vamos deixar o usuário preencher manualmente
-                console.log('Serviço selecionado:', this.value);
-            }
-        });
-    }
-    
-    // Validação em tempo real
-    const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('input, select, textarea');
-    
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            }
-        });
-    });
-    
-    // Animação de foco nos inputs
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
-            this.parentElement.style.transition = 'transform 0.2s ease';
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
-        });
-    });
-});
+  document.addEventListener('DOMContentLoaded', function() {
+      // Auto-preencher data com hoje se estiver vazio
+      const dataInput = document.getElementById('{{ form.data_agendamento.id_for_label }}');
+      if (!dataInput.value) {
+          const hoje = new Date();
+          const dataFormatada = hoje.toISOString().split('T')[0];
+          dataInput.value = dataFormatada;
+      }
+      
+      // Máscara para hora
+      const horaInput = document.getElementById('{{ form.hora_inicio.id_for_label }}');
+      if (horaInput) {
+          horaInput.addEventListener('input', function(e) {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length >= 2) {
+                  value = value.substring(0, 2) + ':' + value.substring(2, 4);
+              }
+              e.target.value = value;
+          });
+      }
+      
+      // Auto-calcular valor baseado no serviço selecionado
+      const servicoSelect = document.getElementById('{{ form.servico.id_for_label }}');
+      const valorInput = document.getElementById('{{ form.valor_cobrado.id_for_label }}');
+      
+      if (servicoSelect && valorInput) {
+          servicoSelect.addEventListener('change', function() {
+              if (this.value && !valorInput.value) {
+                  // Aqui você pode fazer uma requisição AJAX para buscar o preço do serviço
+                  // Por enquanto, vamos deixar o usuário preencher manualmente
+                  console.log('Serviço selecionado:', this.value);
+              }
+          });
+      }
+      
+      // Validação em tempo real
+      const form = document.querySelector('form');
+      const inputs = form.querySelectorAll('input, select, textarea');
+      
+      inputs.forEach(input => {
+          input.addEventListener('blur', function() {
+              if (this.hasAttribute('required') && !this.value.trim()) {
+                  this.classList.add('is-invalid');
+              } else {
+                  this.classList.remove('is-invalid');
+                  this.classList.add('is-valid');
+              }
+          });
+      });
+      
+      // Animação de foco nos inputs
+      inputs.forEach(input => {
+          input.addEventListener('focus', function() {
+              this.parentElement.style.transform = 'scale(1.02)';
+              this.parentElement.style.transition = 'transform 0.2s ease';
+          });
+          
+          input.addEventListener('blur', function() {
+              this.parentElement.style.transform = 'scale(1)';
+          });
+      });
+  });
 </script>
 
 {% endblock %}

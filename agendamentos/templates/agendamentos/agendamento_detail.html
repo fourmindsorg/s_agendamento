@@ -8,34 +8,41 @@
 
 {% block content %}
 <!-- Header dos Detalhes -->
-<div class="detail-header">
-  <h1 class="detail-title">
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+
+  <div class="header-text-group mb-md-0 text-center">
+    <h1 class="list-title">
     <i class="fas fa-calendar-check"></i>
     Detalhes do Agendamento
-  </h1>
-  <p class="detail-subtitle">
-    Agendamento #{{ agendamento.pk }} - {{ agendamento.data_agendamento|date:"d/m/Y" }}
-    <span class="text-primary">• {{ agendamento.cliente.nome }}</span>
-  </p>
+    </h1>
+    <p class="list-subtitle">
+      Agendamento #{{ agendamento.pk }} - {{ agendamento.data_agendamento|date:"d/m/Y" }}
+      <br><span class="text-primary">• {{ agendamento.cliente.nome }}</span>
+    </p>
+  </div>
+
+</div>
+
   
-  <!-- Ações no Header -->
-  <div class="header-actions">
+<!-- Ações no Header -->
+<div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0 mb-2">
+  <div class="d-flex gap-2">
     {% if agendamento.pode_editar %}
-    <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-warning">
+    <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-custom justify-content-center w-50">
       <i class="fas fa-edit"></i>Editar
     </a>
     {% endif %}
-    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-success">
-      <i class="fas fa-flag"></i>Alterar Status
+    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-outline-custom justify-content-center p-2">
+      <i class="fas fa-flag"></i>Status
     </a>
-    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-secondary">
+    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom justify-content-center p-2">
       <i class="fas fa-arrow-left"></i>Voltar
     </a>
-  </div>
 </div>
 
+
 <!-- Status Principal -->
-<div class="status-card">
+<div class="card p-2">
   <div class="row align-items-center">
     <div class="col-md-8">
       <div class="d-flex align-items-center">

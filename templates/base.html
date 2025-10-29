@@ -238,7 +238,7 @@ body {
             
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="menu-icon fas fa-calendar-check"></i>
+                    <i class="menu-icon fas fa-calendar-check me-1"></i>
                     <span class="menu-text me-2">Agendamentos</span>
                     {% if agendamentos_pendentes > 0 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>

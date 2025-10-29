@@ -4,18 +4,33 @@
 
 {% block content %}
 
-
-
-<div class="container">
-  <div class="row">
-    <div class="col">
-
-    </div>
-  </div>
-</div>
-
 <!-- Header da Lista -->
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-lg-center">
 
+  <div class="header-text-group mb-2 mb-md-0 text-center">
+    <h1 class="list-title">
+      <i class="fas fa-calendar-alt"></i>
+      Agendamentos
+    </h1>
+    <p class="list-subtitle">
+      Total de {{ total_agendamentos }} agendamentos{{ total_agendamentos|pluralize }}
+      {% if search or status or data_inicio or data_fim %}
+      <span class="text-primary">• Filtros aplicados</span>
+      {% endif %}
+    </p>
+  </div>
+    
+  <!-- Ações no Header -->
+  <div class="header-actions d-flex justify-content-center gap-2">
+    <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom">
+      <i class="fas fa-calendar-plus"></i> Novo Agendamento
+    </a>
+    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i> Dashboard
+    </a>
+  </div>
+
+</div>
 
 <!-- Filtros Rápidos -->
 <div class="quick-filters">
@@ -46,7 +61,7 @@
 </div>
 
 <!-- Filtros Avançados -->
-<div class="card filter-card">
+<div class="card filter-card p-1">
   
   <div class="card-header d-flex justify-content-center align-items-center">
     <h6 class="mb-0">
@@ -83,7 +98,7 @@
         </select>
       </div>
       
-      <div class="col-md-2 col-data">
+      <div class="col-6 col-md-2 col-data">
         <label for="data_inicio" class="form-label mb-1">
           <i class="fas fa-calendar me-1"></i>Início
         </label>
@@ -94,7 +109,7 @@
                value="{{ data_inicio }}">
       </div>
       
-      <div class="col-md-2 col-data">
+      <div class="col-6 col-md-2 col-data">
         <label for="data_fim" class="form-label mb-1">
           <i class="fas fa-calendar me-1"></i>Fim
         </label>
@@ -105,22 +120,20 @@
                value="{{ data_fim }}">
       </div>
       
-      <div class="col-12 col-md-4 d-flex gap-2 justify-content-center justify-content-md-end">
-        
-        <a type="submit" class="btn btn-outline-primary" btn-sm text-white"> 
-            <i class="fas fa-search me-1"></i>
-            <span class="d-none d-lg-inline">&nbsp;Filtrar</span>
-        </a>
+      <div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0">
+        <div class="d-flex gap-2">
+          <a type="submit" class="btn btn-custom justify-content-center">
+            <i class="fas fa-search"></i>Filtrar
+          </a>
 
-        <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom btn-sm">
-          <i class="fas fa-times me-1"></i>
-          <span class="d-none d-lg-inline">Limpar</span>
-        </a>
+          <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom justify-content-center p-2">
+            <i class="fas fa-times fa-lg"></i>Limpar
+          </a>
+        </div>
         
         <div class="dropdown m-0">
-          <a class="btn btn-outline-custom dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
-            <i class="fas fa-download me-1"></i>
-            <span class="d-none d-lg-inline">Exportar</span>
+          <a class="btn btn-outline-custom dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-download fa-lg"></i>Exportar
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
@@ -400,8 +413,8 @@
           Você ainda não possui agendamentos cadastrados.
           <br>Comece criando seu primeiro agendamento!
         </p>
-        <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom">
-          <i class="fas fa-calendar-plus me-2"></i>Criar Primeiro Agendamento
+        <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom w-md-100 h-25">
+          <i class="fas fa-calendar-plus m-0"></i>Primeiro Agendamento
         </a>
       {% endif %}
     </div>

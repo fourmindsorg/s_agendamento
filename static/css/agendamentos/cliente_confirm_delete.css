@@ -23,24 +23,24 @@
 }
 
 /* Ações no Header */
-.header-actions {
+/* .header-actions {
     position: absolute;
     top: 0;
     right: 0;
     display: flex;
     gap: 10px;
     align-items: flex-start;
-}
+} */
 
 @media (max-width: 768px) {
-    .header-actions {
+    /* .header-actions {
         position: relative;
         top: auto;
         right: auto;
         margin-top: 15px;
         justify-content: flex-start;
         flex-wrap: wrap;
-    }
+    } */
 
     .delete-title {
         font-size: 1.5rem;
@@ -353,10 +353,10 @@
         justify-content: center;
     }
 
-    .header-actions {
+    /* .header-actions {
         width: 100%;
         justify-content: center;
-    }
+    } */
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
