@@ -1,3 +1,71 @@
+name: Deploy to EC2 via SSH
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for context only)
+        uses: actions/checkout@v4
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+
+            echo "📂 Entrando no diretório da aplicação..."
+            cd ${{ secrets.APP_DIR }}
+
+            echo "🔧 Ajustando permissões do diretório (se necessário)..."
+            sudo chown -R $USER:$USER ${{ secrets.APP_DIR }} || true
+
+            echo "🔧 Ajustando git safe.directory..."
+            git config --global --add safe.directory ${{ secrets.APP_DIR }} || true
+
+            echo "📥 Atualizando código do repositório..."
+            git fetch --all --prune
+            if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
+              git reset --hard origin/main
+            else
+              git checkout -f main || true
+              git reset --hard origin/main
+            fi
+
+            echo "🐍 Instalando Python 3, venv e pip..."
+            sudo apt-get update -y
+            sudo apt-get install -y python3 python3-venv python3-pip
+
+            echo "📦 Criando/ativando venv..."
+            python3 -m venv venv || true
+            . venv/bin/activate
+
+            echo "📦 Instalando dependências..."
+            pip install --upgrade pip
+            pip install -r requirements.txt
+
+            echo "🔄 Aplicando migrações..."
+            python manage.py migrate --noinput
+
+            echo "🗂️ Coletando arquivos estáticos..."
+            python manage.py collectstatic --noinput
+
+            if command -v systemctl >/dev/null 2>&1; then
+              echo "🔁 Reiniciando serviços (se existirem)..."
+              systemctl is-enabled --quiet gunicorn 2>/dev/null && sudo systemctl restart gunicorn || true
+              systemctl is-enabled --quiet nginx 2>/dev/null && sudo systemctl restart nginx || true
+            fi
+
+            echo "✅ Deploy finalizado com sucesso."
 # .github/workflows/deploy.yml
 name: Deploy to Production
 
