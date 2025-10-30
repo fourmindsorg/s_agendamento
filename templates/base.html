@@ -45,7 +45,7 @@
             --shadow-color: {{ paleta_cores.shadow }};
             
             /* Layout Variables */
-            --sidebar-width: 280px;
+            --sidebar-width: 220px;
             --sidebar-collapsed-width: 70px;
             --topbar-height: 70px;
             --transition-speed: 0.3s;
@@ -149,7 +149,7 @@
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-calendar-check"></i>
-                    <span class="menu-text">Agendamentos</span>
+                    <span class="menu-text me-1">Agendamentos</span>
                     {% if agendamentos_pendentes > 0 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>
                     {% endif %}
@@ -178,8 +178,8 @@
             </div>
 
             <div class="menu-item">
-                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'authentication' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="menu-icon fa-solid fa-business-time"></i>
+                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'authentication' in request.resolver_match.namespace or 'plan' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="menu-icon fas fa-business-time"></i>
                     <span class="menu-text">Planos</span>
                 </a>
             </div>
