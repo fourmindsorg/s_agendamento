@@ -46,10 +46,6 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
-        "OPTIONS": {
-            # Enforce SSL in production by default
-            "sslmode": os.environ.get("DB_SSLMODE", "require"),
-        },
     }
 }
 
@@ -132,16 +128,16 @@ CACHES = {
     }
 }
 
-# WhiteNoise para arquivos estáticos (se disponível)
+# WhiteNoise para arquivos estáticos com cache-busting via hash
 try:
     import whitenoise
 
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-    # Usar storage simples para evitar problemas com arquivos faltando
-    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    # Manter apenas arquivos com hash para evitar servir versões sem hash
+    WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 except ImportError:
-    # Se WhiteNoise não estiver disponível, usar configuração básica
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 # Configuração adicional para servir arquivos estáticos
 STATICFILES_FINDERS = [
