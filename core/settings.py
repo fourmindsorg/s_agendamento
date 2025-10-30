@@ -24,15 +24,18 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "0.0.0.0",
-    "3.80.178.120",
     "fourmindstech.com.br",
 ]
+# Allow extending from env (comma-separated)
+_env_hosts = os.environ.get("ALLOWED_HOSTS", "")
+if _env_hosts:
+    ALLOWED_HOSTS.extend([h.strip() for h in _env_hosts.split(",") if h.strip()])
 
 # Application definition
 INSTALLED_APPS = [
@@ -56,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # "authentication.middleware.SubscriptionExpirationMiddleware",  # Temporariamente desabilitado
+    "authentication.middleware.SubscriptionExpirationMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

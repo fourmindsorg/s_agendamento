@@ -4,8 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import redirect
-from .admin_views import CustomAdminLoginView
+
 
 
 @csrf_exempt
@@ -18,13 +17,11 @@ def health_check(request):
 
 urlpatterns = [
     path("health/", health_check, name="health_check"),  # Health check endpoint
-    path("admin/login/", CustomAdminLoginView.as_view(), name="admin_login"),  # Login personalizado
     path("admin/", admin.site.urls),
     path("authentication/", include("authentication.urls")),  # URLs de autenticação
     path("info/", include("info.urls")),
     path("financeiro/", include("financeiro.urls")),  # URLs do financeiro
-    path("s_agendamentos/", include("agendamentos.urls")),  # URLs do sistema de agendamentos
-    path("", lambda request: redirect('/s_agendamentos/'), name="home_redirect"),  # Redirecionar raiz para s_agendamentos
+    path("", include("agendamentos.urls")),
 ]
 
 # Servir arquivos de media e estáticos
