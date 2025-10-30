@@ -133,7 +133,7 @@ jobs:
               "set -e",
               "echo Instalando Python e venv (se necessário)...",
               "sudo apt-get update -y",
-              "sudo apt-get install -y python3 python3-venv python3-pip",
+              "sudo apt-get install -y python3 python3-venv python3-pip postgresql-client",
               "cd /opt/s-agendamento",
               "sudo chown -R django:django /opt/s-agendamento || true",
               "sudo -u django git config --global --add safe.directory /opt/s-agendamento || true",
@@ -142,8 +142,17 @@ jobs:
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
               "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
               "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
-              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py migrate --noinput'",
-              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py collectstatic --noinput --clear'",
+              "echo Exportando variáveis de ambiente do banco...",
+              "export DJANGO_SETTINGS_MODULE=core.settings_production",
+              "export DB_NAME=\"${{ secrets.DB_NAME }}\"",
+              "export DB_USER=\"${{ secrets.DB_USER }}\"",
+              "export DB_PASSWORD=\"${{ secrets.DB_PASSWORD }}\"",
+              "export DB_HOST=\"${{ secrets.DB_HOST }}\"",
+              "export DB_PORT=\"${{ secrets.DB_PORT }}\"",
+              "echo Aguardando banco de dados ficar disponível...",
+              "if command -v pg_isready >/dev/null 2>&1 && [ -n \"$DB_HOST\" ]; then for i in $(seq 1 24); do pg_isready -h \"$DB_HOST\" -p \"${DB_PORT:-5432}\" -U \"$DB_USER\" && break || (echo Esperando DB... && sleep 5); done; fi",
+              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME=\"${DB_NAME}\" DB_USER=\"${DB_USER}\" DB_PASSWORD=\"${DB_PASSWORD}\" DB_HOST=\"${DB_HOST}\" DB_PORT=\"${DB_PORT}\" && venv/bin/python manage.py migrate --noinput'",
+              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME=\"${DB_NAME}\" DB_USER=\"${DB_USER}\" DB_PASSWORD=\"${DB_PASSWORD}\" DB_HOST=\"${DB_HOST}\" DB_PORT=\"${DB_PORT}\" && venv/bin/python manage.py collectstatic --noinput --clear'",
               "sudo supervisorctl restart s-agendamento",
               "sudo systemctl reload nginx",
               "echo Deploy completo concluído"
@@ -231,7 +240,7 @@ jobs:
             echo "📂 Entrando no diretório da aplicação..."
             echo "🐍 Instalando Python e venv (se necessário)..."
             sudo apt-get update -y
-            sudo apt-get install -y python3 python3-venv python3-pip
+            sudo apt-get install -y python3 python3-venv python3-pip postgresql-client
             cd /opt/s-agendamento
             echo "🔧 Ajustando permissões e git safe.directory..."
             sudo chown -R django:django /opt/s-agendamento || true
@@ -248,12 +257,19 @@ jobs:
             sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
             echo "✓ Dependências instaladas"
             
+            echo "⚙️ Exportando variáveis de banco e aguardando disponibilidade..."
+            export DB_NAME="${{ secrets.DB_NAME }}"
+            export DB_USER="${{ secrets.DB_USER }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export DB_HOST="${{ secrets.DB_HOST }}"
+            export DB_PORT="${{ secrets.DB_PORT }}"
+            if command -v pg_isready >/dev/null 2>&1 && [ -n "$DB_HOST" ]; then for i in $(seq 1 24); do pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}" -U "$DB_USER" && break || (echo Esperando DB... && sleep 5); done; fi
             echo "🔄 Aplicando migrações..."
-            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py migrate --noinput'
+            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME="'"$DB_NAME"'" DB_USER="'"$DB_USER"'" DB_PASSWORD="'"$DB_PASSWORD"'" DB_HOST="'"$DB_HOST"'" DB_PORT="'"$DB_PORT"'" && venv/bin/python manage.py migrate --noinput'
             echo "✓ Migrações aplicadas"
             
             echo "📁 Coletando arquivos estáticos..."
-            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py collectstatic --noinput --clear'
+            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME="'"$DB_NAME"'" DB_USER="'"$DB_USER"'" DB_PASSWORD="'"$DB_PASSWORD"'" DB_HOST="'"$DB_HOST"'" DB_PORT="'"$DB_PORT"'" && venv/bin/python manage.py collectstatic --noinput --clear'
             echo "✓ Arquivos estáticos coletados"
             
             echo "🔄 Reiniciando serviços..."
