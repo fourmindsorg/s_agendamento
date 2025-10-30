@@ -8,7 +8,7 @@
 
 {% block content %}
 
-<section class="dashboard-header p-3 d-flex justify-content-center justify-content-md-between flex-wrap align-items-center">
+<div class="dashboard-header p-3 d-flex justify-content-center justify-content-md-between flex-wrap align-items-center">
 
   <div class="header-greeting mb-2 mb-lg-0">
     <h1 class="dashboard-title">
@@ -132,54 +132,49 @@
       </ul>
     </div>    
   </div>
-</section>
+</div>
 
+<!-- Ações Rápidas -->
 <section>
-  <!-- Ações Rápidas -->
-  <div class="row mb-2">
-    <div class="col-12">
-      <div class="card shadow-sm theme-card">
-        <div class="card-header bg-light">
-          <h5 class="mb-0">
-            <i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas
-          </h5>
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">        
+        <div class="col-md-3">
+          <a href="{% url 'agendamentos:agendamento_create' %}" 
+            class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-calendar-plus fa-lg me-2"></i> 
+            <strong>Novo Agendamento</strong>
+          </a>
         </div>
-        <div class="card-body">
-          <div class="row g-3">
+        
+        <div class="col-md-3">
+          <a href="{% url 'agendamentos:cliente_create' %}" 
+            class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-user-plus fa-lg me-2"></i> 
+            <strong>Cadastrar Cliente</strong>
+          </a>
+        </div>
+                  
+        <div class="col-md-3">
+          <a href="{% url 'agendamentos:servico_create' %}" 
+            class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-cogs fa-lg me-2"></i> 
+            <strong>Novo Serviço</strong>
+          </a>
+          {% comment %} <a href="{% url 'agendamentos:relatorios' %}" 
+            class="btn btn-outline-success w-100 py-2 d-flex align-items-center justify-content-center">
             
-            <div class="col-md-3">
-              <a href="{% url 'agendamentos:agendamento_create' %}" 
-                class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-calendar-plus fa-lg me-2"></i> 
-                <strong>Novo Agendamento</strong>
-              </a>
-            </div>
+            <i class="fas fa-chart-line fa-lg me-2"></i> 
             
-            <div class="col-md-3">
-              <a href="{% url 'agendamentos:cliente_create' %}" 
-                class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-user-plus fa-lg me-2"></i> 
-                <strong>Cadastrar Cliente</strong>
-              </a>
+            <div class="d-flex flex-column align-items-start text-start">
+                <strong>Ver Relatórios</strong>
             </div>
-                      
-            <div class="col-md-3">
-              <a href="{% url 'agendamentos:servico_create' %}" 
-                class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-cogs fa-lg me-2"></i> 
-                <strong>Novo Serviço</strong>
-              </a>
-              {% comment %} <a href="{% url 'agendamentos:relatorios' %}" 
-                class="btn btn-outline-success w-100 py-2 d-flex align-items-center justify-content-center">
-                
-                <i class="fas fa-chart-line fa-lg me-2"></i> 
-                
-                <div class="d-flex flex-column align-items-start text-start">
-                    <strong>Ver Relatórios</strong>
-                </div>
-              </a> {% endcomment %}
-            </div>
-          </div>
+          </a> {% endcomment %}
         </div>
       </div>
     </div>

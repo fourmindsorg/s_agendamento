@@ -12,7 +12,9 @@ body {
     background-color: var(--background-color) !important;
     color: var(--text-color) !important;
     transition: all var(--transition-speed) ease;
+    padding: 0;
     overflow-x: hidden;
+    padding: 10px;
 }
 
 /* Layout Principal */

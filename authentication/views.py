@@ -623,9 +623,13 @@ def select_plan(request, plano_id):
         usuario = request.user
 
         # Se já existe uma assinatura aguardando pagamento, encaminhar para finalizar
-        assinatura_aguardando = AssinaturaUsuario.objects.filter(
-            usuario=usuario, status="aguardando_pagamento"
-        ).order_by("-data_inicio").first()
+        assinatura_aguardando = (
+            AssinaturaUsuario.objects.filter(
+                usuario=usuario, status="aguardando_pagamento"
+            )
+            .order_by("-data_inicio")
+            .first()
+        )
         if assinatura_aguardando:
             messages.warning(
                 request,
@@ -637,11 +641,17 @@ def select_plan(request, plano_id):
 
         # Calcular início do novo plano: se existir assinatura ATIVA cujo fim ainda não passou,
         # o novo plano inicia no dia seguinte à data_fim; caso contrário, inicia agora
-        assinatura_ativa = AssinaturaUsuario.objects.filter(
-            usuario=usuario, status="ativa"
-        ).order_by("-data_fim").first()
+        assinatura_ativa = (
+            AssinaturaUsuario.objects.filter(usuario=usuario, status="ativa")
+            .order_by("-data_fim")
+            .first()
+        )
 
-        if assinatura_ativa and assinatura_ativa.data_fim and assinatura_ativa.data_fim >= timezone.now():
+        if (
+            assinatura_ativa
+            and assinatura_ativa.data_fim
+            and assinatura_ativa.data_fim >= timezone.now()
+        ):
             data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
         else:
             data_inicio = timezone.now()
@@ -678,11 +688,17 @@ def skip_plan_selection(request):
         plano_gratuito = Plano.objects.get(tipo="gratuito", ativo=True)
 
         # Calcular início considerando assinatura ativa
-        assinatura_ativa = AssinaturaUsuario.objects.filter(
-            usuario=request.user, status="ativa"
-        ).order_by("-data_fim").first()
+        assinatura_ativa = (
+            AssinaturaUsuario.objects.filter(usuario=request.user, status="ativa")
+            .order_by("-data_fim")
+            .first()
+        )
 
-        if assinatura_ativa and assinatura_ativa.data_fim and assinatura_ativa.data_fim >= timezone.now():
+        if (
+            assinatura_ativa
+            and assinatura_ativa.data_fim
+            and assinatura_ativa.data_fim >= timezone.now()
+        ):
             data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
         else:
             data_inicio = timezone.now()

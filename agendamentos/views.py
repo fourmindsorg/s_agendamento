@@ -37,9 +37,7 @@ class HomeView(TemplateView):
         from authentication.models import Plano
 
         # Exibir apenas os 3 últimos planos ATIVOS cadastrados
-        context["planos"] = (
-            Plano.objects.filter(ativo=True).order_by("-criado_em")[:3]
-        )
+        context["planos"] = Plano.objects.filter(ativo=True).order_by("-criado_em")[:3]
 
         return context
 
