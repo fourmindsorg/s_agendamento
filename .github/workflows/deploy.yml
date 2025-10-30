@@ -135,14 +135,15 @@ jobs:
               "sudo apt-get update -y",
               "sudo apt-get install -y python3 python3-venv python3-pip",
               "cd /opt/s-agendamento",
-              "git config --global --add safe.directory /opt/s-agendamento || true",
-              "git fetch origin",
-              "git reset --hard origin/main",
-              "test -x venv/bin/python || python3 -m venv venv",
-              "venv/bin/pip install --upgrade pip",
-              "venv/bin/pip install -r requirements.txt --upgrade --quiet",
-              "venv/bin/python manage.py migrate --noinput",
-              "venv/bin/python manage.py collectstatic --noinput",
+              "sudo chown -R django:django /opt/s-agendamento || true",
+              "sudo -u django git config --global --add safe.directory /opt/s-agendamento || true",
+              "sudo -u django git fetch origin",
+              "sudo -u django git reset --hard origin/main",
+              "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
+              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
+              "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
+              "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
+              "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
               "sudo supervisorctl restart s-agendamento",
               "sudo systemctl reload nginx",
               "echo Deploy completo concluído"
@@ -232,16 +233,17 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y python3 python3-venv python3-pip
             cd /opt/s-agendamento
-            echo "🔧 Ajustando git safe.directory..."
+            echo "🔧 Ajustando permissões e git safe.directory..."
+            sudo chown -R django:django /opt/s-agendamento || true
             sudo -u django git config --global --add safe.directory /opt/s-agendamento || true
             
             echo "📥 Atualizando código do repositório..."
             sudo -u django git fetch origin
             sudo -u django git reset --hard origin/main
-            echo "✓ Código atualizado: $(git log --oneline -1)"
+            sudo -u django git --no-pager log --oneline -1 || true
             
             echo "📦 Instalando dependências..."
-            sudo -u django bash -c 'test -x venv/bin/python || python3 -m venv venv'
+            sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'
             sudo -u django bash -c 'venv/bin/pip install --upgrade pip'
             sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
             echo "✓ Dependências instaladas"
