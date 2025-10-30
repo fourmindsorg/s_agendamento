@@ -6,8 +6,6 @@ on:
     types:
       - completed
     branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -21,7 +19,7 @@ jobs:
       - name: Checkout code from GitHub main branch
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -126,6 +124,7 @@ jobs:
           INSTANCE_ID="i-0077873407e4114b1"
 
           # Enviar comandos de deploy via SSM
+          GIT_SHA="${{ github.sha }}" && \
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
@@ -137,8 +136,8 @@ jobs:
               "cd /opt/s-agendamento",
               "sudo chown -R django:django /opt/s-agendamento || true",
               "sudo -u django git config --global --add safe.directory /opt/s-agendamento || true",
-              "sudo -u django git fetch origin",
-              "sudo -u django git reset --hard origin/main",
+              "sudo -u django git fetch --tags --prune origin",
+              "sudo -u django git reset --hard '"'$GIT_SHA'"' || sudo -u django git reset --hard origin/main",
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
               "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
               "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
@@ -155,8 +154,9 @@ jobs:
               "if command -v pg_isready >/dev/null 2>&1 && [ -n \"$DB_HOST\" ]; then for i in $(seq 1 24); do pg_isready -h \"$DB_HOST\" -p \"${DB_PORT:-5432}\" -U \"$DB_USER\" && break || (echo Esperando DB... && sleep 5); done; fi",
               "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME=\"${DB_NAME}\" DB_USER=\"${DB_USER}\" DB_PASSWORD=\"${DB_PASSWORD}\" DB_HOST=\"${DB_HOST}\" DB_PORT=\"${DB_PORT}\" && venv/bin/python manage.py migrate --noinput'",
               "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME=\"${DB_NAME}\" DB_USER=\"${DB_USER}\" DB_PASSWORD=\"${DB_PASSWORD}\" DB_HOST=\"${DB_HOST}\" DB_PORT=\"${DB_PORT}\" && venv/bin/python manage.py collectstatic --noinput --clear'",
-              "sudo supervisorctl restart s-agendamento",
-              "sudo systemctl reload nginx",
+              "# Reiniciar serviços com fallback",
+              "if command -v supervisorctl >/dev/null 2>&1; then sudo supervisorctl reread || true; sudo supervisorctl update || true; sudo supervisorctl restart s-agendamento || true; fi",
+              "if command -v systemctl >/dev/null 2>&1; then systemctl is-enabled --quiet gunicorn 2>/dev/null && sudo systemctl restart gunicorn || true; sudo systemctl reload nginx || true; fi",
               "echo Deploy completo concluído"
             ]' \
             --timeout-seconds 600 \
@@ -249,8 +249,8 @@ jobs:
             sudo -u django git config --global --add safe.directory /opt/s-agendamento || true
             
             echo "📥 Atualizando código do repositório..."
-            sudo -u django git fetch origin
-            sudo -u django git reset --hard origin/main
+            sudo -u django git fetch --tags --prune origin
+            sudo -u django git reset --hard ${GITHUB_SHA:-origin/main}
             sudo -u django git --no-pager log --oneline -1 || true
             
             echo "📦 Instalando dependências..."
@@ -284,9 +284,9 @@ EOF'
             sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME="'"$DB_NAME"'" DB_USER="'"$DB_USER"'" DB_PASSWORD="'"$DB_PASSWORD"'" DB_HOST="'"$DB_HOST"'" DB_PORT="'"$DB_PORT"'" && venv/bin/python manage.py collectstatic --noinput --clear'
             echo "✓ Arquivos estáticos coletados"
             
-            echo "🔄 Reiniciando serviços..."
-            sudo supervisorctl restart s-agendamento
-            sudo systemctl reload nginx
+            echo "🔄 Reiniciando serviços (fallback Supervisor/Systemd)..."
+            if command -v supervisorctl >/dev/null 2>&1; then sudo supervisorctl reread || true; sudo supervisorctl update || true; sudo supervisorctl restart s-agendamento || true; fi
+            if command -v systemctl >/dev/null 2>&1; then systemctl is-enabled --quiet gunicorn 2>/dev/null && sudo systemctl restart gunicorn || true; sudo systemctl reload nginx || true; fi
             echo "✓ Serviços reiniciados"
             
             echo ""
