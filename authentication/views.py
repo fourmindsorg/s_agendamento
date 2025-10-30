@@ -622,11 +622,10 @@ def select_plan(request, plano_id):
         plano = Plano.objects.get(id=plano_id, ativo=True)
         usuario = request.user
 
-        # Verificar se já tem assinatura aguardando pagamento
+        # Se já existe uma assinatura aguardando pagamento, encaminhar para finalizar
         assinatura_aguardando = AssinaturaUsuario.objects.filter(
             usuario=usuario, status="aguardando_pagamento"
-        ).first()
-
+        ).order_by("-data_inicio").first()
         if assinatura_aguardando:
             messages.warning(
                 request,
@@ -636,31 +635,34 @@ def select_plan(request, plano_id):
                 "authentication:payment_pix", assinatura_id=assinatura_aguardando.id
             )
 
-        # Verificar se já tem assinatura ativa
+        # Calcular início do novo plano: se existir assinatura ATIVA cujo fim ainda não passou,
+        # o novo plano inicia no dia seguinte à data_fim; caso contrário, inicia agora
         assinatura_ativa = AssinaturaUsuario.objects.filter(
             usuario=usuario, status="ativa"
-        ).first()
+        ).order_by("-data_fim").first()
 
-        if assinatura_ativa:
-            messages.warning(request, "Você já possui uma assinatura ativa.")
-            return redirect("authentication:plan_selection")
+        if assinatura_ativa and assinatura_ativa.data_fim and assinatura_ativa.data_fim >= timezone.now():
+            data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
+        else:
+            data_inicio = timezone.now()
 
-        # Criar nova assinatura
-        data_fim = timezone.now() + timedelta(days=plano.duracao_dias)
-
-        assinatura = AssinaturaUsuario.objects.create(
-            usuario=usuario, plano=plano, data_fim=data_fim, status="ativa"
-        )
-
-        # Se for plano gratuito, ativar imediatamente
+        # Fluxo para plano gratuito: ativa imediatamente (ou agenda para o dia seguinte ao fim do atual)
         if plano.tipo == "gratuito":
+            data_fim = data_inicio + timedelta(days=plano.duracao_dias)
+            AssinaturaUsuario.objects.create(
+                usuario=usuario,
+                plano=plano,
+                data_fim=data_fim,
+                status="ativa",
+            )
             messages.success(
                 request,
                 f"Período gratuito de {plano.duracao_dias} dias ativado com sucesso!",
             )
             return redirect("agendamentos:dashboard")
 
-        # Para planos pagos, redirecionar para pagamento
+        # Planos pagos: seguir para confirmação/pagamento (a lógica de agendamento do início
+        # está em CheckoutView.processar_pagamento, que respeita a assinatura ativa)
         return redirect("authentication:plan_confirmation", plano_id=plano.id)
 
     except Plano.DoesNotExist:
@@ -675,17 +677,18 @@ def skip_plan_selection(request):
         # Buscar plano gratuito
         plano_gratuito = Plano.objects.get(tipo="gratuito", ativo=True)
 
-        # Verificar se já tem assinatura ativa
+        # Calcular início considerando assinatura ativa
         assinatura_ativa = AssinaturaUsuario.objects.filter(
             usuario=request.user, status="ativa"
-        ).first()
+        ).order_by("-data_fim").first()
 
-        if assinatura_ativa:
-            messages.warning(request, "Você já possui uma assinatura ativa.")
-            return redirect("agendamentos:dashboard")
+        if assinatura_ativa and assinatura_ativa.data_fim and assinatura_ativa.data_fim >= timezone.now():
+            data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
+        else:
+            data_inicio = timezone.now()
 
-        # Criar assinatura gratuita
-        data_fim = timezone.now() + timedelta(days=plano_gratuito.duracao_dias)
+        # Criar assinatura gratuita (ativa) com término calculado a partir do início decidido
+        data_fim = data_inicio + timedelta(days=plano_gratuito.duracao_dias)
 
         AssinaturaUsuario.objects.create(
             usuario=request.user,
