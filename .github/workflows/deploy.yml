@@ -142,8 +142,8 @@ jobs:
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
               "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
               "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
-              "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
-              "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
+              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py migrate --noinput'",
+              "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py collectstatic --noinput --clear'",
               "sudo supervisorctl restart s-agendamento",
               "sudo systemctl reload nginx",
               "echo Deploy completo concluído"
@@ -249,11 +249,11 @@ jobs:
             echo "✓ Dependências instaladas"
             
             echo "🔄 Aplicando migrações..."
-            sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'
+            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py migrate --noinput'
             echo "✓ Migrações aplicadas"
             
             echo "📁 Coletando arquivos estáticos..."
-            sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'
+            sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production && venv/bin/python manage.py collectstatic --noinput --clear'
             echo "✓ Arquivos estáticos coletados"
             
             echo "🔄 Reiniciando serviços..."
