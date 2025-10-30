@@ -2,10 +2,12 @@
 
 {% block title %}Relatórios{% endblock %}
 
+{% load static %}
+
 {% block extra_css %}
-<script src="https://cdn.plot.ly/plotly-2.35.3.min.js"></script>
-
-
+<link rel="stylesheet" href="{% static 'css/agendamentos/relatorios.css' %}">
+{% comment %} <script src="https://cdn.plot.ly/plotly-2.35.3.min.js"></script> {% endcomment %}
+<script src="{% static 'js/vendor/plotly.min.js' %}"></script>
 {% endblock %}
 
 {% block content %}
