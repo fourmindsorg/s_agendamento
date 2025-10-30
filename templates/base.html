@@ -151,7 +151,66 @@
 
        
 
-        /* Removidos estilos experimentais que sobrepunham layout base */
+        /* ======================================================= */
+/* 1. Estilos Padrão (Mobile First - Celular) */
+/* ======================================================= */
+
+body {
+    background-color: #f0f0f0; /* Fundo cinza claro para celular */
+    padding: 10px;
+    font-size: 16px;
+}
+
+.container {
+    width: 100%; /* Largura total para celular */
+    padding: 10px;
+}
+
+.menu {
+    display: none; /* Menu escondido ou em formato hambúrguer */
+}
+
+.conteudo {
+    width: 100%;
+}
+
+/* ======================================================= */
+/* 2. Media Query para Tablet (Telas maiores que 768px) */
+/* ======================================================= */
+
+@media screen and (min-width: 768px) {
+   .page-title{
+    font-size: 1rem;
+   }
+}
+
+/* ======================================================= */
+/* 3. Media Query para Desktop (Telas maiores que 1200px) */
+/* ======================================================= */
+
+    @media screen and (min-width: 1200px) {
+        body {
+            background-color: #d0ffe0; 
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1400px; /* Aumenta a largura máxima do container */
+        }
+
+        .conteudo {
+            /* Exemplo: reverte para um layout de três colunas ou amplia o conteúdo */
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr; /* Três colunas (Ex: Sidebar, Conteúdo, Sidebar) */
+            gap: 30px;
+        }
+        
+        .menu a {
+            padding: 15px 25px; /* Botões de menu maiores */
+        }
+    }
+
+        
 </style>
 
 </head>
@@ -180,8 +239,8 @@
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-calendar-check"></i>
-                    <span class="menu-text">Agendamentos</span>
-                    {% if agendamentos_pendentes > 1 %}
+                    <span class="menu-text me-2">Agendamentos</span>
+                    {% if agendamentos_pendentes > 0 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>
                     {% endif %}
                 </a>
@@ -190,14 +249,14 @@
             <div class="menu-item">
                 <a href="{% url 'agendamentos:cliente_list' %}" class="menu-link {% if 'cliente' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-users"></i>
-                    <span class="menu-text pe-1">Clientes</span>
+                    <span class="menu-text">Clientes</span>
                 </a>
             </div>
             
             <div class="menu-item">
                 <a href="{% url 'agendamentos:servico_list' %}" class="menu-link {% if 'servico' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-cogs"></i>
-                    <span class="menu-text pe-1">Serviços</span>
+                    <span class="menu-text">Serviços</span>
                 </a>
             </div>
             

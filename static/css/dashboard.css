@@ -23,7 +23,7 @@
 }
 
 /* Ações no Header */
-/* .header-actions {
+.header-actions {
   position: absolute;
   top: 0;
   right: 0;
@@ -31,10 +31,10 @@
   gap: 10px;
   align-items: flex-start;
 
-} */
+}
 
 
-/* .btn-custom {
+.btn-custom {
   background: var(--gradient-bg);
   border: none;
   color: white !important;
@@ -46,7 +46,7 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 15px var(--shadow-color);
   color: white !important;
-} */
+}
 
 .theme-card {
   border-radius: 15px;
@@ -319,7 +319,7 @@ Espaço Vazio para Celular (Smartphones - Máx. 600px)
     }
     
     .card-body {
-        /* padding: 1rem !important; */
+        padding: 1rem !important;
         align-items: center !important; 
         text-align: center;
     }
