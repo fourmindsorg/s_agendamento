@@ -238,9 +238,9 @@ body {
             
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="menu-icon fas fa-calendar-check me-1"></i>
-                    <span class="menu-text me-2">Agendamentos</span>
-                    {% if agendamentos_pendentes > 0 %}
+                    <i class="menu-icon fas fa-calendar-check"></i>
+                    <span class="menu-text">Agendamentos</span>
+                    {% if agendamentos_pendentes > 1 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>
                     {% endif %}
                 </a>
@@ -249,14 +249,14 @@ body {
             <div class="menu-item">
                 <a href="{% url 'agendamentos:cliente_list' %}" class="menu-link {% if 'cliente' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-users"></i>
-                    <span class="menu-text">Clientes</span>
+                    <span class="menu-text pe-1">Clientes</span>
                 </a>
             </div>
             
             <div class="menu-item">
                 <a href="{% url 'agendamentos:servico_list' %}" class="menu-link {% if 'servico' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-cogs"></i>
-                    <span class="menu-text">Serviços</span>
+                    <span class="menu-text pe-1">Serviços</span>
                 </a>
             </div>
             
@@ -268,7 +268,7 @@ body {
             </div>
 
             <div class="menu-item">
-                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'authentication' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'plan' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fa-solid fa-business-time"></i>
                     <span class="menu-text">Planos</span>
                 </a>

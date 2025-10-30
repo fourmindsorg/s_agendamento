@@ -188,11 +188,10 @@
 
 <section class="row g-3 px-2 mb-2">
 
-  <!-- CARD 1: Agendamentos Hoje -->
-  <div class="col-6 col-md-3 p-3 bg-body-tertiary rounded"> 
-    <div class="card h-100 theme-card p-2">
-      <!-- MUDANÇA ESTRUTURAL: card-body agora é um container de coluna centralizado -->
-      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start">
+    <!-- CARD 1: Agendamentos Hoje -->
+  <div class="col-12 col-md-3 bg-body-tertiary rounded p-0 p-lg-2"> 
+    <div class="card h-100 theme-card p-2 p-lg-4">
+      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start p-0">
         
         <a href="{% url 'agendamentos:agendamento_list' %}?data_inicio={{ today|date:'Y-m-d' }}&data_fim={{ today|date:'Y-m-d' }}" 
            class="stretched-link d-md-none"></a>
@@ -229,9 +228,9 @@
   </div>
 
   <!-- CARD 2: Esta Semana -->
- <div class="col-6 col-md-3  p-3 bg-body-tertiary rounded">
-    <div class="card border-0 h-100 theme-card p-2">
-      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start">
+  <div class="col-12 col-md-3 bg-body-tertiary rounded p-0 p-lg-2"> 
+    <div class="card h-100 theme-card p-2 p-lg-4">
+      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start p-0">
         
         <a href="{% url 'agendamentos:agendamento_list' %}" class="stretched-link d-md-none"></a>
         
@@ -266,9 +265,9 @@
   </div>
 
   <!-- CARD 3: Total de Clientes -->
-  <div class="col-6 col-md-3  p-3 bg-body-tertiary rounded">
-    <div class="card border-0 h-100 theme-card p-2">
-      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start">
+  <div class="col-12 col-md-3 bg-body-tertiary rounded p-0 p-lg-2"> 
+    <div class="card h-100 theme-card p-2 p-lg-4">
+      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start p-0">
         
         <a href="{% url 'agendamentos:cliente_list' %}" class="stretched-link d-md-none"></a>
 
@@ -303,9 +302,9 @@
   </div>
 
   <!-- CARD 4: Aguardando Confirmação -->
-  <div class="col-6 col-md-3 p-3 bg-body-tertiary rounded">
-    <div class="card border-0 h-100 theme-card p-2">
-      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start">
+  <div class="col-12 col-md-3 bg-body-tertiary rounded p-0 p-lg-2"> 
+    <div class="card h-100 theme-card p-2 p-lg-4">
+      <div class="card-body d-flex flex-column justify-content-between align-items-center text-center align-items-md-start text-md-start p-0">
         
         <a href="{% url 'agendamentos:agendamento_list' %}?status=agendado" class="stretched-link d-md-none"></a>
 

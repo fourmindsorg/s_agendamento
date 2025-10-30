@@ -4,401 +4,352 @@
 {% block title %}Escolha seu Plano{% endblock %}
 
 {% block extra_css %}
-<style>
-    .pricing-card {
-        transition: all 0.3s ease;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 15px !important;
-    }
-    
-    .pricing-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2) !important;
-    }
-    
-    .pricing-title {
-        color: var(--text-color) !important;
-    }
-    
-    .pricing-price {
-        color: var(--primary-color) !important;
-    }
-    
-    .date-badge {
-        width: 50px;
-        padding: 8px 4px;
-        font-size: 12px;
-        line-height: 1;
-        background: var(--gradient-bg) !important;
-        color: white !important;
-        border-radius: 8px;
-    }
 
-    .date-badge .day {
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .date-badge .month {
-        font-size: 10px;
-        text-transform: uppercase;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center py-5">
-                    <h1 class="display-4 fw-bold mb-3">
-                        <i class="fas fa-star text-primary me-2"></i>
-                        Escolha seu Plano
-                    </h1>
-                    <p class="lead text-muted">
-                        Seleccione o plano ideal para suas necessidades
-                    </p>
-                </div>
+
+<!-- Header da Lista -->
+<div class="dashboard-header p-3 d-flex justify-content-center justify-content-md-between flex-wrap align-items-center">
+
+  <div class="header-greeting mb-2 mb-lg-0">
+    <h1 class="dashboard-title">
+      <i class="fa-solid fa-business-time fa-md"></i>
+      Planos
+    </h1>
+    <p class="dashboard-subtitle text-muted">Selecione o plano ideal para suas necessidades
+    </p>
+  </div>
+
+</div>
+
+<div class="container-fluid p-0">
+
+    <!-- Header -->
+    {% if tem_assinatura_aguardando %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Pagamento Pendente!</strong> Você tem uma assinatura aguardando pagamento. 
+        Finalize o pagamento na seção "Histórico de Assinaturas" abaixo para ativar sua assinatura.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Mensagem de boas-vindas -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center">
+            <h2 class="fw-bold mb-3">
+                <i class="fas fa-hand-sparkles text-primary me-2"></i>
+                Bem-vindo, {{ usuario.first_name|default:usuario.username }}!
+            </h2>
+            <p class="lead text-muted mb-0">
+                Escolha o plano que melhor se adapta às suas necessidades e comece a usar o sistema hoje mesmo.
+            </p>
+        </div>
+    </div>
+
+    <!-- Opção de período gratuito (apenas se não tiver usado) -->
+    {% if ja_usou_gratuito %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="alert alert-info text-center mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Você já utilizou seu período gratuito de 14 dias.</strong>
+                <br>Escolha um dos planos abaixo para continuar usando o sistema.
             </div>
+        </div>
+    </div>
+    {% endif %}
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            {% if tem_assinatura_aguardando %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Pagamento Pendente!</strong> Você tem uma assinatura aguardando pagamento. 
-                Finalize o pagamento na seção "Histórico de Assinaturas" abaixo para ativar sua assinatura.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endif %}
-
-            <!-- Mensagem de boas-vindas -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h2 class="fw-bold mb-3">
-                        <i class="fas fa-hand-sparkles text-primary me-2"></i>
-                        Bem-vindo, {{ usuario.first_name|default:usuario.username }}!
-                    </h2>
-                    <p class="lead text-muted mb-0">
-                        Escolha o plano que melhor se adapta às suas necessidades e comece a usar o sistema hoje mesmo.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Opção de período gratuito (apenas se não tiver usado) -->
-            {% if ja_usou_gratuito %}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="alert alert-info text-center mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Você já utilizou seu período gratuito de 14 dias.</strong>
-                        <br>Escolha um dos planos abaixo para continuar usando o sistema.
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Planos pagos -->
-            <div class="row g-4 mb-4">
-                {% for plano in planos %}
-                {% if plano.tipo != 'gratuito' %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card pricing-card border rounded-4 shadow-sm p-4 text-center h-100 position-relative d-flex flex-column
-                                {% if plano.destaque %}border-2 border-primary featured{% endif %}">
-                        
-                        {% if plano.destaque %}
-                        <div class="position-absolute top-0 start-50 translate-middle badge bg-primary text-white rounded-pill px-3 py-2">
-                            Mais Popular ⭐
-                        </div>
-                        {% endif %}
-
-                        <div class="flex-grow-1">
-                            <h3 class="pricing-title fw-bold mb-3">{{ plano.nome }}</h3>
-                            <p class="text-muted mb-4">{{ plano.descricao }}</p>
-
-                            <div class="pricing-value mb-3">
-                                <h3 class="pricing-price display-6 fw-bold mb-0">
-                                    R$ {{ plano.preco_cartao|floatformat:0 }}
-                                </h3>
-                                <small class="text-muted">no cartão de crédito</small>
-                            </div>
-                            
-                            {% if plano.economia_pix > 0 %}
-                            <p class="text-muted my-2">
-                                ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
-                                <br><small class="text-success">Economia de R$ {{ plano.economia_pix|floatformat:0 }}</small>
-                            </p>
-                            {% else %}
-                            <p class="text-muted my-2">
-                                ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
-                            </p>
-                            {% endif %}
-
-                            <div class="pricing-features mb-4">
-                                <ul class="list-unstyled">
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        Duração: {{ plano.duracao_dias }} dias
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        Acesso completo ao sistema
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        Suporte prioritário
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        Backup automático
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="mt-auto pt-3">
-                            <a href="{% url 'authentication:checkout' plano.id %}" 
-                                class="btn {% if plano.destaque %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">
-                                <i class="fas fa-shopping-cart me-2"></i>
-                                Finalizar Compra
-                            </a>
-                        </div>
-                    </div>
+    <!-- Planos pagos -->
+    <div class="row g-4 mb-4">
+        {% for plano in planos %}
+        {% if plano.tipo != 'gratuito' %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card pricing-card border rounded-4 shadow-sm p-4 text-center h-100 position-relative d-flex flex-column
+                        {% if plano.destaque %}border-2 border-primary featured{% endif %}">
+                
+                {% if plano.destaque %}
+                <div class="position-absolute top-0 start-50 translate-middle badge bg-primary text-white rounded-pill px-3 py-2">
+                    Mais Popular ⭐
                 </div>
                 {% endif %}
-                {% endfor %}
-            </div>
 
-            <!-- Garantia de Satisfação -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-shield-alt text-primary me-2"></i>
-                                Garantia de Satisfação
-                            </h5>
-                            <p class="text-muted mb-0 mt-2">
-                                Todos os nossos planos incluem garantia de 14 dias totalmente grátis.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <div class="flex-grow-1">
+                    <h3 class="pricing-title fw-bold mb-3">{{ plano.nome }}</h3>
+                    <p class="text-muted mb-4">{{ plano.descricao }}</p>
 
-            <!-- Histórico de Assinaturas -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-4">
-                        <i class="fas fa-history text-primary me-2"></i>
-                        Histórico de Assinaturas
-                    </h5>
-
-                    {% if assinaturas_historico %}
-                    <!-- Versão Desktop -->
-                    <div class="d-none d-lg-block">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="min-width: 300px;">Plano</th>
-                                        <th>Tipo</th>
-                                        <th>Valor</th>
-                                        <th>Início</th>
-                                        <th>Fim</th>
-                                        <th>Status</th>
-                                        <th>Método</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for a in assinaturas_historico %}
-                                    <tr class="assinatura-row" data-status="{{ a.status }}">
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-2 bg-primary">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                </div>
-                                                <div>
-                                                    <strong>{{ a.plano.nome }}</strong>
-                                                    {% if a.plano.descricao %}
-                                                        <br><small class="text-muted">{{ a.plano.descricao|truncatechars:30 }}</small>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                <i class="fas fa-tag me-1"></i>{{ a.plano.get_tipo_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if a.valor_pago %}
-                                                <span class="h6 text-success mb-0">
-                                                    R$ {{ a.valor_pago|floatformat:2 }}
-                                                </span>
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="date-badge text-center me-2">
-                                                    <div class="day">{{ a.data_inicio|date:"d" }}</div>
-                                                    <div class="month">{{ a.data_inicio|date:"M" }}</div>
-                                                </div>
-                                                <div>
-                                                    <strong>{{ a.data_inicio|date:"d/m/Y" }}</strong>
-                                                    <br><small class="text-muted">{{ a.data_inicio|date:"H:i" }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="date-badge text-center me-2">
-                                                    <div class="day">{{ a.data_fim|date:"d" }}</div>
-                                                    <div class="month">{{ a.data_fim|date:"M" }}</div>
-                                                </div>
-                                                <div>
-                                                    <strong>{{ a.data_fim|date:"d/m/Y" }}</strong>
-                                                    <br><small class="text-muted">{{ a.data_fim|date:"H:i" }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if a.status == 'ativa' %}bg-success{% elif a.status == 'expirada' %}bg-secondary{% elif a.status == 'cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                                                {% if a.status == 'ativa' %}
-                                                    <i class="fas fa-check-circle me-1"></i>
-                                                {% elif a.status == 'expirada' %}
-                                                    <i class="fas fa-clock me-1"></i>
-                                                {% elif a.status == 'cancelada' %}
-                                                    <i class="fas fa-times-circle me-1"></i>
-                                                {% else %}
-                                                    <i class="fas fa-hourglass-half me-1"></i>
-                                                {% endif %}
-                                                {{ a.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if a.metodo_pagamento == 'PIX' %}bg-success{% elif a.metodo_pagamento == 'Cartão' %}bg-primary{% else %}bg-secondary{% endif %}">
-                                                <i class="fas fa-{% if a.metodo_pagamento == 'PIX' %}qrcode{% elif a.metodo_pagamento == 'Cartão' %}credit-card{% else %}question{% endif %} me-1"></i>
-                                                {{ a.metodo_pagamento|default:'-' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group btn-group-sm">
-                                                {% if a.status == 'aguardando_pagamento' %}
-                                                    <a href="{% url 'authentication:payment_pix' a.id %}" class="btn btn-outline-success" title="Finalizar Pagamento">
-                                                        <i class="fas fa-credit-card"></i>
-                                                    </a>
-                                                {% endif %}
-                                                {% if a.status != 'ativa' and a.status != 'expirada' %}
-                                                    <button type="button" 
-                                                            class="btn btn-outline-danger" 
-                                                            title="Deletar"
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#deleteAssinaturaModal{{ a.id }}">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="pricing-value mb-3">
+                        <h3 class="pricing-price display-6 fw-bold mb-0">
+                            R$ {{ plano.preco_cartao|floatformat:0 }}
+                        </h3>
+                        <small class="text-muted">no cartão de crédito</small>
                     </div>
                     
-                    <!-- Versão Mobile -->
-                    <div class="d-lg-none">
-                        <div class="list-group list-group-flush">
-                            {% for a in assinaturas_historico %}
-                            <div class="list-group-item assinatura-card" data-status="{{ a.status }}">
-                                <div class="d-flex align-items-start">
-                                    <div class="date-badge text-center me-3">
-                                        <div class="day">{{ a.data_inicio|date:"d" }}</div>
-                                        <div class="month">{{ a.data_inicio|date:"M" }}</div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <div>
-                                                <h6 class="mb-1">{{ a.plano.nome }}</h6>
-                                                <small class="text-muted">{{ a.plano.get_tipo_display }}</small>
-                                            </div>
-                                            <span class="badge {% if a.status == 'ativa' %}bg-success{% elif a.status == 'expirada' %}bg-secondary{% elif a.status == 'cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                                                {{ a.get_status_display }}
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="row g-2 mb-2">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">
-                                                    <i class="fas fa-dollar-sign me-1"></i>
-                                                    {% if a.valor_pago %}
-                                                        R$ {{ a.valor_pago|floatformat:2 }}
-                                                    {% else %}
-                                                        -
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">
-                                                    <i class="fas fa-{% if a.metodo_pagamento == 'PIX' %}qrcode{% elif a.metodo_pagamento == 'Cartão' %}credit-card{% else %}question{% endif %} me-1"></i>
-                                                    {{ a.metodo_pagamento|default:'-' }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="fas fa-calendar me-1"></i>
-                                                {{ a.data_inicio|date:"d/m/Y" }} - {{ a.data_fim|date:"d/m/Y" }}
-                                            </small>
-                                            <div class="btn-group btn-group-sm">
-                                                {% if a.status == 'aguardando_pagamento' %}
-                                                    <a href="{% url 'authentication:payment_pix' a.id %}" class="btn btn-outline-success btn-sm" title="Finalizar Pagamento">
-                                                        <i class="fas fa-credit-card"></i>
-                                                    </a>
-                                                {% endif %}
-                                                {% if a.status != 'ativa' and a.status != 'expirada' %}
-                                                    <button type="button" 
-                                                            class="btn btn-outline-danger btn-sm" 
-                                                            title="Deletar"
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#deleteAssinaturaModal{{ a.id }}">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    {% if plano.economia_pix > 0 %}
+                    <p class="text-muted my-2">
+                        ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
+                        <br><small class="text-success">Economia de R$ {{ plano.economia_pix|floatformat:0 }}</small>
+                    </p>
                     {% else %}
-                        <div class="alert alert-info mb-0">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Nenhuma assinatura anterior encontrada para este usuário.
-                        </div>
+                    <p class="text-muted my-2">
+                        ou <span class="text-success fw-bold">R$ {{ plano.preco_pix|floatformat:0 }}</span> no PIX
+                    </p>
                     {% endif %}
+
+                    <div class="pricing-features mb-4">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Duração: {{ plano.duracao_dias }} dias
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Acesso completo ao sistema
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Suporte prioritário
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Backup automático
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-3">
+                    <a href="{% url 'authentication:checkout' plano.id %}" 
+                        class="btn {% if plano.destaque %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Finalizar Compra
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Garantia de Satisfação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-4">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        Garantia de Satisfação
+                    </h5>
+                    <p class="text-muted mb-0 mt-2">
+                        Todos os nossos planos incluem garantia de 14 dias totalmente grátis.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Histórico de Assinaturas -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <h5 class="card-title m-4">
+                <i class="fas fa-history text-primary me-2"></i>
+                Histórico de Assinaturas
+            </h5>
+
+            {% if assinaturas_historico %}
+            <!-- Versão Desktop -->
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 300px;">Plano</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Status</th>
+                            <th>Método</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assinaturas_historico %}
+                        <tr class="assinatura-row" data-status="{{ a.status }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-2 bg-primary">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ a.plano.nome }}</strong>
+                                        {% if a.plano.descricao %}
+                                            <br><small class="text-muted">{{ a.plano.descricao|truncatechars:30 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-tag me-1"></i>{{ a.plano.get_tipo_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if a.valor_pago %}
+                                    <span class="h6 text-success mb-0">
+                                        R$ {{ a.valor_pago|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="date-badge text-center me-2">
+                                        <div class="day">{{ a.data_inicio|date:"d" }}</div>
+                                        <div class="month">{{ a.data_inicio|date:"M" }}</div>
+                                    </div>
+                                    <div>
+                                        <strong>{{ a.data_inicio|date:"d/m/Y" }}</strong>
+                                        <br><small class="text-muted">{{ a.data_inicio|date:"H:i" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="date-badge text-center me-2">
+                                        <div class="day">{{ a.data_fim|date:"d" }}</div>
+                                        <div class="month">{{ a.data_fim|date:"M" }}</div>
+                                    </div>
+                                    <div>
+                                        <strong>{{ a.data_fim|date:"d/m/Y" }}</strong>
+                                        <br><small class="text-muted">{{ a.data_fim|date:"H:i" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if a.status == 'ativa' %}bg-success{% elif a.status == 'expirada' %}bg-secondary{% elif a.status == 'cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {% if a.status == 'ativa' %}
+                                        <i class="fas fa-check-circle me-1"></i>
+                                    {% elif a.status == 'expirada' %}
+                                        <i class="fas fa-clock me-1"></i>
+                                    {% elif a.status == 'cancelada' %}
+                                        <i class="fas fa-times-circle me-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-hourglass-half me-1"></i>
+                                    {% endif %}
+                                    {{ a.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if a.metodo_pagamento == 'PIX' %}bg-success{% elif a.metodo_pagamento == 'Cartão' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    <i class="fas fa-{% if a.metodo_pagamento == 'PIX' %}qrcode{% elif a.metodo_pagamento == 'Cartão' %}credit-card{% else %}question{% endif %} me-1"></i>
+                                    {{ a.metodo_pagamento|default:'-' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    {% if a.status == 'aguardando_pagamento' %}
+                                        <a href="{% url 'authentication:payment_pix' a.id %}" class="btn btn-outline-success" title="Finalizar Pagamento">
+                                            <i class="fas fa-credit-card"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if a.status != 'ativa' and a.status != 'expirada' %}
+                                        <button type="button" 
+                                                class="btn btn-outline-danger" 
+                                                title="Deletar"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteAssinaturaModal{{ a.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Versão Mobile -->
+            <div class="d-lg-none">
+                <div class="list-group list-group-flush">
+                    {% for a in assinaturas_historico %}
+                    <div class="list-group-item assinatura-card" data-status="{{ a.status }}">
+                        <div class="d-flex align-items-start">
+                            <div class="date-badge text-center me-3">
+                                <div class="day">{{ a.data_inicio|date:"d" }}</div>
+                                <div class="month">{{ a.data_inicio|date:"M" }}</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ a.plano.nome }}</h6>
+                                        <small class="text-muted">{{ a.plano.get_tipo_display }}</small>
+                                    </div>
+                                    <span class="badge {% if a.status == 'ativa' %}bg-success{% elif a.status == 'expirada' %}bg-secondary{% elif a.status == 'cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                        {{ a.get_status_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-dollar-sign me-1"></i>
+                                            {% if a.valor_pago %}
+                                                R$ {{ a.valor_pago|floatformat:2 }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-{% if a.metodo_pagamento == 'PIX' %}qrcode{% elif a.metodo_pagamento == 'Cartão' %}credit-card{% else %}question{% endif %} me-1"></i>
+                                            {{ a.metodo_pagamento|default:'-' }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ a.data_inicio|date:"d/m/Y" }} - {{ a.data_fim|date:"d/m/Y" }}
+                                    </small>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if a.status == 'aguardando_pagamento' %}
+                                            <a href="{% url 'authentication:payment_pix' a.id %}" class="btn btn-outline-success btn-sm" title="Finalizar Pagamento">
+                                                <i class="fas fa-credit-card"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if a.status != 'ativa' and a.status != 'expirada' %}
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm" 
+                                                    title="Deletar"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#deleteAssinaturaModal{{ a.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Nenhuma assinatura anterior encontrada para este usuário.
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+
 
 <!-- Modais de Confirmação de Exclusão -->
 {% if assinaturas_historico %}

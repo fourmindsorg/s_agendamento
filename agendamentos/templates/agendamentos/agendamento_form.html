@@ -12,17 +12,20 @@
 
 <!-- Header do Formulário -->
 <div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-  <h1 class="form-title">
+
+  <div class="header-greeting mb-2 mb-lg-0">
+    <h1 class="dashboard-title">
     <i class="fas fa-calendar-plus"></i>
     {% if object %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
-  </h1>
-  <p class="form-subtitle">
-    {% if object %}
-      Atualize as informações do agendamento de {{ object.cliente.nome }}
-    {% else %}
-      Preencha os dados para criar um novo agendamento
-    {% endif %}
-  </p>
+    </h1>
+    <p class="dashboard-subtitle text-muted">
+      {% if object %}
+        Atualize as informações do agendamento de {{ object.cliente.nome }}
+      {% else %}
+        Preencha os dados para criar um novo agendamento
+      {% endif %}
+    </p>
+  </div>
   
   <!-- Ações no Header -->
   <div class="header-actions d-flex justify-content-center gap-2">

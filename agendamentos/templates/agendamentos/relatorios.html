@@ -9,19 +9,23 @@
 {% endblock %}
 
 {% block content %}
+
 <!-- Header dos Relatórios -->
-<div class="reports-header">
-  <h1 class="reports-title">
+<div class="dashboard-header p-3 d-flex justify-content-center justify-content-md-between flex-wrap align-items-center">
+
+  <div class="header-greeting mb-2 mb-lg-0">
+    <h1 class="dashboard-title">
     <i class="fas fa-chart-bar"></i>
     Relatórios e Analytics
-  </h1>
-  <p class="reports-subtitle">
-    Insights detalhados do seu negócio
-    <span class="period-indicator">
-      <i class="fas fa-calendar me-1"></i>
-      {{ data_inicio|date:"d/m/Y" }} até {{ data_fim|date:"d/m/Y" }}
-    </span>
-  </p>
+    </h1>
+    <p class="reports-subtitle">
+      Insights detalhados do seu negócio
+      <span class="period-indicator">
+        <i class="fas fa-calendar me-1"></i>
+        {{ data_inicio|date:"d/m/Y" }} até {{ data_fim|date:"d/m/Y" }}
+      </span>
+    </p>
+  </div>
   
   <!-- Ações no Header -->
   <div class="header-actions">
