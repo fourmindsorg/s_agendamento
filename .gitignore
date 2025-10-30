@@ -76,4 +76,5 @@ tmp/
 
 s-agendamento-key.pub
 .venv
+venv/
 authentication
