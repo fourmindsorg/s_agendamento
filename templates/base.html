@@ -9,40 +9,17 @@
     <!-- Favicon -->
     <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
       
-    <!-- Font Awesome (CDN) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfE3R3rC1N5CFVYv1aQrtUATnpG4sDXf4ZQ+M6G3K9eN1N2YHgYneg7A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Font Awesome (Local) -->
+    <link rel="stylesheet" href="{% static 'css/fontawesome/all.min.css' %}">
     
     <!-- Google Fonts (Local) -->
     <link rel="stylesheet" href="{% static 'fonts/inter.css' %}">
     
     <!-- CSS -->
     {% comment %} boostrap {% endcomment %}
-   
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/error-messages.css' %}" />
-
-   
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" /> 
-
-    <!-- AGENDAMENTOS -->
-
-    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_detail.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_form.CSS' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_list.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/agendamento_status_form.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/cliente_confirm_delete.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/cliente_form.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/cliente_list.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/configuracoes.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/agendamentos/relatorios.css' %}" />
-
-  
-
-
-    <!-- serviços -->
-        <link rel="stylesheet" href="{% static 'css/agendamentos/servico_form.css' %}" />
-
+    <link rel="stylesheet" href="{% static 'css/error-messages.css' %}" />
     
     {% comment %} plot {% endcomment %}
     <script src="{% static 'js/vendor/plotly.min.js' %}"></script>
@@ -68,7 +45,7 @@
             --shadow-color: {{ paleta_cores.shadow }};
             
             /* Layout Variables */
-            --sidebar-width: 220px;
+            --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --topbar-height: 70px;
             --transition-speed: 0.3s;
@@ -79,8 +56,6 @@
             body, body * {
                 color: var(--text-color) !important;
             }
-
-       
             
             /* Exceções para elementos que devem manter cor específica */
             .text-primary { color: var(--primary-color) !important; }
@@ -93,8 +68,6 @@
             .text-dark { color: var(--dark-color) !important; }
             .text-muted { color: var(--text-muted-color) !important; }
             .text-white { color: #ffffff !important; }
-
-             
             
             /* Botões com cores específicas */
             .btn-primary, .btn-primary *, 
@@ -148,69 +121,6 @@
         .btn-outline-custom:hover .fas {
             color: inherit !important;
         }
-
-       
-
-        /* ======================================================= */
-/* 1. Estilos Padrão (Mobile First - Celular) */
-/* ======================================================= */
-
-body {
-    background-color: #f0f0f0; /* Fundo cinza claro para celular */
-    padding: 10px;
-    font-size: 16px;
-}
-
-.container {
-    width: 100%; /* Largura total para celular */
-    padding: 10px;
-}
-
-.menu {
-    display: none; /* Menu escondido ou em formato hambúrguer */
-}
-
-.conteudo {
-    width: 100%;
-}
-
-/* ======================================================= */
-/* 2. Media Query para Tablet (Telas maiores que 768px) */
-/* ======================================================= */
-
-@media screen and (min-width: 768px) {
-   .page-title{
-    font-size: 1rem;
-   }
-}
-
-/* ======================================================= */
-/* 3. Media Query para Desktop (Telas maiores que 1200px) */
-/* ======================================================= */
-
-    @media screen and (min-width: 1200px) {
-        body {
-            background-color: #d0ffe0; 
-            font-size: 16px;
-        }
-
-        .container {
-            max-width: 1400px; /* Aumenta a largura máxima do container */
-        }
-
-        .conteudo {
-            /* Exemplo: reverte para um layout de três colunas ou amplia o conteúdo */
-            display: grid;
-            grid-template-columns: 1fr 3fr 1fr; /* Três colunas (Ex: Sidebar, Conteúdo, Sidebar) */
-            gap: 30px;
-        }
-        
-        .menu a {
-            padding: 15px 25px; /* Botões de menu maiores */
-        }
-    }
-
-        
 </style>
 
 </head>
@@ -239,7 +149,7 @@ body {
             <div class="menu-item">
                 <a href="{% url 'agendamentos:agendamento_list' %}" class="menu-link {% if 'agendamento' in request.resolver_match.url_name and 'dashboard' not in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fas fa-calendar-check"></i>
-                    <span class="menu-text me-2">Agendamentos</span>
+                    <span class="menu-text">Agendamentos</span>
                     {% if agendamentos_pendentes > 0 %}
                     <span class="menu-badge">{{ agendamentos_pendentes }}</span>
                     {% endif %}
@@ -268,7 +178,7 @@ body {
             </div>
 
             <div class="menu-item">
-                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'plan' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'authentication:plan_selection' %}" class="menu-link {% if 'authentication' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="menu-icon fa-solid fa-business-time"></i>
                     <span class="menu-text">Planos</span>
                 </a>
@@ -300,17 +210,16 @@ body {
         </button>
         
         <h1 class="d-block d-md-none page-title">Agenda Online</h1>
-        <h4 class="d-none d-md-block pt-2">Sistema de Agendamentos Online</h4>
+        <h1 class="d-none d-md-block page-title">Sistema de Agendamentos Online</h1>
         
         <div class="user-area">
-      
-            <!-- 
-             <div class="dropdown">
+            <!-- Dropdown de Temas e Modo -->
+            <div class="dropdown">
                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-palette me-1"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" style="min-width: 280px;">
-                   
+                    <!-- Toggle Modo Escuro -->
                     <li>
                         <h6 class="dropdown-header">
                             <i class="fas fa-adjust me-2"></i>Aparência
@@ -330,7 +239,7 @@ body {
                     
                     <li><hr class="dropdown-divider"></li>
                     
-                   
+                    <!-- Seletor de Temas -->
                     <li>
                         <h6 class="dropdown-header">
                             <i class="fas fa-palette me-2"></i>Temas
@@ -352,8 +261,6 @@ body {
                     {% endfor %}
                 </ul>
             </div>
-            -->
-           
             
             <!-- Usuário -->
             <div class="dropdown">
@@ -395,7 +302,6 @@ body {
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="{% static 'js/agendamento_detail.js' %}"></script>
-     <script src="{% static 'js/agendamento_list.js' %}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
