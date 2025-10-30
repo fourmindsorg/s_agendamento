@@ -142,13 +142,13 @@ jobs:
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
               "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
               "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
-              "echo Exportando variáveis de ambiente do banco...",
+              "echo Obtendo credenciais do banco no AWS SSM...",
               "export DJANGO_SETTINGS_MODULE=core.settings_production",
-              "export DB_NAME=\"${{ secrets.DB_NAME }}\"",
-              "export DB_USER=\"${{ secrets.DB_USER }}\"",
-              "export DB_PASSWORD=\"${{ secrets.DB_PASSWORD }}\"",
-              "export DB_HOST=\"${{ secrets.DB_HOST }}\"",
-              "export DB_PORT=\"${{ secrets.DB_PORT }}\"",
+              "export DB_HOST=\"$(aws ssm get-parameter --name /s-agendamento/DB_HOST --with-decryption --query Parameter.Value --output text)\"",
+              "export DB_NAME=\"$(aws ssm get-parameter --name /s-agendamento/DB_NAME --with-decryption --query Parameter.Value --output text)\"",
+              "export DB_USER=\"$(aws ssm get-parameter --name /s-agendamento/DB_USER --with-decryption --query Parameter.Value --output text)\"",
+              "export DB_PASSWORD=\"$(aws ssm get-parameter --name /s-agendamento/DB_PASSWORD --with-decryption --query Parameter.Value --output text)\"",
+              "export DB_PORT=\"$(aws ssm get-parameter --name /s-agendamento/DB_PORT --with-decryption --query Parameter.Value --output text)\"",
               "echo Aguardando banco de dados ficar disponível...",
               "if command -v pg_isready >/dev/null 2>&1 && [ -n \"$DB_HOST\" ]; then for i in $(seq 1 24); do pg_isready -h \"$DB_HOST\" -p \"${DB_PORT:-5432}\" -U \"$DB_USER\" && break || (echo Esperando DB... && sleep 5); done; fi",
               "sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME=\"${DB_NAME}\" DB_USER=\"${DB_USER}\" DB_PASSWORD=\"${DB_PASSWORD}\" DB_HOST=\"${DB_HOST}\" DB_PORT=\"${DB_PORT}\" && venv/bin/python manage.py migrate --noinput'",
@@ -240,7 +240,7 @@ jobs:
             echo "📂 Entrando no diretório da aplicação..."
             echo "🐍 Instalando Python e venv (se necessário)..."
             sudo apt-get update -y
-            sudo apt-get install -y python3 python3-venv python3-pip postgresql-client
+            sudo apt-get install -y python3 python3-venv python3-pip postgresql-client awscli
             cd /opt/s-agendamento
             echo "🔧 Ajustando permissões e git safe.directory..."
             sudo chown -R django:django /opt/s-agendamento || true
@@ -258,11 +258,12 @@ jobs:
             echo "✓ Dependências instaladas"
             
             echo "⚙️ Exportando variáveis de banco e aguardando disponibilidade..."
-            export DB_NAME="${{ secrets.DB_NAME }}"
-            export DB_USER="${{ secrets.DB_USER }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export DB_HOST="${{ secrets.DB_HOST }}"
-            export DB_PORT="${{ secrets.DB_PORT }}"
+            echo "🔐 Buscando credenciais no AWS SSM..."
+            export DB_HOST="$(aws ssm get-parameter --name /s-agendamento/DB_HOST --with-decryption --query Parameter.Value --output text)"
+            export DB_NAME="$(aws ssm get-parameter --name /s-agendamento/DB_NAME --with-decryption --query Parameter.Value --output text)"
+            export DB_USER="$(aws ssm get-parameter --name /s-agendamento/DB_USER --with-decryption --query Parameter.Value --output text)"
+            export DB_PASSWORD="$(aws ssm get-parameter --name /s-agendamento/DB_PASSWORD --with-decryption --query Parameter.Value --output text)"
+            export DB_PORT="$(aws ssm get-parameter --name /s-agendamento/DB_PORT --with-decryption --query Parameter.Value --output text)"
             if command -v pg_isready >/dev/null 2>&1 && [ -n "$DB_HOST" ]; then for i in $(seq 1 24); do pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}" -U "$DB_USER" && break || (echo Esperando DB... && sleep 5); done; fi
             echo "🔄 Aplicando migrações..."
             sudo -u django bash -c 'export DJANGO_SETTINGS_MODULE=core.settings_production DB_NAME="'"$DB_NAME"'" DB_USER="'"$DB_USER"'" DB_PASSWORD="'"$DB_PASSWORD"'" DB_HOST="'"$DB_HOST"'" DB_PORT="'"$DB_PORT"'" && venv/bin/python manage.py migrate --noinput'
