@@ -3,7 +3,7 @@
 {% block title %}Editar Perfil{% endblock %}
 
 {% block extra_css %}
-<style>
+{# estilos movidos para static/css/style.css (escopo: .profile-update-page) #}
   /* Header personalizado */
   .form-header {
     margin-bottom: 10px;
@@ -379,10 +379,10 @@
       transform: translateY(0);
     }
   }
-</style>
 {% endblock %}
 
 {% block content %}
+<div class="profile-update-page">
 <!-- Header do Formulário -->
 <div class="form-header">
   <h1 class="form-title">
