@@ -36,7 +36,7 @@ class HomeView(TemplateView):
         # Importar Plano do módulo authentication
         from authentication.models import Plano
 
-        # Exibir apenas os últimos 3 planos ativos cadastrados (por criação mais recente)
+        # Exibir apenas os 3 últimos planos ATIVOS cadastrados
         context["planos"] = (
             Plano.objects.filter(ativo=True).order_by("-criado_em")[:3]
         )
