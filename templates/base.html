@@ -16,8 +16,8 @@
     <link rel="stylesheet" href="{% static 'fonts/inter.css' %}">
     
     <!-- CSS -->
-    {% comment %} boostrap {% endcomment %}
-   
+    {% comment %} Bootstrap CSS (CDN primeiro, local como backup) {% endcomment %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/error-messages.css' %}" />
 
@@ -390,7 +390,8 @@ body {
         </div>
     </div>
     
-    <!-- Bootstrap JS -->   
+    <!-- Bootstrap JS (CDN primeiro, local como backup) -->   
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
