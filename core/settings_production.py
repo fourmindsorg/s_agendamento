@@ -128,16 +128,16 @@ CACHES = {
     }
 }
 
-# WhiteNoise para arquivos estáticos com cache-busting via hash
+# WhiteNoise para arquivos estáticos (se disponível)
 try:
     import whitenoise
 
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    # Manter apenas arquivos com hash para evitar servir versões sem hash
-    WHITENOISE_KEEP_ONLY_HASHED_FILES = True
+    # Usar storage simples para evitar problemas com arquivos faltando
+    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 except ImportError:
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+    # Se WhiteNoise não estiver disponível, usar configuração básica
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # Configuração adicional para servir arquivos estáticos
 STATICFILES_FINDERS = [
