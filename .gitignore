@@ -5,6 +5,7 @@
 *.tfvars
 *.tfvars.backup
 .terraform.lock.hcl
+terraform.tfvars
 
 # Python
 __pycache__/
@@ -74,7 +75,8 @@ logs/
 temp/
 tmp/
 
-s-agendamento-key.pub
+s-agendamento-key
 .venv
 venv/
 authentication
+infrastructure/
