@@ -6,179 +6,140 @@
 
 {% block content %}
 <!-- Header do Formulário -->
-<div class="form-header">
-  <h1 class="form-title">
+<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+
+  <div class="header-greeting mb-2 mb-lg-0">
+    <h1 class="dashboard-title">
     <i class="fas fa-user-edit"></i>
     Editar Perfil
-  </h1>
-  <p class="form-subtitle">
-    Atualize suas informações pessoais e mantenha seu perfil sempre atualizado
-  </p>
+    </h1>
+    <p class="form-subtitle">
+      Atualize suas informações pessoais e mantenha seu perfil sempre atualizado
+    </p>
+  </div>
   
   <!-- Ações no Header -->
-  <div class="header-actions">
+  <div class="header-actions d-flex justify-content-center gap-2">
     <a href="{% url 'authentication:profile' %}" class="btn btn-outline-primary">
-      <i class="fas fa-arrow-left fa-lg me-2"></i>Voltar ao Perfil
+      <i class="fas fa-arrow-left fa-lg me-2"></i>Voltar
     </a>
   </div>
 </div>
 
-<!-- Barra de Progresso -->
-<div class="form-progress">
-  <div class="form-progress-bar" id="progress-bar"></div>
+<!-- Formulário -->
+<div class="avatar-section d-flex gap-3 align-items-center p-2">
+  <div class="current-avatar m-0">
+    <i class="fas fa-user-circle avatar-icon"></i>
+  </div>
+  <h5 class="mb-1">{{ user.get_full_name|default:user.username }}</h5>
+  <p class="avatar-info"> - Membro desde {{ user.date_joined|date:"F Y" }}</p>
 </div>
 
-<!-- Formulário -->
-<div class="row">
-  <div class="col-lg-8 mx-auto">
-    <!-- Avatar Atual -->
-    <div class="avatar-section">
-      <div class="current-avatar">
-        <i class="fas fa-user-circle avatar-icon"></i>
-      </div>
-      <h5 class="mb-1">{{ user.get_full_name|default:user.username }}</h5>
-      <p class="avatar-info">Membro desde {{ user.date_joined|date:"F Y" }}</p>
-    </div>
-
+<div class="row mb-2">
+  <div class="col">
     <div class="card form-card">
-      <div class="card-header">
-        <h4 class="mb-0 text-white">
+      <div class="card-header card-agendamentos-form px-3">
+          <h4 class="mb-0 text-white">
           <i class="fas fa-edit me-2"></i>
           Atualizar Informações
         </h4>
       </div>
-      <div class="card-body">
-        <!-- Mensagem de Sucesso -->
-        <div class="success-message" id="success-message">
-          <i class="fas fa-check-circle me-2"></i>
-          Perfil atualizado com sucesso!
+    <div class="card-body">
+      <form method="post" id="profile-form" novalidate>
+        {% csrf_token %}
+          
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.first_name.id_for_label }}" class="form-label required">
+              <i class="fas fa-user"></i>
+              Nome
+            </label>
+            <input type="text" 
+                    class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                    id="{{ form.first_name.id_for_label }}"
+                    name="{{ form.first_name.name }}" 
+                    value="{{ form.first_name.value|default:'' }}"
+                    placeholder="Digite seu nome">
+            {% if form.first_name.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.first_name.errors %}
+                  <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="form-text">
+              <i class="fas fa-info-circle me-1"></i>
+              Como você gostaria de ser chamado
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.last_name.id_for_label }}" class="form-label required">
+              <i class="fas fa-user"></i>
+              Sobrenome
+            </label>
+            <input type="text" 
+                    class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                    id="{{ form.last_name.id_for_label }}"
+                    name="{{ form.last_name.name }}" 
+                    value="{{ form.last_name.value|default:'' }}"
+                    placeholder="Digite seu sobrenome">
+            {% if form.last_name.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.last_name.errors %}
+                  <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="form-text">
+              <i class="fas fa-info-circle me-1"></i>
+              Seu nome de família
+            </div>
+          </div>
         </div>
 
-        <form method="post" id="profile-form" novalidate>
-          {% csrf_token %}
-          
-          <!-- Seção: Informações Pessoais -->
-          <div class="form-section">
-            <div class="form-section-title">
-              <i class="fas fa-user"></i>
-              Informações Pessoais
-            </div>
-            
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.first_name.id_for_label }}" class="form-label required">
-                  <i class="fas fa-user"></i>
-                  Nome
-                </label>
-                <input type="text" 
-                       class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
-                       id="{{ form.first_name.id_for_label }}"
-                       name="{{ form.first_name.name }}" 
-                       value="{{ form.first_name.value|default:'' }}"
-                       placeholder="Digite seu nome">
-                {% if form.first_name.errors %}
-                  <div class="invalid-feedback">
-                    {% for error in form.first_name.errors %}
-                      <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
-                    {% endfor %}
-                  </div>
-                {% endif %}
-                <div class="form-text">
-                  <i class="fas fa-info-circle me-1"></i>
-                  Como você gostaria de ser chamado
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.last_name.id_for_label }}" class="form-label required">
-                  <i class="fas fa-user"></i>
-                  Sobrenome
-                </label>
-                <input type="text" 
-                       class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
-                       id="{{ form.last_name.id_for_label }}"
-                       name="{{ form.last_name.name }}" 
-                       value="{{ form.last_name.value|default:'' }}"
-                       placeholder="Digite seu sobrenome">
-                {% if form.last_name.errors %}
-                  <div class="invalid-feedback">
-                    {% for error in form.last_name.errors %}
-                      <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
-                    {% endfor %}
-                  </div>
-                {% endif %}
-                <div class="form-text">
-                  <i class="fas fa-info-circle me-1"></i>
-                  Seu nome de família
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Seção: Informações de Contato -->
-          <div class="form-section">
-            <div class="form-section-title">
+        <!-- Seção: Informações de Contato -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label required">
               <i class="fas fa-envelope"></i>
-              Informações de Contato
-            </div>
-            
-            <div class="mb-3">
-              <label for="{{ form.email.id_for_label }}" class="form-label required">
-                <i class="fas fa-envelope"></i>
-                Email
-              </label>
-              <input type="email" 
-                     class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
-                     id="{{ form.email.id_for_label }}"
-                     name="{{ form.email.name }}" 
-                     value="{{ form.email.value|default:'' }}"
-                     placeholder="seu@email.com">
-              {% if form.email.errors %}
-                <div class="invalid-feedback">
-                  {% for error in form.email.errors %}
-                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
-                  {% endfor %}
-                </div>
-              {% endif %}
-              <div class="form-text">
-                <i class="fas fa-info-circle me-1"></i>
-                Usado para login e notificações importantes
+              Email
+            </label>
+            <input type="email" 
+                    class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                    id="{{ form.email.id_for_label }}"
+                    name="{{ form.email.name }}" 
+                    value="{{ form.email.value|default:'' }}"
+                    placeholder="seu@email.com">
+            {% if form.email.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.email.errors %}
+                  <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                {% endfor %}
               </div>
+            {% endif %}
+            <div class="form-text">
+              <i class="fas fa-info-circle me-1"></i>
+              Usado para login e notificações importantes
             </div>
           </div>
+        </div>
 
-          <!-- Preview das Alterações -->
-          <div class="card preview-card">
-            <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fas fa-eye me-2"></i>Preview das Alterações
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <i class="fas fa-user-circle fa-3x text-primary me-3"></i>
-                <div>
-                  <h6 class="mb-1" id="preview-name">{{ form.first_name.value|default:user.first_name }} {{ form.last_name.value|default:user.last_name }}</h6>
-                  <p class="text-muted mb-0" id="preview-email">{{ form.email.value|default:user.email }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Botões de Ação -->
-          <div class="d-flex gap-3 justify-content-end mt-4 pt-3 border-top">
-            <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
-              <i class="fas fa-times me-2"></i>Cancelar
-            </a>
-            <button type="submit" class="btn btn-custom" id="submit-btn">
-              <i class="fas fa-save me-2"></i>Salvar Alterações
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Botões de Ação -->
+        <div class="d-flex gap-3 justify-content-end mt-4 pt-3 border-top">
+          <button type="submit" class="btn btn-custom" id="submit-btn">
+            <i class="fas fa-save me-2"></i>Salvar Alterações
+          </button>
+          <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
     </div>
   </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
