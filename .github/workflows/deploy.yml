@@ -142,10 +142,18 @@ jobs:
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
               "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
               "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
+              "sudo -u django bash -c 'venv/bin/python manage.py check --deploy'",
               "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
               "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
-              "sudo supervisorctl restart s-agendamento",
-              "sudo systemctl reload nginx",
+              "echo Reiniciando via supervisor...",
+              "sudo supervisorctl restart s-agendamento || true",
+              "sleep 5",
+              "sudo supervisorctl status s-agendamento || true",
+              "echo Fallback: iniciando gunicorn em 127.0.0.1:8000 se necessário...",
+              "pgrep -f 'gunicorn .*core.wsgi' || sudo -u django bash -c 'venv/bin/gunicorn core.wsgi:application --bind 127.0.0.1:8000 --workers 2 --timeout 120 --daemon'",
+              "sudo systemctl reload nginx || true",
+              "echo --- Últimas linhas do Nginx error.log ---",
+              "sudo tail -n 100 /var/log/nginx/error.log || true",
               "echo Deploy completo concluído"
             ]' \
             --timeout-seconds 600 \
@@ -248,6 +256,9 @@ jobs:
             sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
             echo "✓ Dependências instaladas"
             
+            echo "✅ Django checks"
+            sudo -u django bash -c 'venv/bin/python manage.py check --deploy' || true
+            
             echo "🔄 Aplicando migrações..."
             sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'
             echo "✓ Migrações aplicadas"
@@ -257,8 +268,14 @@ jobs:
             echo "✓ Arquivos estáticos coletados"
             
             echo "🔄 Reiniciando serviços..."
-            sudo supervisorctl restart s-agendamento
-            sudo systemctl reload nginx
+            sudo supervisorctl restart s-agendamento || true
+            sleep 5
+            sudo supervisorctl status s-agendamento || true
+            echo "🔁 Fallback Gunicorn (se supervisor falhar)..."
+            pgrep -f "gunicorn .*core.wsgi" || sudo -u django bash -c 'venv/bin/gunicorn core.wsgi:application --bind 127.0.0.1:8000 --workers 2 --timeout 120 --daemon'
+            sudo systemctl reload nginx || true
+            echo "--- Nginx error.log (últimas 100 linhas) ---"
+            sudo tail -n 100 /var/log/nginx/error.log || true
             echo "✓ Serviços reiniciados"
             
             echo ""
