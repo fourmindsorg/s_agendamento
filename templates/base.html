@@ -214,7 +214,7 @@
         
         <div class="user-area">
             <!-- Dropdown de Temas e Modo -->
-            <div class="dropdown">
+            {% comment %} <div class="dropdown">
                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-palette me-1"></i>
                 </button>
@@ -260,7 +260,7 @@
                     </li>
                     {% endfor %}
                 </ul>
-            </div>
+            </div> {% endcomment %}
             
             <!-- Usuário -->
             <div class="dropdown">
@@ -277,9 +277,6 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="{% url 'authentication:profile' %}">
                         <i class="fas fa-user me-2"></i>Meu Perfil
-                    </a></li>
-                    <li><a class="dropdown-item" href="{% url 'agendamentos:configuracoes' %}">
-                        <i class="fas fa-cog me-2"></i>Configurações
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{% url 'authentication:logout' %}">

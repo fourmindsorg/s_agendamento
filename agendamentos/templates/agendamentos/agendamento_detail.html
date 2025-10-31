@@ -3,429 +3,920 @@
 {% block title %}Agendamento{% endblock %}
 
 {% block extra_css %}
+<style>
+/* ===== MOBILE FIRST DESIGN - DETALHES ===== */
 
+/* Header simplificado */
+.detail-header {
+    background: var(--gradient-bg);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.detail-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: white !important;
+}
+
+.detail-subtitle {
+    font-size: 0.9rem;
+    margin: 8px 0 0 0;
+    opacity: 0.9;
+    color: white !important;
+}
+
+.header-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.header-actions .btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 80px;
+}
+
+/* Status atual card */
+.status-main-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.status-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.status-icon-main {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.status-agendado .status-icon-main { background: #6c757d; }
+.status-confirmado .status-icon-main { background: #0d6efd; }
+.status-em_andamento .status-icon-main { background: #ffc107; }
+.status-concluido .status-icon-main { background: #198754; }
+.status-cancelado .status-icon-main { background: #dc3545; }
+.status-nao_compareceu .status-icon-main { background: #212529; }
+
+.status-text h3 {
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+    color: var(--text-color);
+}
+
+.status-text p {
+    font-size: 0.9rem;
+    color: var(--text-muted-color);
+    margin: 0;
+}
+
+.status-badge-main {
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.status-em_andamento .status-badge-main {
+    animation: pulse 2s infinite;
+}
+
+/* Cards principais */
+.simple-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.simple-card-header {
+    padding: 15px 20px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.simple-card-body {
+    padding: 20px;
+}
+
+/* Cliente info */
+.client-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.avatar-simple {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.client-details h5 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.client-details small {
+    color: var(--text-muted-color);
+}
+
+/* Info list simplificada */
+.info-list-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item-simple {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item-simple:last-child {
+    border-bottom: none;
+}
+
+.info-item-simple i {
+    width: 20px;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.info-item-simple strong {
+    margin-right: 8px;
+    font-weight: 700;
+    min-width: 70px;
+}
+
+.info-item-simple a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.info-item-simple a:hover {
+    text-decoration: underline;
+}
+
+/* Serviço info */
+.service-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.service-icon-simple {
+    width: 45px;
+    height: 45px;
+    background: var(--info-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.service-details h5 {
+    margin: 0 0 5px 0;
+    color: var(--info-color);
+    font-size: 1.2rem;
+}
+
+.service-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.stat-box i {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.stat-box small {
+    display: block;
+    color: var(--text-muted-color);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.stat-box strong {
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+/* Timeline simplificada */
+.timeline-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.timeline-item-simple {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.timeline-icon-simple {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.timeline-content-simple h6 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.timeline-content-simple p {
+    margin: 0 0 3px 0;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.timeline-content-simple small {
+    color: var(--text-muted-color);
+    font-size: 0.85rem;
+}
+
+/* Ações rápidas */
+.quick-actions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn-simple {
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.action-btn-simple:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.action-btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.action-btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.action-btn-outline {
+    background: white;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.action-btn-outline:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Observações */
+.notes-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 10px;
+    padding: 15px;
+    color: #856404;
+}
+
+/* Sistema info */
+.system-info {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.system-info .info-item-simple {
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Modal simplificado */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 15px 15px;
+}
+
+.agendamento-preview {
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+/* Auto-refresh indicator */
+.refresh-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    background: var(--info-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.refresh-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* DESKTOP ADAPTATIONS */
+@media (min-width: 768px) {
+    .detail-header {
+        text-align: left;
+        padding: 30px;
+        position: relative;
+    }
+
+    .detail-title {
+        font-size: 2rem;
+    }
+
+    .detail-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .header-actions {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        margin-top: 0;
+        flex-wrap: nowrap;
+    }
+
+    .header-actions .btn {
+        flex: none;
+        min-width: auto;
+    }
+
+    .status-main-card {
+        padding: 30px;
+    }
+
+    .status-display {
+        margin-bottom: 0;
+    }
+
+    .status-icon-main {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .avatar-simple {
+        width: 60px;
+        height: 60px;
+        font-size: 22px;
+    }
+
+    .service-icon-simple {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+
+    .simple-card-body {
+        padding: 30px;
+    }
+
+    .quick-actions-grid {
+        gap: 12px;
+    }
+
+    .timeline-simple {
+        gap: 20px;
+    }
+
+    .timeline-item-simple {
+        padding: 20px;
+    }
+
+    .timeline-icon-simple {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}
+
+@media (min-width: 992px) {
+    .service-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .info-list-simple {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+}
+
+/* Animações suaves */
+.simple-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Focus states para acessibilidade */
+.action-btn-simple:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <!-- Header dos Detalhes -->
-<div class="list-header p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-
-  <div class="header-text-group mb-md-0 text-center">
-    <h1 class="list-title">
-    <i class="fas fa-calendar-check"></i>
-    Detalhes do Agendamento
+<div class="detail-header">
+    <h1 class="detail-title">
+        <i class="fas fa-calendar-check me-2"></i>
+        Detalhes do Agendamento
     </h1>
-    <p class="list-subtitle">
-      Agendamento #{{ agendamento.pk }} - {{ agendamento.data_agendamento|date:"d/m/Y" }}
-      <br><span class="text-primary">• {{ agendamento.cliente.nome }}</span>
+    <p class="detail-subtitle">
+        Agendamento #{{ agendamento.pk }} - {{ agendamento.data_agendamento|date:"d/m/Y" }} • {{ agendamento.cliente.nome }}
     </p>
-  </div>
-
+    
+    <div class="header-actions">
+        {% if agendamento.pode_editar %}
+        <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-edit me-1"></i>Editar
+        </a>
+        {% endif %}
+        <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-flag me-1"></i>Status
+        </a>
+        <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
 </div>
-
-  
-<!-- Ações no Header -->
-<div class="col d-flex flex-column flex-lg-row gap-2 justify-content-lg-end m-lg-0 mb-2">
-  <div class="d-flex gap-2">
-    {% if agendamento.pode_editar %}
-    <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-custom justify-content-center w-50">
-      <i class="fas fa-edit"></i>Editar
-    </a>
-    {% endif %}
-    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-outline-custom justify-content-center p-2">
-      <i class="fas fa-flag"></i>Status
-    </a>
-    <a href="{% url 'agendamentos:agendamento_list' %}" class="btn btn-outline-custom justify-content-center p-2">
-      <i class="fas fa-arrow-left"></i>Voltar
-    </a>
-</div>
-
 
 <!-- Status Principal -->
-<div class="card p-2">
-  <div class="row align-items-center">
-    <div class="col-md-8">
-      <div class="d-flex align-items-center">
-        <div class="status-icon me-3">
-          {% if agendamento.status == 'agendado' %}
-            <i class="fas fa-clock"></i>
-          {% elif agendamento.status == 'confirmado' %}
-            <i class="fas fa-check"></i>
-          {% elif agendamento.status == 'em_andamento' %}
-            <i class="fas fa-play"></i>
-          {% elif agendamento.status == 'concluido' %}
-            <i class="fas fa-check-circle"></i>
-          {% elif agendamento.status == 'cancelado' %}
-            <i class="fas fa-times"></i>
-          {% elif agendamento.status == 'nao_compareceu' %}
-            <i class="fas fa-user-times"></i>
-          {% endif %}
+<div class="status-main-card status-{{ agendamento.status }}">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="status-display">
+                <div class="status-icon-main">
+                    {% if agendamento.status == 'agendado' %}
+                        <i class="fas fa-clock"></i>
+                    {% elif agendamento.status == 'confirmado' %}
+                        <i class="fas fa-check"></i>
+                    {% elif agendamento.status == 'em_andamento' %}
+                        <i class="fas fa-play"></i>
+                    {% elif agendamento.status == 'concluido' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif agendamento.status == 'cancelado' %}
+                        <i class="fas fa-times"></i>
+                    {% elif agendamento.status == 'nao_compareceu' %}
+                        <i class="fas fa-user-times"></i>
+                    {% endif %}
+                </div>
+                <div class="status-text">
+                    <h3>{{ agendamento.get_status_display }}</h3>
+                    <p>Status atual do agendamento</p>
+                </div>
+            </div>
         </div>
-        <div>
-          <h3 class="mb-1">{{ agendamento.get_status_display }}</h3>
-          <p class="mb-0 opacity-75">
-            Status atual do agendamento
-          </p>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <span class="status-badge-main">
+                {{ agendamento.get_status_display|upper }}
+            </span>
         </div>
-      </div>
     </div>
-    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-      <span class="status-badge bg-white text-dark {% if agendamento.status == 'em_andamento' %}pulse{% endif %}">
-        {{ agendamento.get_status_display|upper }}
-      </span>
-    </div>
-  </div>
 </div>
 
-<!-- Conteúdo Principal -->
 <div class="row">
-  <!-- Coluna Principal -->
-  <div class="col-lg-8 mb-2">
-    <!-- Dados do Cliente -->
-    <div class="card detail-card">
-      <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">
-          <i class="fas fa-user me-2"></i>Informações do Cliente
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="d-flex align-items-center mb-4">
-              <div class="avatar-lg d-flex align-items-center justify-content-center me-3">
-                {{ agendamento.cliente.nome|first|upper }}
-              </div>
-              <div>
-                <h5 class="mb-1">{{ agendamento.cliente.nome }}</h5>
-                <small class="text-muted">{{ agendamento.cliente.idade }} anos</small>
-              </div>
+    <!-- Coluna Principal -->
+    <div class="col-lg-8">
+        <!-- Dados do Cliente -->
+        <div class="simple-card">
+            <div class="simple-card-header" style="background: var(--primary-color); color: white;">
+                <i class="fas fa-user me-2"></i>Informações do Cliente
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="info-list">
-              <div class="info-item">
-                <i class="fas fa-envelope me-2"></i>
-                <strong>Email:</strong> 
-                <a href="mailto:{{ agendamento.cliente.email }}">{{ agendamento.cliente.email }}</a>
-              </div>
-              <div class="info-item">
-                <i class="fas fa-phone me-2"></i>
-                <strong>Telefone:</strong> 
-                <a href="tel:{{ agendamento.cliente.telefone }}">{{ agendamento.cliente.telefone }}</a>
-              </div>
-              <div class="info-item">
-                <i class="fas fa-id-card me-2"></i>
-                <strong>CPF:</strong> {{ agendamento.cliente.cpf }}
-              </div>
+            <div class="simple-card-body">
+                <div class="client-info">
+                    <div class="avatar-simple">
+                        {{ agendamento.cliente.nome|first|upper }}
+                    </div>
+                    <div class="client-details">
+                        <h5>{{ agendamento.cliente.nome }}</h5>
+                        <small>Cliente desde {{ agendamento.cliente.criado_em|date:"Y" }}</small>
+                    </div>
+                </div>
+                
+                <div class="info-list-simple">
+                    <div class="info-item-simple">
+                        <i class="fas fa-envelope"></i>
+                        <strong>Email:</strong>
+                        <a href="mailto:{{ agendamento.cliente.email }}">{{ agendamento.cliente.email }}</a>
+                    </div>
+                    <div class="info-item-simple">
+                        <i class="fas fa-phone"></i>
+                        <strong>Telefone:</strong>
+                        <a href="tel:{{ agendamento.cliente.telefone }}">{{ agendamento.cliente.telefone }}</a>
+                    </div>
+                    <div class="info-item-simple">
+                        <i class="fas fa-id-card"></i>
+                        <strong>CPF:</strong>
+                        {{ agendamento.cliente.cpf }}
+                    </div>
+                    {% if agendamento.cliente.endereco %}
+                    <div class="info-item-simple">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <strong>Endereço:</strong>
+                        {{ agendamento.cliente.endereco }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'agendamentos:cliente_detail' agendamento.cliente.pk %}" class="action-btn-simple action-btn-outline">
+                        <i class="fas fa-user me-2"></i>Ver Perfil Completo
+                    </a>
+                </div>
             </div>
-          </div>
         </div>
-        
-        {% if agendamento.cliente.endereco %}
-        <hr>
-        <div class="info-item">
-          <i class="fas fa-map-marker-alt me-2"></i>
-          <strong>Endereço:</strong> {{ agendamento.cliente.endereco }}
+
+        <!-- Dados do Serviço -->
+        <div class="simple-card">
+            <div class="simple-card-header" style="background: var(--info-color); color: white;">
+                <i class="fas fa-cogs me-2"></i>Informações do Serviço
+            </div>
+            <div class="simple-card-body">
+                <div class="service-header">
+                    <div class="service-icon-simple">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="service-details">
+                        <h5>{{ agendamento.servico.nome }}</h5>
+                        {% if agendamento.servico.descricao %}
+                        <p class="text-muted mb-0">{{ agendamento.servico.descricao }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="service-stats">
+                    <div class="stat-box">
+                        <i class="fas fa-clock text-primary"></i>
+                        <small>Duração</small>
+                        <strong>{{ agendamento.servico.duracao_formatada }}</strong>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-dollar-sign text-success"></i>
+                        <small>Preço Padrão</small>
+                        <strong>R$ {{ agendamento.servico.preco|floatformat:2 }}</strong>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'agendamentos:servico_list' %}" class="action-btn-simple action-btn-outline">
+                        <i class="fas fa-cogs me-2"></i>Ver Todos os Serviços
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observações -->
+        {% if agendamento.observacoes %}
+        <div class="simple-card">
+            <div class="simple-card-header" style="background: var(--warning-color); color: white;">
+                <i class="fas fa-sticky-note me-2"></i>Observações
+            </div>
+            <div class="simple-card-body">
+                <div class="notes-box">
+                    {{ agendamento.observacoes|linebreaks }}
+                </div>
+            </div>
         </div>
         {% endif %}
-        
-        <div class="mt-4">
-          <a href="{% url 'agendamentos:cliente_detail' agendamento.cliente.pk %}" class="btn btn-outline-primary">
-            <i class="fas fa-user me-2"></i>Ver Perfil Completo
-          </a>
-        </div>
-      </div>
     </div>
 
-    <!-- Dados do Serviço -->
-    <div class="card detail-card">
-      <div class="card-header bg-info text-white">
-        <h5 class="mb-0">
-          <i class="fas fa-cogs me-2"></i>Informações do Serviço
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-8">
-            <h5 class="text-info mb-3">{{ agendamento.servico.nome }}</h5>
-            {% if agendamento.servico.descricao %}
-            <p class="text-muted mb-4">{{ agendamento.servico.descricao }}</p>
-            {% endif %}
-            
-            <div class="row g-3">
-              <div class="col-6">
-                <div class="info-box">
-                  <div class="d-flex align-items-center">
-                    <i class="fas fa-clock text-primary me-3"></i>
-                    <div>
-                      <small class="d-block">Duração</small>
-                      <strong>{{ agendamento.servico.duracao_formatada }}</strong>
+    <!-- Coluna Lateral -->
+    <div class="col-lg-4">
+        <!-- Resumo do Agendamento -->
+        <div class="simple-card">
+            <div class="simple-card-header" style="background: var(--success-color); color: white;">
+                <i class="fas fa-calendar-check me-2"></i>Resumo
+            </div>
+            <div class="simple-card-body">
+                <div class="timeline-simple">
+                    <div class="timeline-item-simple">
+                        <div class="timeline-icon-simple" style="background: var(--primary-color);">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="timeline-content-simple">
+                            <h6>Data do Agendamento</h6>
+                            <p>{{ agendamento.data_agendamento|date:"d/m/Y" }}</p>
+                            <small>{{ agendamento.data_agendamento|date:"l" }}</small>
+                        </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="info-box">
-                  <div class="d-flex align-items-center">
-                    <i class="fas fa-dollar-sign text-success me-3"></i>
-                    <div>
-                      <small class="d-block">Preço Padrão</small>
-                      <strong>R$ {{ agendamento.servico.preco|floatformat:2 }}</strong>
+                    
+                    <div class="timeline-item-simple">
+                        <div class="timeline-icon-simple" style="background: var(--info-color);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="timeline-content-simple">
+                            <h6>Horário</h6>
+                            <p>{{ agendamento.hora_inicio }} às {{ agendamento.hora_fim }}</p>
+                            <small>Duração: {{ agendamento.duracao_total }}</small>
+                        </div>
                     </div>
-                  </div>
+                    
+                    <div class="timeline-item-simple">
+                        <div class="timeline-icon-simple" style="background: var(--success-color);">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="timeline-content-simple">
+                            <h6>Valor</h6>
+                            <p class="h5 text-success mb-1">
+                                R$ {{ agendamento.valor_cobrado|default:agendamento.servico.preco|floatformat:2 }}
+                            </p>
+                            {% if agendamento.valor_cobrado != agendamento.servico.preco %}
+                            <small>Valor personalizado</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-          <div class="col-md-4 text-center">
-            <div class="service-icon d-flex align-items-center justify-content-center mx-auto mb-3">
-              <i class="fas fa-cog fa-2x"></i>
-            </div>
-            <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-info">
-              <i class="fas fa-cogs me-2"></i>Ver Todos os Serviços
-            </a>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Observações -->
-    {% if agendamento.observacoes %}
-    <div class="card detail-card">
-      <div class="card-header bg-warning text-dark">
-        <h5 class="mb-0">
-          <i class="fas fa-sticky-note me-2"></i>Observações
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="bg-light p-3 rounded">
-          <p class="mb-0">{{ agendamento.observacoes|linebreaks }}</p>
+        <!-- Ações Rápidas -->
+        <div class="simple-card">
+            <div class="simple-card-header" style="background: var(--dark-color); color: white;">
+                <i class="fas fa-bolt me-2"></i>Ações Rápidas
+            </div>
+            <div class="simple-card-body">
+                <div class="quick-actions-grid">
+                    {% if agendamento.status == 'agendado' %}
+                    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="action-btn-simple action-btn-primary">
+                        <i class="fas fa-check me-2"></i>Confirmar Agendamento
+                    </a>
+                    {% elif agendamento.status == 'confirmado' %}
+                    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="action-btn-simple action-btn-warning">
+                        <i class="fas fa-play me-2"></i>Iniciar Atendimento
+                    </a>
+                    {% elif agendamento.status == 'em_andamento' %}
+                    <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="action-btn-simple action-btn-success">
+                        <i class="fas fa-check-circle me-2"></i>Finalizar Atendimento
+                    </a>
+                    {% endif %}
+                    
+                    {% if agendamento.pode_editar %}
+                    <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="action-btn-simple action-btn-outline">
+                        <i class="fas fa-edit me-2"></i>Editar Agendamento
+                    </a>
+                    {% endif %}
+                    
+                    <a href="tel:{{ agendamento.cliente.telefone }}" class="action-btn-simple action-btn-outline">
+                        <i class="fas fa-phone me-2"></i>Ligar para Cliente
+                    </a>
+                    
+                    <a href="https://wa.me/55{{ agendamento.cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-' }}" 
+                       target="_blank" class="action-btn-simple action-btn-outline">
+                        <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                    </a>
+                    
+                    {% if agendamento.pode_cancelar %}
+                    <button type="button" 
+                            class="action-btn-simple action-btn-outline text-danger" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-2"></i>Excluir Agendamento
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    {% endif %}
-  </div>
 
-  <!-- Coluna Lateral -->
-  <div class="col-lg-4">
-    <!-- Resumo do Agendamento -->
-    <div class="card detail-card">
-      <div class="card-header bg-success text-white">
-        <h5 class="mb-0">
-          <i class="fas fa-calendar-check me-2"></i>Resumo
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="timeline">
-          <div class="timeline-item">
-            <div class="timeline-icon bg-primary">
-              <i class="fas fa-calendar"></i>
+        {% comment %} <!-- Informações do Sistema -->
+        <div class="simple-card">
+            <div class="simple-card-header">
+                <i class="fas fa-info-circle me-2"></i>Informações do Sistema
             </div>
-            <div class="timeline-content">
-              <h6>Data do Agendamento</h6>
-              <p>{{ agendamento.data_agendamento|date:"l, d \d\e F \d\e Y" }}</p>
+            <div class="simple-card-body">
+                <div class="system-info">
+                    <div class="info-item-simple">
+                        <i class="fas fa-plus-circle"></i>
+                        <strong>Criado:</strong>
+                        {{ agendamento.criado_em|date:"d/m/Y H:i" }}
+                    </div>
+                    <div class="info-item-simple">
+                        <i class="fas fa-edit"></i>
+                        <strong>Atualizado:</strong>
+                        {{ agendamento.atualizado_em|date:"d/m/Y H:i" }}
+                    </div>
+                    <div class="info-item-simple">
+                        <i class="fas fa-hashtag"></i>
+                        <strong>ID:</strong>
+                        #{{ agendamento.pk }}
+                    </div>
+                </div>
             </div>
-          </div>
-          
-          <div class="timeline-item">
-            <div class="timeline-icon bg-info">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="timeline-content">
-              <h6>Horário</h6>
-              <p>{{ agendamento.hora_inicio }} às {{ agendamento.hora_fim }}</p>
-              <small>Duração: {{ agendamento.duracao_total }}</small>
-            </div>
-          </div>
-          
-          <div class="timeline-item">
-            <div class="timeline-icon bg-success">
-              <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="timeline-content">
-              <h6>Valor</h6>
-              <p class="h5 text-success mb-1">
-                R$ {{ agendamento.valor_cobrado|default:agendamento.servico.preco|floatformat:2 }}
-              </p>
-              {% if agendamento.valor_cobrado != agendamento.servico.preco %}
-              <small>
-                Valor personalizado (padrão: R$ {{ agendamento.servico.preco|floatformat:2 }})
-              </small>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
+        </div> {% endcomment %}
     </div>
-
-    <!-- Ações Rápidas -->
-    <div class="card detail-card">
-      <div class="card-header bg-dark text-white">
-        <h5 class="mb-0">
-          <i class="fas fa-bolt me-2"></i>Ações Rápidas
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="d-grid gap-2">
-          {% if agendamento.status == 'agendado' %}
-          <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-primary action-btn">
-            <i class="fas fa-check"></i>Confirmar Agendamento
-          </a>
-          {% elif agendamento.status == 'confirmado' %}
-          <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-warning action-btn">
-            <i class="fas fa-play"></i>Iniciar Atendimento
-          </a>
-          {% elif agendamento.status == 'em_andamento' %}
-          <a href="{% url 'agendamentos:agendamento_status' agendamento.pk %}" class="btn btn-success action-btn">
-            <i class="fas fa-check-circle"></i>Finalizar Atendimento
-          </a>
-          {% endif %}
-          
-          {% if agendamento.pode_editar %}
-          <a href="{% url 'agendamentos:agendamento_update' agendamento.pk %}" class="btn btn-outline-warning action-btn">
-            <i class="fas fa-edit"></i>Editar Agendamento
-          </a>
-          {% endif %}
-          
-          <a href="tel:{{ agendamento.cliente.telefone }}" class="btn btn-outline-primary action-btn">
-            <i class="fas fa-phone"></i>Ligar para Cliente
-          </a>
-          
-          <a href="https://wa.me/55{{ agendamento.cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-' }}" 
-             target="_blank" class="btn btn-outline-success action-btn">
-            <i class="fab fa-whatsapp"></i>WhatsApp
-          </a>
-          
-          {% if agendamento.pode_cancelar %}
-          <button type="button" 
-                  class="btn btn-outline-danger action-btn" 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#deleteModal">
-            <i class="fas fa-trash"></i>Excluir Agendamento
-          </button>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Informações do Sistema -->
-    <div class="card detail-card">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">
-          <i class="fas fa-info-circle me-2"></i>Informações do Sistema
-        </h6>
-      </div>
-      <div class="card-body">
-        <div class="info-item">
-          <i class="fas fa-plus-circle me-2"></i>
-          <strong>Criado em:</strong> {{ agendamento.criado_em|date:"d/m/Y H:i" }}
-        </div>
-        <div class="info-item">
-          <i class="fas fa-edit me-2"></i>
-          <strong>Atualizado:</strong> {{ agendamento.atualizado_em|date:"d/m/Y H:i" }}
-        </div>
-        <div class="info-item">
-          <i class="fas fa-hashtag me-2"></i>
-          <strong>ID:</strong> #{{ agendamento.pk }}
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-          Confirmar Exclusão
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p>Tem certeza que deseja excluir este agendamento?</p>
-        
-        <div class="alert alert-warning">
-          <i class="fas fa-info-circle me-2"></i>
-          <strong>Atenção:</strong> Esta ação não pode ser desfeita.
-        </div>
-        
-        <div class="agendamento-preview p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <strong>{{ agendamento.cliente.nome }}</strong>
-              <br><small class="text-muted">{{ agendamento.servico.nome }}</small>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="text-end">
-              <div class="text-primary">{{ agendamento.data_agendamento|date:"d/m/Y" }}</div>
-              <small class="text-muted">{{ agendamento.hora_inicio }} - {{ agendamento.hora_fim }}</small>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este agendamento?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+                </div>
+                
+                <div class="agendamento-preview">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ agendamento.cliente.nome }}</strong>
+                            <br><small class="text-muted">{{ agendamento.servico.nome }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-primary">{{ agendamento.data_agendamento|date:"d/m/Y" }}</div>
+                            <small class="text-muted">{{ agendamento.hora_inicio }} - {{ agendamento.hora_fim }}</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <a href="{% url 'agendamentos:agendamento_delete' agendamento.pk %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Excluir Agendamento
+                </a>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fas fa-times me-2"></i>Cancelar
-        </button>
-        <a href="{% url 'agendamentos:agendamento_delete' agendamento.pk %}" class="btn btn-danger">
-          <i class="fas fa-trash me-2"></i>Excluir Agendamento
-        </a>
-      </div>
     </div>
-  </div>
 </div>
 
-{% comment %}
-INFORMAÇÃO SOBRE OS SCRIPTS
-
-OBJETIVO INICIAL:
-O plano original era mover todos os arquivos CSS e JavaScript para a pasta 'static' para manter o código do projeto mais limpo e organizado.
-
-MOTIVO DA EXCEÇÃO:
-Foi identificado que este script em particular NÃO PODE ser movido para um arquivo .js externo. O motivo é que ele utiliza variáveis do Django (identificadas por {{ ... }}), que são processadas pelo servidor antes de a página ser entregue ao navegador. Arquivos .js externos não têm acesso a essas informações.
-
-SOLUÇÃO IMPLEMENTADA:
-A solução adotada foi deixar este script específico aqui no HTML (para que ele possa acessar as variáveis do Django) e mover todos os outros scripts que não dependem de variáveis do servidor para arquivos .js separados na pasta 'static'. Esta é a prática recomendada para este tipo de situação, garantindo a organização do código sem comprometer a funcionalidade.
-{% endcomment %}
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-atualizar página para agendamentos em andamento
-        const agendamentoStatus = '{{ agendamento.status }}';
-        if (agendamentoStatus === 'em_andamento') {
-            // Mostrar indicador de auto-refresh
-            const refreshIndicator = document.createElement('div');
-            refreshIndicator.className = 'refresh-indicator';
-            refreshIndicator.innerHTML = `
-                <i class="fas fa-sync-alt me-2"></i>
-                <small>Auto-refresh em <span id="countdown">5:00</span></small>
-            `;
-            document.body.appendChild(refreshIndicator);
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-atualizar página para agendamentos em andamento
+    const agendamentoStatus = '{{ agendamento.status }}';
+    if (agendamentoStatus === 'em_andamento') {
+        // Mostrar indicador de auto-refresh
+        const refreshIndicator = document.createElement('div');
+        refreshIndicator.className = 'refresh-indicator';
+        refreshIndicator.innerHTML = `
+            <i class="fas fa-sync-alt me-2"></i>
+            <small>Auto-refresh <span id="countdown">5:00</span></small>
+        `;
+        document.body.appendChild(refreshIndicator);
+        
+        // Countdown
+        let timeLeft = 300; // 5 minutos em segundos
+        const countdownElement = document.getElementById('countdown');
+        
+        const countdown = setInterval(function() {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             
-            // Countdown
-            let timeLeft = 300; // 5 minutos em segundos
-            const countdownElement = document.getElementById('countdown');
-            
-            const countdown = setInterval(function() {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    location.reload();
-                }
-            }, 1000);
-            
-            // Permitir cancelar o auto-refresh
-            refreshIndicator.addEventListener('click', function() {
+            if (timeLeft <= 0) {
                 clearInterval(countdown);
-                this.remove();
-            });
-        }
-    });
+                location.reload();
+            }
+        }, 1000);
+        
+        // Permitir cancelar o auto-refresh
+        refreshIndicator.addEventListener('click', function() {
+            clearInterval(countdown);
+            this.remove();
+        });
+    }
+});
 </script>
 {% endblock %}

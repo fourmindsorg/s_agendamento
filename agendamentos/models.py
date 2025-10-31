@@ -10,7 +10,7 @@ class Cliente(models.Model):
     """Model para armazenar dados dos clientes"""
 
     nome = models.CharField(max_length=100, verbose_name="Nome Completo")
-    email = models.EmailField(unique=True, verbose_name="Email")
+    email = models.EmailField(blank=True, null=True, unique=True, verbose_name="Email")
     telefone_regex = RegexValidator(
         regex=r"^\(\d{2}\)\s\d{4,5}-\d{4}$",
         message="Telefone deve estar no formato: (11) 99999-9999",
@@ -23,9 +23,9 @@ class Cliente(models.Model):
         message="CPF deve estar no formato: 000.000.000-00",
     )
     cpf = models.CharField(
-        validators=[cpf_regex], max_length=14, unique=True, verbose_name="CPF"
+        validators=[cpf_regex], max_length=14, unique=True, verbose_name="CPF", blank=True, null=True
     )
-    data_nascimento = models.DateField(verbose_name="Data de Nascimento")
+    data_nascimento = models.DateField(blank=True, null=True, verbose_name="Data de Nascimento")
     endereco = models.TextField(blank=True, null=True, verbose_name="Endereço")
     observacoes = models.TextField(blank=True, null=True, verbose_name="Observações")
     ativo = models.BooleanField(default=True, verbose_name="Ativo")

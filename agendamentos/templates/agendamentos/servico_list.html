@@ -26,9 +26,9 @@
       <i class="fas fa-cogs"></i> Novo Serviço
     </a>
     
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+    {% comment %} <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
       <i class="fas fa-arrow-left me-2"></i> Dashboard
-    </a>
+    </a> {% endcomment %}
   </div>
 </div>
 
@@ -78,7 +78,7 @@
           </a>
         </div>
         
-        <div class="dropdown m-0">
+        {% comment %} <div class="dropdown m-0">
           <a class="btn btn-outline-custom dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
             <i class="fas fa-download fa-lg"></i>Exportar
           </a>
@@ -88,7 +88,7 @@
             <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Imprimir</a></li>
           </ul>
         </div>
-      </div>
+      </div> {% endcomment %}
 
     </form>
   </div>
@@ -226,13 +226,13 @@
                    title="Novo agendamento">
                   <i class="fas fa-calendar-plus"></i>
                 </a>
-                <button type="button" 
+                {% comment %} <button type="button" 
                         class="btn btn-outline-danger" 
                         title="Excluir"
                         data-bs-toggle="modal" 
                         data-bs-target="#deleteModal{{ servico.pk }}">
                   <i class="fas fa-trash"></i>
-                </button>
+                </button> {% endcomment %}
               </div>
             </td>
           </tr>
@@ -302,13 +302,13 @@
                    title="Novo agendamento">
                   <i class="fas fa-calendar-plus"></i>
                 </a>
-                <button type="button" 
+                {% comment %} <button type="button" 
                         class="btn btn-outline-danger btn-sm" 
                         title="Excluir"
                         data-bs-toggle="modal" 
                         data-bs-target="#deleteModal{{ servico.pk }}">
                   <i class="fas fa-trash"></i>
-                </button>
+                </button> {% endcomment %}
               </div>
             </div>
           </div>
