@@ -25,9 +25,9 @@
     <a href="{% url 'agendamentos:agendamento_create' %}" class="btn btn-custom">
       <i class="fas fa-calendar-plus"></i> Novo Agendamento
     </a>
-    <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
+    {% comment %} <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-outline-primary">
       <i class="fas fa-arrow-left me-2"></i> Dashboard
-    </a>
+    </a> {% endcomment %}
   </div>
 
 </div>
@@ -133,7 +133,7 @@
             </a>
           </div>
           
-          <div class="dropdown m-0">
+          {% comment %} <div class="dropdown m-0">
             <a class="btn btn-outline-custom dropdown-toggle p-2" type="button" data-bs-toggle="dropdown">
               <i class="fas fa-download fa-lg"></i>Exportar
             </a>
@@ -142,7 +142,7 @@
               <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
               <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Imprimir</a></li>
             </ul>
-          </div>
+          </div> {% endcomment %}
         </div>
       </div>
     </form>

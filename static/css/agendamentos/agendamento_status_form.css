@@ -1,99 +1,192 @@
-/* Header personalizado */
+/* ===== VARIÁVEIS E BASE ===== */
+:root {
+    --status-transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --status-shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --status-shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --status-shadow-heavy: 0 15px 45px rgba(0, 0, 0, 0.2);
+    --status-border-radius: 20px;
+    --status-border-radius-small: 16px;
+}
+
+/* ===== HEADER PRINCIPAL ===== */
 .status-header {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 40px;
+    padding: 30px;
+    border-bottom: none;
     position: relative;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9) 0%, 
+        rgba(248, 250, 252, 0.8) 100%);
+    border-radius: var(--status-border-radius);
+    box-shadow: var(--status-shadow-light);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .status-title {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.5rem;
+    font-weight: 800;
     color: var(--text-color) !important;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.02em;
+}
+
+.status-title i {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-bg);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .status-subtitle {
     color: var(--text-muted-color) !important;
-    margin: 8px 0 0 0;
-    font-size: 1rem;
+    margin: 15px 0 0 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.5;
 }
 
-/* Ações no Header */
-/* .header-actions {
+.header-actions {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 30px;
+    right: 30px;
     display: flex;
-    gap: 10px;
+    gap: 15px;
     align-items: flex-start;
-} */
-
-@media (max-width: 768px) {
-    /* .header-actions {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-top: 15px;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    } */
-
-    .status-title {
-        font-size: 1.5rem;
-    }
 }
 
-/* Cards styling */
+.header-actions .btn {
+    border-radius: 30px;
+    padding: 12px 24px;
+    font-weight: 700;
+    transition: var(--status-transition);
+    box-shadow: var(--status-shadow-light);
+    border: 2px solid transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.header-actions .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--status-shadow-medium);
+}
+
+.header-actions .btn-outline-primary:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white !important;
+}
+
+/* ===== CARDS CONTAINER ===== */
 .status-card-container {
-    border-radius: 15px;
+    border-radius: var(--status-border-radius);
     border: none;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--status-shadow-light);
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    transition: var(--status-transition);
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-card-container:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--status-shadow-medium);
 }
 
 .status-card-container .card-header {
     border: none;
-    padding: 20px 25px;
-    font-weight: 600;
+    padding: 30px 35px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.status-card-container .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-bg);
 }
 
 .status-card-container .card-body {
-    padding: 25px;
+    padding: 35px;
+    background: var(--surface-color);
 }
 
-/* Status atual card */
+/* ===== STATUS ATUAL CARD ===== */
 .current-status-card {
     background: var(--gradient-bg);
     color: white !important;
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 25px;
+    border-radius: var(--status-border-radius);
+    padding: 35px;
+    margin-bottom: 35px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--status-shadow-heavy);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.current-status-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(-20px, -20px) rotate(180deg); }
 }
 
 .current-status-card * {
     color: white !important;
+    position: relative;
+    z-index: 2;
 }
 
 .status-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--status-border-radius-small);
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Status options */
+/* ===== STATUS OPTIONS - DESIGN REVOLUCIONÁRIO ===== */
 .status-options {
     display: grid;
-    gap: 15px;
+    gap: 25px;
+    margin-top: 25px;
 }
 
 .status-option {
@@ -107,139 +200,338 @@
 }
 
 .status-card {
-    transition: all 0.3s ease;
-    border: 2px solid var(--border-color) !important;
-    border-radius: 12px !important;
-    padding: 20px;
-    background: var(--surface-color) !important;
+    position: relative;
+    border: none !important;
+    border-radius: var(--status-border-radius) !important;
+    padding: 0 !important;
+    background: transparent !important;
     color: var(--text-color) !important;
     text-decoration: none;
     display: block;
-    position: relative;
     cursor: pointer;
+    overflow: hidden;
+    transition: var(--status-transition);
 }
 
-.status-card:hover {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-    color: var(--text-color) !important;
-    text-decoration: none;
+/* Container interno do card */
+.status-card .d-flex {
+    background: var(--surface-color);
+    border: 3px solid var(--border-color);
+    border-radius: var(--status-border-radius-small);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--status-transition);
+    box-shadow: var(--status-shadow-light);
+    backdrop-filter: blur(10px);
 }
 
-.btn-check:checked+.status-card {
-    background: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
+/* Efeito de brilho animado */
+.status-card .d-flex::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left 0.8s ease;
+    z-index: 1;
+}
+
+/* Estados de hover */
+.status-card:hover .d-flex {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--status-shadow-medium);
+    border-color: var(--primary-color);
+}
+
+.status-card:hover .d-flex::before {
+    left: 100%;
+}
+
+/* Estado selecionado */
+.btn-check:checked + .status-card .d-flex {
+    background: var(--gradient-bg);
+    border-color: var(--primary-color);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: var(--status-shadow-heavy);
+}
+
+.btn-check:checked + .status-card * {
     color: white !important;
-    box-shadow: 0 8px 25px var(--shadow-color);
 }
 
-.btn-check:checked+.status-card * {
-    color: white !important;
-}
-
-.btn-check:checked+.status-card .status-description {
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
+/* Ícone do status completamente redesenhado */
 .status-icon-small {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    border-radius: var(--status-border-radius-small);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--light-color);
-    transition: all 0.3s ease;
+    font-size: 28px;
+    transition: var(--status-transition);
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
-.btn-check:checked+.status-card .status-icon-small {
-    background: rgba(255, 255, 255, 0.2);
+/* Cores específicas para cada status */
+.status-agendado .status-icon-small {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+}
+
+.status-confirmado .status-icon-small {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: white;
+}
+
+.status-em_andamento .status-icon-small {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: white;
+}
+
+.status-concluido .status-icon-small {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    color: white;
+}
+
+.status-cancelado .status-icon-small {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+    color: white;
+}
+
+.status-nao_compareceu .status-icon-small {
+    background: linear-gradient(135deg, #212529 0%, #000 100%);
+    color: white;
+}
+
+/* Estado selecionado do ícone */
+.btn-check:checked + .status-card .status-icon-small {
+    background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
+    transform: scale(1.15) rotate(10deg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Conteúdo do texto */
+.status-card .flex-grow-1 {
+    position: relative;
+    z-index: 2;
+    margin-left: 20px;
 }
 
 .status-title {
-    font-weight: 600;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
+    font-weight: 800;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+    transition: var(--status-transition);
+    text-transform: uppercase;
 }
 
 .status-description {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--text-muted-color) !important;
     margin: 0;
+    line-height: 1.6;
+    font-weight: 600;
+    transition: var(--status-transition);
 }
 
+.btn-check:checked + .status-card .status-description {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Badge "Atual" redesenhado */
 .current-badge {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 20px;
+    right: 20px;
     background: var(--info-color) !important;
     color: white !important;
-    padding: 4px 12px;
-    border-radius: 15px;
+    padding: 8px 18px;
+    border-radius: 30px;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+    animation: pulse-badge 3s infinite;
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.btn-check:checked+.status-card .current-badge {
-    background: rgba(255, 255, 255, 0.2) !important;
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
 }
 
-/* Form controls */
+.btn-check:checked + .status-card .current-badge {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Indicador lateral por status */
+.status-card .d-flex::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    border-radius: 0 15px 15px 0;
+    transition: var(--status-transition);
+}
+
+.status-agendado .d-flex::after {
+    background: linear-gradient(180deg, #6c757d 0%, #495057 100%);
+}
+
+.status-confirmado .d-flex::after {
+    background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.status-em_andamento .d-flex::after {
+    background: linear-gradient(180deg, #ffc107 0%, #ffb300 100%);
+}
+
+.status-concluido .d-flex::after {
+    background: linear-gradient(180deg, #198754 0%, #146c43 100%);
+}
+
+.status-cancelado .d-flex::after {
+    background: linear-gradient(180deg, #dc3545 0%, #b02a37 100%);
+}
+
+.status-nao_compareceu .d-flex::after {
+    background: linear-gradient(180deg, #212529 0%, #000 100%);
+}
+
+.btn-check:checked + .status-card .d-flex::after {
+    width: 10px;
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Efeito de ondulação ao clicar */
+.status-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.8s ease, height 0.8s ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.status-card:active::before {
+    width: 400px;
+    height: 400px;
+}
+
+/* ===== FORM CONTROLS ===== */
 .form-control {
-    border-radius: 10px !important;
-    border: 2px solid var(--border-color) !important;
-    padding: 12px 15px;
-    transition: all 0.3s ease;
+    border-radius: var(--status-border-radius-small) !important;
+    border: 3px solid var(--border-color) !important;
+    padding: 18px 22px;
+    transition: var(--status-transition);
     background-color: var(--surface-color) !important;
     color: var(--text-color) !important;
+    font-size: 1.1rem;
+    box-shadow: var(--status-shadow-light);
+    font-weight: 600;
 }
 
 .form-control:focus {
     border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 0.2rem var(--shadow-color) !important;
+    box-shadow: 0 0 0 0.3rem var(--shadow-color), var(--status-shadow-medium) !important;
     background-color: var(--surface-color) !important;
     color: var(--text-color) !important;
+    transform: translateY(-2px);
 }
 
 .form-label {
-    font-weight: 600;
+    font-weight: 800;
     color: var(--text-color) !important;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Buttons */
-/* .btn-custom {
+.form-label i {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+/* ===== BUTTONS ===== */
+.btn-custom {
     background: var(--gradient-bg);
     border: none;
     color: white !important;
-    font-weight: 600;
-    padding: 12px 25px;
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    font-weight: 800;
+    padding: 18px 35px;
+    border-radius: var(--status-border-radius-small);
+    transition: var(--status-transition);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--status-shadow-medium);
+    border: 3px solid transparent;
 }
 
 .btn-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--shadow-color);
+    transform: translateY(-4px);
+    box-shadow: var(--status-shadow-heavy);
     color: white !important;
-} */
+}
 
-/* Info items */
+.btn-custom:active {
+    transform: translateY(-2px);
+}
+
+/* ===== INFO ITEMS ===== */
 .info-item {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 15px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    padding: 18px;
+    border-bottom: 2px solid var(--border-color);
+    transition: var(--status-transition);
+    border-radius: 12px;
+}
+
+.info-item:hover {
+    background: rgba(0, 0, 0, 0.03);
+    transform: translateX(5px);
+    box-shadow: var(--status-shadow-light);
 }
 
 .info-item:last-child {
@@ -247,156 +539,379 @@
 }
 
 .info-item i {
-    width: 20px;
-    margin-right: 10px;
-    margin-top: 2px;
+    width: 28px;
+    margin-right: 18px;
+    margin-top: 4px;
+    font-size: 1.3rem;
 }
 
 .info-item strong {
     color: var(--text-color) !important;
-    margin-right: 8px;
+    margin-right: 12px;
+    font-weight: 800;
 }
 
-/* Avatar */
+/* ===== AVATAR ===== */
 .avatar-sm {
-    width: 35px;
-    height: 35px;
-    font-size: 14px;
-    font-weight: bold;
-    background: var(--primary-color) !important;
+    width: 55px;
+    height: 55px;
+    font-size: 18px;
+    font-weight: 800;
+    background: var(--gradient-bg) !important;
     color: white !important;
     border-radius: 50%;
+    box-shadow: var(--status-shadow-medium);
+    border: 4px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Status flow */
+/* ===== STATUS FLOW ===== */
 .status-flow {
     text-align: center;
-    padding: 20px 0;
+    padding: 30px 0;
 }
 
 .flow-item {
-    margin: 15px 0;
-    opacity: 0.4;
-    transition: all 0.3s ease;
+    margin: 25px 0;
+    opacity: 0.3;
+    transition: var(--status-transition);
+    transform: scale(0.85);
 }
 
 .flow-item.active {
     opacity: 1;
     color: var(--primary-color) !important;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .flow-icon {
-    width: 45px;
-    height: 45px;
+    width: 65px;
+    height: 65px;
     border-radius: 50%;
     background-color: var(--light-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 8px;
-    font-size: 18px;
+    margin: 0 auto 12px;
+    font-size: 24px;
     color: var(--text-muted-color);
-    transition: all 0.3s ease;
+    transition: var(--status-transition);
+    box-shadow: var(--status-shadow-light);
+    border: 3px solid var(--border-color);
 }
 
 .flow-item.active .flow-icon {
     background: var(--gradient-bg);
     color: white !important;
-    box-shadow: 0 4px 15px var(--shadow-color);
+    box-shadow: var(--status-shadow-heavy);
+    transform: scale(1.2);
+    border-color: var(--primary-color);
 }
 
 .flow-arrow {
     color: var(--text-muted-color);
-    font-size: 24px;
-    margin: 8px 0;
-    transition: all 0.3s ease;
+    font-size: 32px;
+    margin: 15px 0;
+    transition: var(--status-transition);
+    font-weight: 800;
 }
 
 .flow-text {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 800;
     color: var(--text-color) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* Alerts */
+/* ===== ALERTS ===== */
 .alert {
-    border-radius: 10px;
+    border-radius: var(--status-border-radius);
     border: none;
-    padding: 15px 20px;
-    margin-bottom: 20px;
+    padding: 25px 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--status-shadow-light);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive */
+.alert i {
+    font-size: 1.4rem;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .status-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
+    .header-actions {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 25px;
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 
-    .status-card {
-        padding: 15px;
+    .status-title {
+        font-size: 2rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .status-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+    }
+
+    .status-card .d-flex {
+        padding: 22px;
     }
 
     .status-icon-small {
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
     }
 
     .flow-icon {
-        width: 35px;
-        height: 35px;
-        font-size: 14px;
+        width: 55px;
+        height: 55px;
+        font-size: 20px;
+    }
+
+    .status-card-container .card-header,
+    .status-card-container .card-body {
+        padding: 25px;
+    }
+
+    .current-status-card {
+        padding: 30px;
+    }
+
+    .status-header {
+        padding: 25px;
     }
 }
 
-/* Animations */
+@media (max-width: 576px) {
+    .status-title {
+        font-size: 1.8rem;
+    }
+
+    .status-options {
+        gap: 20px;
+    }
+
+    .status-card .d-flex {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 18px;
+    }
+
+    .status-icon-small {
+        margin: 0 auto;
+    }
+
+    .status-card .flex-grow-1 {
+        margin-left: 0;
+    }
+
+    .current-badge {
+        position: relative;
+        top: auto;
+        right: auto;
+        align-self: center;
+        margin-top: 15px;
+    }
+
+    .btn-custom {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
 .status-card-container {
-    animation: slideInUp 0.5s ease-out;
+    animation: slideInUp 0.8s ease-out;
+    animation-fill-mode: both;
 }
 
 @keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(50px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* Character counter */
+/* Animações de entrada escalonada */
+.status-option:nth-child(1) { animation-delay: 0.1s; }
+.status-option:nth-child(2) { animation-delay: 0.2s; }
+.status-option:nth-child(3) { animation-delay: 0.3s; }
+.status-option:nth-child(4) { animation-delay: 0.4s; }
+.status-option:nth-child(5) { animation-delay: 0.5s; }
+.status-option:nth-child(6) { animation-delay: 0.6s; }
+
+.status-option {
+    animation: slideInRight 0.8s ease-out both;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===== CHARACTER COUNTER ===== */
 .char-counter {
-    font-size: 0.8rem;
-    margin-top: 5px;
+    font-size: 0.9rem;
+    margin-top: 10px;
     text-align: right;
+    font-weight: 700;
+    transition: var(--status-transition);
 }
 
-/* Status specific colors */
-.status-agendado {
-    border-left: 4px solid var(--secondary-color);
+.char-counter.text-warning {
+    color: var(--warning-color) !important;
 }
 
-.status-confirmado {
-    border-left: 4px solid var(--primary-color);
+.char-counter.text-danger {
+    color: var(--danger-color) !important;
+    animation: pulse 1.5s infinite;
 }
 
-.status-em_andamento {
-    border-left: 4px solid var(--warning-color);
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
-.status-concluido {
-    border-left: 4px solid var(--success-color);
+/* ===== LOADING STATES ===== */
+.btn-custom:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
-.status-cancelado {
-    border-left: 4px solid var(--danger-color);
+.btn-custom.loading {
+    position: relative;
+    color: transparent !important;
 }
 
-.status-nao_compareceu {
-    border-left: 4px solid var(--dark-color);
+.btn-custom.loading::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 50%;
+    left: 50%;
+    margin-left: -12px;
+    margin-top: -12px;
+    border: 3px solid transparent;
+    border-top: 3px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== EFEITO ESPECIAL PARA STATUS SELECIONADO ===== */
+.btn-check:checked + .status-card {
+    animation: selectedPulse 0.8s ease-out;
+}
+
+@keyframes selectedPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+/* ===== MICRO-INTERAÇÕES ===== */
+.status-icon-small i {
+    transition: var(--status-transition);
+}
+
+.status-card:hover .status-icon-small i {
+    transform: scale(1.15);
+}
+
+.btn-check:checked + .status-card .status-icon-small i {
+    transform: scale(1.3) rotate(15deg);
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+@media (prefers-color-scheme: dark) {
+    .status-card-container {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        background: rgba(30, 30, 30, 0.95);
+    }
+
+    .current-status-card::before {
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    }
+
+    .status-card:hover .d-flex {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .status-header {
+        background: linear-gradient(135deg, 
+            rgba(30, 30, 30, 0.9) 0%, 
+            rgba(20, 20, 20, 0.8) 100%);
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.status-card:focus-visible {
+    outline: none;
+}
+
+.status-card:focus-visible .d-flex {
+    outline: 4px solid var(--primary-color);
+    outline-offset: 4px;
+}
+
+.btn:focus-visible {
+    outline: 4px solid var(--primary-color);
+    outline-offset: 4px;
+}
+
+/* ===== EFEITOS ESPECIAIS ===== */
+.status-card .d-flex {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-card .d-flex::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.status-card:hover .d-flex::after {
+    transform: translateX(100%);
 }

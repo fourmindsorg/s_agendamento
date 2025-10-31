@@ -72,6 +72,11 @@ class DashboardView(LoginRequiredMixin, ReadOnlyForExpiredMixin, TemplateView):
             status="agendado"
         ).count()
 
+        # NOVO: Agendamentos de hoje com detalhes para o dashboard
+        context["agendamentos_hoje_detalhes"] = agendamentos.filter(
+            data_agendamento=hoje
+        ).select_related('cliente', 'servico').order_by('hora_inicio')
+
         # Próximos agendamentos
         context["proximos_agendamentos"] = agendamentos.filter(
             data_agendamento__gte=hoje
@@ -634,17 +639,21 @@ class TipoServicoDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, Delet
     """Deletar tipo de serviço"""
 
     model = TipoServico
-    template_name = "agendamentos/servico_confirm_delete.html"
     success_url = reverse_lazy("agendamentos:servico_list")
-    context_object_name = "servico"
-
+    
     def get_queryset(self):
         return TipoServico.objects.filter(criado_por=self.request.user)
 
-    def delete(self, request, *args, **kwargs):
-        servico = self.get_object()
+    def get(self, request, *args, **kwargs):
+        """Redireciona GET para evitar exclusão acidental"""
+        messages.warning(request, "Use o formulário apropriado para excluir serviços.")
+        return redirect(self.success_url)
 
-        # Verificar se há agendamentos futuros
+    def form_valid(self, form):
+        """Valida antes de excluir"""
+        servico = self.get_object()
+        
+        # Verificar agendamentos futuros
         agendamentos_futuros = Agendamento.objects.filter(
             servico=servico,
             data_agendamento__gte=timezone.now().date(),
@@ -653,13 +662,24 @@ class TipoServicoDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, Delet
 
         if agendamentos_futuros > 0:
             messages.error(
-                request,
+                self.request,
                 f'Não é possível excluir o serviço "{servico.nome}" pois há {agendamentos_futuros} agendamento(s) futuro(s).',
             )
-            return redirect("agendamentos:servico_list")
+            return redirect(self.success_url)
 
-        messages.success(request, f'Serviço "{servico.nome}" excluído com sucesso!')
-        return super().delete(request, *args, **kwargs)
+        # Salvar nome antes de excluir
+        nome_servico = servico.nome
+        
+        # Executar exclusão
+        response = super().form_valid(form)
+        
+        messages.success(self.request, f'Serviço "{nome_servico}" excluído com sucesso!')
+        return response
+
+    def post(self, request, *args, **kwargs):
+        """Processa POST request"""
+        self.object = self.get_object()
+        return self.form_valid(None)
 
 
 # ========================================

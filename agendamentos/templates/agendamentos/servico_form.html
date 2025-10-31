@@ -40,8 +40,8 @@
   <div class="col">
     <div class="card form-card">
       <div class="card-header card-agendamentos-form px-3">
-        <h4 class="mb-0 text-white">
-          <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+        <h4 class="mb-0" style="color: white !important;">
+          <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2" style="color: white !important;"></i>
           Dados do Serviço
         </h4>
       </div>
@@ -229,15 +229,10 @@
 
           <!-- Botões de Ação -->
           <div class="d-flex gap-3 justify-content-end mt-4 pt-3 border-top">
-            <a href="{% url 'agendamentos:servico_list' %}" class="btn btn-outline-secondary">
-              <i class="fas fa-times me-2"></i>Cancelar
-            </a>
             {% if object %}
-              <a href="{% url 'agendamentos:servico_delete' object.pk %}" 
-                 class="btn btn-outline-danger"
-                 onclick="return confirm('Tem certeza que deseja excluir este serviço?')">
+              <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                 <i class="fas fa-trash me-2"></i>Excluir Serviço
-              </a>
+              </button>
             {% endif %}
             <button type="submit" class="btn btn-custom" id="submit-btn">
               <i class="fas fa-{% if object %}save{% else %}plus{% endif %} me-2"></i>
@@ -255,8 +250,8 @@
   <div class="col">
     <div class="card form-card">
       <div class="card-header card-agendamentos-form px-3">
-        <h6 class="mb-0">
-          <i class="fas fa-lightbulb me-2"></i>Dicas para Cadastrar Serviços
+        <h6 class="mb-0" style="color: white !important;">
+          <i class="fas fa-lightbulb me-2" style="color: white !important;"></i>Dicas para Cadastrar Serviços
         </h6>
       </div>
       <div class="card-body">
@@ -307,6 +302,72 @@
   </div>
 </div>
 
+<!-- Modal de Confirmação de Exclusão -->
+{% if object %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">
+          <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+          Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <i class="fas fa-trash-alt text-danger" style="font-size: 3rem;"></i>
+        </div>
+        
+        <p class="text-center mb-3">
+          Tem certeza que deseja excluir o serviço <strong>"{{ object.nome }}"</strong>?
+        </p>
+        
+        <div class="alert alert-warning">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Atenção:</strong> Esta ação não pode ser desfeita. O serviço será removido permanentemente do sistema.
+        </div>
+
+        <!-- Preview do serviço que será excluído -->
+        <div class="card border-danger">
+          <div class="card-header bg-danger text-white">
+            <h6 class="mb-0">
+              <i class="fas fa-cog me-2"></i>Serviço a ser excluído
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-8">
+                <h6 class="mb-1">{{ object.nome }}</h6>
+                {% if object.descricao %}
+                <p class="text-muted mb-2 small">{{ object.descricao|truncatechars:100 }}</p>
+                {% endif %}
+                <span class="badge bg-primary">{{ object.duracao_formatada }}</span>
+              </div>
+              <div class="col-4 text-end">
+                <div class="h5 text-success mb-0">R$ {{ object.preco|floatformat:2 }}</div>
+                <small class="text-muted">Preço</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Cancelar
+        </button>
+        <form method="post" action="{% url 'agendamentos:servico_delete' object.pk %}" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger" id="confirm-delete-btn">
+            <i class="fas fa-trash me-2"></i>Sim, Excluir Serviço
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos do formulário
@@ -326,6 +387,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewPreco = document.getElementById('preview-preco');
     const duracaoTexto = document.getElementById('duracao-texto');
     const duracaoPreview = document.getElementById('duracao-preview');
+    
+    // Modal de exclusão - CORRIGIDO
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     
     // Função para atualizar a duração
     function atualizarDuracao() {
@@ -397,44 +462,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event listeners
-    nomeInput.addEventListener('input', atualizarNome);
-    descricaoInput.addEventListener('input', atualizarDescricao);
-    horasInput.addEventListener('input', atualizarDuracao);
-    minutosInput.addEventListener('input', atualizarDuracao);
-    precoInput.addEventListener('input', atualizarPreco);
+    if (nomeInput) nomeInput.addEventListener('input', atualizarNome);
+    if (descricaoInput) descricaoInput.addEventListener('input', atualizarDescricao);
+    if (horasInput) horasInput.addEventListener('input', atualizarDuracao);
+    if (minutosInput) minutosInput.addEventListener('input', atualizarDuracao);
+    if (precoInput) precoInput.addEventListener('input', atualizarPreco);
     
     // Validações em tempo real
-    horasInput.addEventListener('input', function() {
-        const valor = parseInt(this.value);
-        if (valor < 0) this.value = 0;
-        if (valor > 23) this.value = 23;
-        
-        if (this.value.trim()) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
+    if (horasInput) {
+        horasInput.addEventListener('input', function() {
+            const valor = parseInt(this.value);
+            if (valor < 0) this.value = 0;
+            if (valor > 23) this.value = 23;
+            
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
     
-    minutosInput.addEventListener('input', function() {
-        const valor = parseInt(this.value);
-        if (valor < 0) this.value = 0;
-        if (valor > 59) this.value = 59;
-        
-        if (this.value.trim()) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
+    if (minutosInput) {
+        minutosInput.addEventListener('input', function() {
+            const valor = parseInt(this.value);
+            if (valor < 0) this.value = 0;
+            if (valor > 59) this.value = 59;
+            
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
     
-    precoInput.addEventListener('input', function() {
-        const valor = parseFloat(this.value);
-        if (valor < 0) this.value = 0;
-        
-        if (this.value.trim()) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
+    if (precoInput) {
+        precoInput.addEventListener('input', function() {
+            const valor = parseFloat(this.value);
+            if (valor < 0) this.value = 0;
+            
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
     
     // Validação em tempo real para campos obrigatórios
     const requiredInputs = form.querySelectorAll('input[required], select[required], textarea[required]');
@@ -450,6 +521,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // CORRIGIDO: Loading state no botão de exclusão - SEM INTERFERIR NO SUBMIT
+    if (confirmDeleteBtn) {
+        // Encontrar o form pai do botão
+        const deleteForm = confirmDeleteBtn.closest('form');
+        
+        if (deleteForm) {
+            // Adicionar listener no FORM, não no botão
+            deleteForm.addEventListener('submit', function(e) {
+                // Não prevenir o submit, apenas mostrar loading
+                confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...';
+                confirmDeleteBtn.disabled = true;
+                
+                console.log('Form de exclusão sendo enviado para:', deleteForm.action);
+            });
+        }
+    }
+    
     // Inicializar preview
     atualizarNome();
     atualizarDescricao();
@@ -457,26 +545,30 @@ document.addEventListener('DOMContentLoaded', function() {
     atualizarPreco();
     
     // Auto-focus no primeiro campo
-    nomeInput.focus();
+    if (nomeInput) nomeInput.focus();
     
     // Formatação do preço ao sair do campo
-    precoInput.addEventListener('blur', function() {
-        const valor = parseFloat(this.value) || 0;
-        this.value = valor.toFixed(2);
-        atualizarPreco();
-    });
+    if (precoInput) {
+        precoInput.addEventListener('blur', function() {
+            const valor = parseFloat(this.value) || 0;
+            this.value = valor.toFixed(2);
+            atualizarPreco();
+        });
+    }
     
-    // Loading state no submit
-    form.addEventListener('submit', function() {
-        submitBtn.classList.add('btn-loading');
-        submitBtn.disabled = true;
-        
-        // Remover loading se houver erro
-        setTimeout(() => {
-            submitBtn.classList.remove('btn-loading');
-            submitBtn.disabled = false;
-        }, 5000);
-    });
+    // Loading state no submit do formulário principal
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+            submitBtn.disabled = true;
+            
+            // Remover loading se houver erro (timeout de segurança)
+            setTimeout(() => {
+                submitBtn.innerHTML = '{% if object %}<i class="fas fa-save me-2"></i>Atualizar Serviço{% else %}<i class="fas fa-plus me-2"></i>Salvar{% endif %}';
+                submitBtn.disabled = false;
+            }, 10000);
+        });
+    }
     
     // Animação de foco nos inputs
     const allInputs = form.querySelectorAll('input, select, textarea');
@@ -490,6 +582,17 @@ document.addEventListener('DOMContentLoaded', function() {
             this.parentElement.style.transform = 'scale(1)';
         });
     });
+    
+    // Debug para verificar se o modal está funcionando
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function() {
+            console.log('Modal de exclusão aberto');
+        });
+        
+        deleteModal.addEventListener('hide.bs.modal', function() {
+            console.log('Modal de exclusão fechado');
+        });
+    }
 });
 </script>
 {% endblock %}
