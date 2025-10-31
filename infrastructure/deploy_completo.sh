@@ -99,14 +99,14 @@ echo ""
 echo "6. Aplicando configuração do Supervisor..."
 sudo tee /etc/supervisor/conf.d/s-agendamento.conf > /dev/null <<'EOF'
 [program:s-agendamento]
-command=/opt/s-agendamento/venv/bin/gunicorn s_agendamento.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3
+command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3
 directory=/opt/s-agendamento
 user=django
 autostart=true
 autorestart=true
 redirect_stderr=true
 stdout_logfile=/opt/s-agendamento/logs/gunicorn.log
-environment=PATH="/opt/s-agendamento/venv/bin"
+environment=PATH="/opt/s-agendamento/venv/bin",DJANGO_SETTINGS_MODULE="core.settings_production"
 EOF
 
 # 7. Testar e recarregar serviços
