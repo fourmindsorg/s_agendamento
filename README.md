@@ -1,8 +1,8 @@
-# 📅 Sistema de Agendamentos - 4Minds
+# Sistema de Agendamentos - 4Minds
 
 Sistema completo para agendamento de clientes com interface moderna, responsiva e sistema de temas personalizáveis.
 
-## 🚀 Tecnologias
+## Tecnologias
 
 - **Backend:** Django 5.2.6
 - **Frontend:** Bootstrap 5.3.0, HTML5, CSS3, JavaScript
@@ -14,29 +14,29 @@ Sistema completo para agendamento de clientes com interface moderna, responsiva 
 - **Infraestrutura:** AWS (EC2, RDS, S3) - Apenas serviços gratuitos
 - **Deploy:** GitHub Actions + Terraform
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-### 🎯 **Core Features**
-- ✅ **Gestão Completa de Clientes** - Cadastro, edição, histórico
-- ✅ **Sistema de Agendamentos** - Criar, editar, controlar status
-- ✅ **Catálogo de Serviços** - Preços, duração, categorias
-- ✅ **Dashboard Interativo** - KPIs, gráficos, visão geral
-- ✅ **Relatórios e BI** - Análises detalhadas, métricas de crescimento
-- ✅ **Sistema de Autenticação** - Login, registro, perfis
+### **Core Features**
+- **Gestão Completa de Clientes** - Cadastro, edição, histórico
+- **Sistema de Agendamentos** - Criar, editar, controlar status
+- **Catálogo de Serviços** - Preços, duração, categorias
+- **Dashboard Interativo** - KPIs, gráficos, visão geral
+- **Relatórios e BI** - Análises detalhadas, métricas de crescimento
+- **Sistema de Autenticação** - Login, registro, perfis
 
-### 🎨 **Interface e UX**
-- ✅ **5 Temas Personalizáveis** - Azul Clássico, Verde Esmeralda, Pôr do Sol, Oceano, Roxo Elegante
-- ✅ **Interface Responsiva** - Funciona em desktop, tablet e mobile
-- ✅ **Central de Ajuda** - Tutoriais interativos, FAQ, guias completos
-- ✅ **Demonstração Interativa** - Tour guiado pelas funcionalidades
+### **Interface e UX**
+- **5 Temas Personalizáveis** - Azul Clássico, Verde Esmeralda, Pôr do Sol, Oceano, Roxo Elegante
+- **Interface Responsiva** - Funciona em desktop, tablet e mobile
+- **Central de Ajuda** - Tutoriais interativos, FAQ, guias completos
+- **Demonstração Interativa** - Tour guiado pelas funcionalidades
 
-### 📊 **Analytics e Controle**
-- ✅ **Controle de Status** - Agendado, Confirmado, Em Andamento, Concluído, Cancelado
-- ✅ **Validação de Conflitos** - Evita agendamentos sobrepostos
-- ✅ **Filtros Avançados** - Por data, cliente, serviço, status
-- ✅ **Gráficos Interativos** - Agendamentos por período, tendências
+### **Analytics e Controle**
+- **Controle de Status** - Agendado, Confirmado, Em Andamento, Concluído, Cancelado
+- **Validação de Conflitos** - Evita agendamentos sobrepostos
+- **Filtros Avançados** - Por data, cliente, serviço, status
+- **Gráficos Interativos** - Agendamentos por período, tendências
 
-## 🛠️ Instalação e Configuração
+## Instalação e Configuração
 
 ### **Pré-requisitos**
 - Python 3.8 ou superior
@@ -49,7 +49,7 @@ git clone https://github.com/fourmindsorg/s_agendamento.git
 cd s_agendamento
 ```
 
-## 🚀 Deploy Automático na AWS
+## Deploy Automático na AWS
 
 O sistema inclui uma pipeline completa de deploy automático usando GitHub Actions e Terraform.
 
@@ -85,17 +85,17 @@ O sistema inclui uma pipeline completa de deploy automático usando GitHub Actio
 
 O sistema possui 3 pipelines automatizadas:
 
-#### 🔄 **Deploy Automático** (`deploy.yml`)
+#### **Deploy Automático** (`deploy.yml`)
 - **Trigger:** Push para `main` ou `master`
 - **Função:** Deploy do código para EC2 existente
 - **Tempo:** ~5 minutos
 
-#### 🏗️ **Deploy com Terraform** (`terraform-deploy.yml`)
+#### **Deploy com Terraform** (`terraform-deploy.yml`)
 - **Trigger:** Push para `main` ou mudanças na infraestrutura
 - **Função:** Cria/atualiza toda a infraestrutura AWS
 - **Tempo:** ~10-15 minutos
 
-#### 🔄 **Atualização de IP** (`update-ip.yml`)
+#### **Atualização de IP** (`update-ip.yml`)
 - **Trigger:** A cada 6 horas ou manual
 - **Função:** Atualiza IPs dinâmicos da EC2
 - **Tempo:** ~2 minutos
@@ -154,11 +154,11 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_EC2]
 - **Arquivos:** Backup dos arquivos de mídia
 - **Retenção:** 7 dias de backups
 
-## 🌐 Servidor em Produção
+## Servidor em Produção
 
 ### **Status Atual**
 - **URL:** https://fourmindstech.com.br
-- **Status:** ✅ Online e Funcionando
+- **Status:** Online e Funcionando
 - **Última Atualização:** Outubro 2025
 - **Versão:** 2.0 (Produção)
 
@@ -170,13 +170,13 @@ ssh -i ~/.ssh/id_rsa ubuntu@[IP_DA_EC2]
 ### **Credenciais de Teste**
 - **Usuário:** admin
 - **Senha:** admin123
-- **⚠️ IMPORTANTE:** Alterar após primeiro login
+- ** IMPORTANTE:** Alterar após primeiro login
 
 ### **Infraestrutura**
 - **Servidor:** AWS EC2 t2.micro (Ubuntu 22.04)
 - **Banco:** RDS PostgreSQL 15.4
 - **Domínio:** fourmindstech.com.br
-- **SSL:** ✅ Ativo (Let's Encrypt)
+- **SSL:** Ativo (Let's Encrypt)
 - **Monitoramento:** Logs nativos do Django
 
 ### **Documentação da Infraestrutura**
@@ -186,4 +186,4 @@ Para informações detalhadas sobre a infraestrutura AWS, consulte:
 
 ---
 
-## 🛠️ Desenvolvimento Local
+## Desenvolvimento Local

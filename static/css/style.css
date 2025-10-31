@@ -561,68 +561,6 @@ small {
 /* III. RESPONSIVIDADE E ANIMAÇÕES */
 /* ========================================================================= */
 
-@media (max-width: 768px) {
-
-    /* Topbar */
-    .topbar {
-        left: 0 !important;
-        right: 0;
-        padding: 0 15px;
-    }
-
-    .sidebar.show+.topbar {
-        left: 0 !important;
-    }
-
-    /* Sidebar */
-    .sidebar {
-        transform: translateX(-100%);
-    }
-
-    .sidebar.show {
-        transform: translateX(0);
-    }
-
-    /* Content */
-    .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        display: none;
-    }
-
-    .sidebar-overlay.show {
-        display: block;
-    }
-
-    /* Responsive adjustments */
-    .date-badge {
-        width: 40px;
-        padding: 6px 2px;
-    }
-
-    .date-badge .day {
-        font-size: 14px;
-    }
-
-    .quick-filters {
-        justify-content: center;
-    }
-
-    .header-actions {
-        width: 100%;
-    }
-}
-
 /* Layout responsivo para botões de filtro */
 @media (max-width: 767.98px) {
     .d-flex.flex-column.flex-lg-row .d-flex.gap-2 {
@@ -713,26 +651,11 @@ small {
 
 .header-actions {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 10px;
+    right: 10px;
     display: flex;
     gap: 10px;
     align-items: flex-start;
-}
-
-@media (max-width: 768px) {
-    .header-actions {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-top: 15px;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .form-title {
-        font-size: 1.5rem;
-    }
 }
 
 .form-card {
@@ -962,26 +885,6 @@ small {
     color: var(--text-color) !important;
 }
 
-@media (max-width: 768px) {
-    .form-card .card-body {
-        padding: 20px;
-    }
-
-    .form-section {
-        padding: 15px;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .avatar-icon {
-        font-size: 3rem;
-        padding: 12px;
-    }
-}
-
 .btn-loading {
     position: relative;
     pointer-events: none;
@@ -1055,31 +958,6 @@ small {
     color: var(--text-muted-color) !important;
     margin: 8px 0 0 0;
     font-size: 1rem;
-}
-
-.header-actions {
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-}
-
-@media (max-width: 768px) {
-    .header-actions {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-top: 15px;
-        display: flex;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .list-title {
-        font-size: 1.5rem;
-    }
 }
 
 /* Cards styling (Consolidação) */
@@ -2604,52 +2482,6 @@ small {
     }
 }
 
-@media (max-width: 768px) {
-    .agendamentos-header {
-        padding: 15px 20px;
-    }
-
-    .agendamentos-title {
-        font-size: 1.1rem;
-    }
-
-    .agendamentos-body {
-        padding: 20px;
-    }
-
-    .agendamento-item {
-        padding: 15px;
-        gap: 12px;
-    }
-
-    .agendamento-time {
-        min-width: 50px;
-        padding: 8px;
-    }
-
-    .agendamento-time .hour {
-        font-size: 1rem;
-    }
-
-    .agendamento-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-
-    .agendamento-cliente {
-        font-size: 0.9rem;
-    }
-
-    .agendamento-servico {
-        font-size: 0.8rem;
-    }
-
-    .agendamento-status {
-        display: none;
-    }
-}
-
 @media (max-width: 600px) {
     .header-greeting {
         text-align: center;
@@ -3359,71 +3191,6 @@ small {
     }
 }
 
-@media (max-width: 768px) {
-    .navbar-menu {
-        flex-direction: column;
-        width: 100%;
-        gap: 3px;
-        margin-top: 15px;
-        align-items: stretch;
-    }
-
-    .navbar-menu .menu-item {
-        width: 100%;
-    }
-
-    .navbar-menu .menu-link {
-        width: 100%;
-        justify-content: start;
-        padding: 10px 15px;
-        font-size: 1rem;
-    }
-
-    .navbar-menu .menu-icon {
-        margin-right: 10px;
-        font-size: 1.1rem;
-    }
-
-    .navbar-menu .menu-text {
-        font-size: 1rem;
-    }
-
-    .hero-title {
-        font-size: 2.5rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1.2rem;
-    }
-
-    .hero-stats {
-        justify-content: center;
-    }
-
-    .hero-buttons {
-        justify-content: center;
-    }
-
-    .btn-hero {
-        width: 100%;
-        max-width: 300px;
-        justify-content: center;
-    }
-
-    .section-title {
-        font-size: 2rem;
-    }
-
-    .pricing-card.featured {
-        transform: none;
-        margin-bottom: 2rem;
-    }
-
-    .cta-title {
-        font-size: 2rem;
-    }
-}
-
 /* ========================================================================= */
 /* IX. ESTILOS ESPECÍFICOS - RELATORIOS.HTML */
 /* ========================================================================= */
@@ -3465,8 +3232,8 @@ small {
 /* KPIs principais */
 .kpis-main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr;
+    gap: 5px;
     margin-bottom: 30px;
 }
 
@@ -3707,6 +3474,8 @@ small {
 .insight-icon {
     width: 40px;
     height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -3714,6 +3483,7 @@ small {
     color: white;
     font-size: 16px;
     background: var(--info-color);
+    flex-shrink: 0;
 }
 
 .insight-text {
@@ -3759,8 +3529,8 @@ small {
     }
 
     .kpis-main {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 25px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
 
     .kpi-card-main {
@@ -3786,6 +3556,13 @@ small {
     }
 }
 
+@media (min-width: 992px) {
+    .kpis-main {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+    }
+}
+
 /* Animações */
 .kpi-card-main,
 .data-section,
@@ -3802,5 +3579,212 @@ small {
 
     50% {
         opacity: 0.7;
+    }
+}
+
+/* ========================================================================= */
+/* MEDIA QUERIES CONSOLIDADAS - RESPONSIVIDADE */
+/* ========================================================================= */
+
+@media (max-width: 768px) {
+
+    /* Topbar */
+    .topbar {
+        left: 0 !important;
+        right: 0;
+        padding: 0 15px;
+    }
+
+    .sidebar.show+.topbar {
+        left: 0 !important;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    /* Content */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+    /* Responsive adjustments */
+    .date-badge {
+        width: 40px;
+        padding: 6px 2px;
+    }
+
+    .date-badge .day {
+        font-size: 14px;
+    }
+
+    .quick-filters {
+        justify-content: center;
+    }
+
+    /* Header actions - consolidado */
+    .header-actions {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 100%;
+        justify-content: center;
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    /* Form titles */
+    .form-title {
+        font-size: 1.5rem;
+    }
+
+    .list-title {
+        font-size: 1.5rem;
+    }
+
+    /* Form cards */
+    .form-card .card-body {
+        padding: 20px;
+    }
+
+    .form-section {
+        padding: 15px;
+    }
+
+    .avatar-icon {
+        font-size: 3rem;
+        padding: 12px;
+    }
+
+    /* Dashboard - Agendamentos */
+    .agendamentos-header {
+        padding: 15px 20px;
+    }
+
+    .agendamentos-title {
+        font-size: 1.1rem;
+    }
+
+    .agendamentos-body {
+        padding: 20px;
+    }
+
+    .agendamento-item {
+        padding: 15px;
+        gap: 12px;
+    }
+
+    .agendamento-time {
+        min-width: 50px;
+        padding: 8px;
+    }
+
+    .agendamento-time .hour {
+        font-size: 1rem;
+    }
+
+    .agendamento-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .agendamento-cliente {
+        font-size: 0.9rem;
+    }
+
+    .agendamento-servico {
+        font-size: 0.8rem;
+    }
+
+    .agendamento-status {
+        display: none;
+    }
+
+    /* Home page - Navbar */
+    .navbar-menu {
+        flex-direction: column;
+        width: 100%;
+        gap: 3px;
+        margin-top: 15px;
+        align-items: stretch;
+    }
+
+    .navbar-menu .menu-item {
+        width: 100%;
+    }
+
+    .navbar-menu .menu-link {
+        width: 100%;
+        justify-content: start;
+        padding: 10px 15px;
+        font-size: 1rem;
+    }
+
+    .navbar-menu .menu-icon {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+
+    .navbar-menu .menu-text {
+        font-size: 1rem;
+    }
+
+    /* Home page - Hero */
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+
+    .hero-stats {
+        justify-content: center;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .btn-hero {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .pricing-card.featured {
+        transform: none;
+        margin-bottom: 2rem;
+    }
+
+    .cta-title {
+        font-size: 2rem;
     }
 }
