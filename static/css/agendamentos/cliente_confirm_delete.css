@@ -349,7 +349,7 @@
     .btn-danger-custom,
     .btn-cancel {
         width: 100%;
-        max-width: 250px;
+        /* max-width: 200px; */
         justify-content: center;
     }
 
