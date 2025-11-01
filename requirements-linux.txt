@@ -1,0 +1,9 @@
+# Requirements para Linux (produção/CI)
+# Este arquivo é gerado automaticamente pelos workflows do GitHub Actions
+# removendo dependências específicas do Windows
+
+# Use: pip install -r requirements-linux.txt
+
+# Para gerar manualmente:
+# grep -v -E "^(pywin32|pywin32-ctypes|winshell|PyAutoGUI|PyGetWindow|PyScreeze|PyRect|PyMsgBox|MouseInfo)==" requirements.txt > requirements-linux.txt
+
