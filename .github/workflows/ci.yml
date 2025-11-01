@@ -98,11 +98,50 @@ jobs:
             python -c "import django" || exit 1
           }
           
-          # Verificar outras dependências críticas
-          echo "📋 Verificando outras dependências críticas..."
-          python -c "import requests" || echo "⚠️ requests não instalado (opcional)"
-          python -c "import qrcode" || echo "⚠️ qrcode não instalado (opcional)"
-          python -c "import dotenv" || echo "⚠️ python-dotenv não instalado (opcional)"
+          # Verificar e instalar dependências críticas necessárias para o sistema funcionar
+          echo "📋 Verificando dependências críticas..."
+          critical_packages=("requests" "python-dotenv" "qrcode[pil]")
+          missing_critical=()
+          
+          for package in "${critical_packages[@]}"; do
+            module_name=$(echo "$package" | sed 's/\[.*\]//' | tr '-' '_')
+            if [ "$module_name" = "python_dotenv" ]; then
+              module_name="dotenv"
+            elif [ "$module_name" = "qrcode" ]; then
+              module_name="qrcode"
+            fi
+            
+            if ! python -c "import $module_name" 2>/dev/null; then
+              echo "⚠️ Módulo '$module_name' (do pacote '$package') não instalado"
+              missing_critical+=("$package")
+            else
+              echo "✅ Módulo '$module_name' disponível"
+            fi
+          done
+          
+          # Instalar dependências críticas faltantes
+          if [ ${#missing_critical[@]} -gt 0 ]; then
+            echo "📦 Instalando dependências críticas faltantes: ${missing_critical[*]}"
+            pip install --no-cache-dir "${missing_critical[@]}" || {
+              echo "❌ ERRO: Falha ao instalar dependências críticas"
+              exit 1
+            }
+            
+            # Verificar novamente
+            for package in "${critical_packages[@]}"; do
+              module_name=$(echo "$package" | sed 's/\[.*\]//' | tr '-' '_')
+              if [ "$module_name" = "python_dotenv" ]; then
+                module_name="dotenv"
+              elif [ "$module_name" = "qrcode" ]; then
+                module_name="qrcode"
+              fi
+              
+              if ! python -c "import $module_name" 2>/dev/null; then
+                echo "❌ ERRO CRÍTICO: Módulo '$module_name' ainda não disponível após instalação"
+                exit 1
+              fi
+            done
+          fi
           
           if [ $INSTALL_EXIT -ne 0 ]; then
             echo "⚠️ Algumas dependências opcionais falharam na instalação"
@@ -129,16 +168,45 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
         run: |
-          # Verificar se Django está disponível antes de rodar migrações
-          echo "🔍 Verificando Django antes de rodar migrações..."
-          python -c "import django; print(f'✅ Django {django.__version__} disponível')" || {
-            echo "❌ Django não disponível! Tentando reinstalar..."
-            pip install --no-cache-dir Django==4.2.25
-            python -c "import django" || {
-              echo "❌ Falha crítica: Django não pode ser importado"
+          # Verificar e instalar dependências críticas antes de rodar migrações
+          echo "🔍 Verificando dependências críticas antes de rodar migrações..."
+          
+          # Lista de módulos críticos e seus pacotes pip
+          declare -A critical_modules=(
+            ["django"]="Django==4.2.25"
+            ["requests"]="requests"
+            ["qrcode"]="qrcode[pil]"
+            ["dotenv"]="python-dotenv"
+          )
+          
+          missing_modules=()
+          for module in "${!critical_modules[@]}"; do
+            if ! python -c "import $module" 2>/dev/null; then
+              echo "⚠️ Módulo '$module' não encontrado"
+              missing_modules+=("${critical_modules[$module]}")
+            else
+              echo "✅ Módulo '$module' disponível"
+            fi
+          done
+          
+          # Instalar módulos faltantes
+          if [ ${#missing_modules[@]} -gt 0 ]; then
+            echo "📦 Instalando módulos faltantes: ${missing_modules[*]}"
+            pip install --no-cache-dir "${missing_modules[@]}" || {
+              echo "❌ Falha ao instalar módulos críticos"
               exit 1
             }
-          }
+            
+            # Verificar novamente após instalação
+            for module in "${!critical_modules[@]}"; do
+              if ! python -c "import $module" 2>/dev/null; then
+                echo "❌ ERRO CRÍTICO: Módulo '$module' ainda não disponível após instalação"
+                exit 1
+              fi
+            done
+          fi
+          
+          echo "✅ Todas as dependências críticas verificadas"
           echo "🔄 Executando migrações..."
           python manage.py migrate --settings=core.settings
 
