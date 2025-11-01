@@ -140,13 +140,8 @@ jobs:
               "sudo -u django git fetch origin",
               "sudo -u django git reset --hard origin/main",
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
-              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip setuptools wheel'",
-              "echo Preparando requirements.txt para Linux (removendo dependências Windows-only)...",
-              "sudo -u django bash -c 'grep -v -E \"^(pywin32|pywin32-ctypes|winshell|PyAutoGUI|PyGetWindow|PyScreeze|PyRect|PyMsgBox|MouseInfo)==\" requirements.txt > requirements-linux.txt || cp requirements.txt requirements-linux.txt'",
-              "echo Instalando dependências do requirements-linux.txt (pode levar alguns minutos)...",
-              "sudo -u django bash -c 'set +e && venv/bin/pip install --no-cache-dir --upgrade -r requirements-linux.txt && set -e || echo Algumas dependências podem ter falhado (opcionais)'",
-              "echo Verificando instalação das dependências críticas...",
-              "sudo -u django bash -c 'venv/bin/pip list | grep -E \"(Django|qrcode|requests|python-dotenv|gunicorn|whitenoise)\" || echo \"Algumas dependências podem não estar listadas\"'",
+              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
+              "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
               "sudo -u django bash -c 'venv/bin/python manage.py check --deploy'",
               "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
               "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
@@ -255,16 +250,11 @@ jobs:
             sudo -u django git reset --hard origin/main
             sudo -u django git --no-pager log --oneline -1 || true
             
-            echo "📦 Preparando requirements.txt para Linux (removendo dependências Windows-only)..."
-            grep -v -E "^(pywin32|pywin32-ctypes|winshell|PyAutoGUI|PyGetWindow|PyScreeze|PyRect|PyMsgBox|MouseInfo)==" requirements.txt > requirements-linux.txt || cp requirements.txt requirements-linux.txt
-            echo "📦 Instalando dependências do requirements-linux.txt (pode levar alguns minutos)..."
+            echo "📦 Instalando dependências..."
             sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'
-            sudo -u django bash -c 'venv/bin/pip install --upgrade pip setuptools wheel'
-            echo "Instalando todas as dependências..."
-            sudo -u django bash -c 'set +e && venv/bin/pip install --no-cache-dir --upgrade -r requirements-linux.txt && set -e || echo "Algumas dependências opcionais podem ter falhado"'
-            echo "Verificando dependências críticas instaladas..."
-            sudo -u django bash -c 'venv/bin/pip list | grep -E "(Django|qrcode|requests|python-dotenv|gunicorn|whitenoise)" || echo "Algumas dependências podem não estar listadas"'
-            echo "✓ Dependências instaladas e verificadas"
+            sudo -u django bash -c 'venv/bin/pip install --upgrade pip'
+            sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
+            echo "✓ Dependências instaladas"
             
             echo "✅ Django checks"
             sudo -u django bash -c 'venv/bin/python manage.py check --deploy' || true

@@ -57,8 +57,7 @@ jobs:
           echo "    \"git fetch origin\","
           echo "    \"git reset --hard origin/main\","
           echo "    \"source venv/bin/activate\","
-          echo "    \"python -m pip install --upgrade pip setuptools wheel\",",
-          echo "    \"pip install --no-cache-dir --upgrade --force-reinstall -r requirements.txt\",",
+          echo "    \"pip install -r requirements.txt --upgrade --quiet\","
           echo "    \"python manage.py migrate\","
           echo "    \"python manage.py collectstatic --noinput\","
           echo "    \"sudo supervisorctl restart s-agendamento\","
