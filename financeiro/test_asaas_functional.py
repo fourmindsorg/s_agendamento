@@ -11,6 +11,7 @@ Certifique-se de ter configurado ASAAS_API_KEY no .env antes de executar.
 
 import os
 import json
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch, Mock, MagicMock
@@ -24,6 +25,43 @@ from django.utils import timezone
 from .models import AsaasPayment
 from .services.asaas import AsaasClient, AsaasAPIError
 from .test_utils import gerar_cpf_valido
+
+
+def wait_for_pix_qr(client, payment_id, max_wait=60, interval=2):
+    """
+    Aguarda o QR Code PIX ficar disponível.
+    
+    Args:
+        client: AsaasClient
+        payment_id: ID do pagamento
+        max_wait: Tempo máximo de espera em segundos (default: 60)
+        interval: Intervalo entre tentativas em segundos (default: 2)
+    
+    Returns:
+        tuple: (pix_data, elapsed_time) ou (None, elapsed_time) se não conseguir
+    """
+    start_time = time.time()
+    elapsed = 0
+    
+    while elapsed < max_wait:
+        try:
+            pix_data = client.get_pix_qr(payment_id)
+            elapsed_time = time.time() - start_time
+            if pix_data.get("payload"):
+                return pix_data, elapsed_time
+        except AsaasAPIError as e:
+            # Se for 404, ainda não está disponível, continuar tentando
+            if e.status_code == 404:
+                elapsed = time.time() - start_time
+                if elapsed < max_wait:
+                    time.sleep(interval)
+                    continue
+            # Outro erro, relançar
+            raise
+    
+    # Timeout
+    elapsed_time = time.time() - start_time
+    return None, elapsed_time
 
 
 class AsaasFunctionalTestCase(TestCase):
@@ -161,8 +199,7 @@ class AsaasFunctionalTestCase(TestCase):
         print(f"[OK] Pagamento PIX criado: {payment['id']}")
 
     def test_get_pix_qr_code(self):
-        """Testa obtenção de QR Code PIX com retry"""
-        import time
+        """Testa obtenção de QR Code PIX com espera se necessário"""
         client = AsaasClient()
         
         # Criar cliente e pagamento (com CPF)
@@ -183,52 +220,22 @@ class AsaasFunctionalTestCase(TestCase):
             description="Teste QR Code"
         )
         
-        # Obter QR Code com retry (aguardar até 60 segundos)
-        max_wait_time = 60  # segundos
-        retry_interval = 2  # segundos entre tentativas
-        start_time = time.time()
-        pix_data = None
-        attempts = 0
+        print(f"[INFO] Pagamento criado: {payment['id']}, aguardando QR Code...")
         
-        while (time.time() - start_time) < max_wait_time:
-            attempts += 1
-            elapsed = time.time() - start_time
-            try:
-                pix_data = client.get_pix_qr(payment["id"])
-                # Se chegou aqui, QR Code foi obtido com sucesso
-                elapsed_time = time.time() - start_time
-                break
-            except AsaasAPIError as e:
-                # Se for 404, QR Code ainda não está disponível, tentar novamente
-                if e.status_code == 404:
-                    # Mostrar progresso a cada 10 tentativas
-                    if attempts % 10 == 0:
-                        print(f"     Tentativa {attempts}: Aguardando QR Code... ({elapsed:.1f}s decorridos)")
-                    time.sleep(retry_interval)
-                    continue
-                else:
-                    # Outro tipo de erro, não continuar tentando
-                    raise
+        # Obter QR Code com espera (até 60 segundos)
+        pix_data, elapsed_time = wait_for_pix_qr(client, payment["id"], max_wait=60, interval=2)
         
-        elapsed_time = time.time() - start_time
+        self.assertIsNotNone(pix_data, f"QR Code nao ficou disponivel apos {elapsed_time:.1f} segundos")
+        self.assertIn("payload", pix_data)
+        self.assertIsInstance(pix_data["payload"], str)
+        self.assertGreater(len(pix_data["payload"]), 0)
         
-        if pix_data is None:
-            print(f"[WARN] QR Code nao foi gerado apos {elapsed_time:.2f} segundos ({attempts} tentativas)")
-            print(f"       Pagamento ID: {payment['id']}")
-            print(f"       Status do pagamento pode ser verificado no painel Asaas")
-            # Não falhar o teste, apenas avisar (limitação do sandbox)
-            self.skipTest(f"QR Code nao disponivel apos {max_wait_time}s (limitacao do sandbox Asaas)")
-        else:
-            self.assertIn("payload", pix_data)
-            self.assertIsInstance(pix_data["payload"], str)
-            self.assertGreater(len(pix_data["payload"]), 0)
-            
-            # Payload PIX deve começar com código correto
-            self.assertTrue(pix_data["payload"].startswith("000201"))
-            
-            print(f"[OK] QR Code obtido em {elapsed_time:.2f} segundos ({attempts} tentativa(s))")
-            print(f"     Payload: {pix_data['payload'][:50]}...")
-            print(f"     Tem imagem: {bool(pix_data.get('encodedImage') or pix_data.get('qrCode'))}")
+        # Payload PIX deve começar com código correto
+        self.assertTrue(pix_data["payload"].startswith("000201"))
+        
+        print(f"[OK] QR Code obtido em {elapsed_time:.1f} segundos")
+        print(f"     Payload: {pix_data['payload'][:50]}...")
+        print(f"     Tem imagem: {bool(pix_data.get('encodedImage') or pix_data.get('qrCode'))}")
 
     def test_get_payment_status(self):
         """Testa obtenção de status de pagamento"""
@@ -309,18 +316,30 @@ class AsaasFunctionalTestCase(TestCase):
 
     def test_complete_pix_flow(self):
         """Testa fluxo completo: Cliente → Pagamento → QR Code"""
-        import time
         client = AsaasClient()
         
         # Passo 1: Criar cliente (com CPF para pagamentos)
         import random
-        email_unico = f"fluxo.{random.randint(1000, 9999)}@example.com"
-        customer = client.create_customer(
-            name="Fluxo Completo Teste",
-            email=email_unico,
-            phone="11987654321",
-            cpf_cnpj=gerar_cpf_valido()
-        )
+        max_tentativas = 3
+        customer = None
+        
+        for tentativa in range(max_tentativas):
+            try:
+                email_unico = f"fluxo.{random.randint(1000, 9999)}@example.com"
+                customer = client.create_customer(
+                    name="Fluxo Completo Teste",
+                    email=email_unico,
+                    phone="11987654321",
+                    cpf_cnpj=gerar_cpf_valido()
+                )
+                break  # Sucesso, sair do loop
+            except AsaasAPIError as e:
+                if "invalid_object" in str(e) and tentativa < max_tentativas - 1:
+                    print(f"[WARN] Tentativa {tentativa + 1} falhou por CPF invalido, tentando novamente...")
+                    continue
+                raise
+        
+        self.assertIsNotNone(customer, "Nao foi possivel criar cliente apos varias tentativas")
         customer_id = customer["id"]
         print(f"[OK] Passo 1: Cliente criado - {customer_id}")
         
@@ -336,37 +355,12 @@ class AsaasFunctionalTestCase(TestCase):
         payment_id = payment["id"]
         print(f"[OK] Passo 2: Pagamento criado - {payment_id}")
         
-        # Passo 3: Obter QR Code com retry (aguardar até 60 segundos)
-        max_wait_time = 60
-        retry_interval = 2
-        start_time = time.time()
-        pix_data = None
-        attempts = 0
-        
-        while (time.time() - start_time) < max_wait_time:
-            attempts += 1
-            elapsed = time.time() - start_time
-            try:
-                pix_data = client.get_pix_qr(payment_id)
-                elapsed_time = time.time() - start_time
-                break
-            except AsaasAPIError as e:
-                if e.status_code == 404:
-                    if attempts % 10 == 0:
-                        print(f"     Tentativa {attempts}: Aguardando QR Code... ({elapsed:.1f}s decorridos)")
-                    time.sleep(retry_interval)
-                    continue
-                else:
-                    raise
-        
-        elapsed_time = time.time() - start_time
-        
-        if pix_data is None:
-            print(f"[WARN] QR Code nao foi gerado apos {elapsed_time:.2f} segundos ({attempts} tentativas)")
-            self.skipTest(f"QR Code nao disponivel apos {max_wait_time}s (limitacao do sandbox Asaas)")
-        else:
-            self.assertIn("payload", pix_data)
-            print(f"[OK] Passo 3: QR Code obtido em {elapsed_time:.2f} segundos ({attempts} tentativa(s))")
+        # Passo 3: Obter QR Code (com espera se necessário)
+        print(f"[INFO] Aguardando QR Code ficar disponivel...")
+        pix_data, elapsed_time = wait_for_pix_qr(client, payment_id, max_wait=60, interval=2)
+        self.assertIsNotNone(pix_data, f"QR Code nao ficou disponivel apos {elapsed_time:.1f} segundos")
+        self.assertIn("payload", pix_data)
+        print(f"[OK] Passo 3: QR Code obtido em {elapsed_time:.1f} segundos")
         
         # Passo 4: Verificar pagamento
         payment_status = client.get_payment(payment_id)
@@ -377,11 +371,9 @@ class AsaasFunctionalTestCase(TestCase):
         print(f"     Cliente: {customer_id}")
         print(f"     Pagamento: {payment_id}")
         print(f"     Payload PIX: {pix_data['payload'][:50]}...")
-        print(f"     Tempo total para QR Code: {elapsed_time:.2f} segundos")
 
     def test_payment_with_different_values(self):
         """Testa criação de pagamentos com diferentes valores"""
-        import time
         client = AsaasClient()
         
         import random
@@ -395,8 +387,6 @@ class AsaasFunctionalTestCase(TestCase):
         due_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
         
         valores = [10.00, 50.00, 100.00, 999.99]
-        max_wait_time = 60
-        retry_interval = 2
         
         for valor in valores:
             payment = client.create_payment(
@@ -409,36 +399,11 @@ class AsaasFunctionalTestCase(TestCase):
             
             self.assertEqual(float(payment["value"]), valor)
             
-            # Obter QR Code com retry
-            start_time = time.time()
-            pix_data = None
-            attempts = 0
-            
-            while (time.time() - start_time) < max_wait_time:
-                attempts += 1
-                elapsed = time.time() - start_time
-                try:
-                    pix_data = client.get_pix_qr(payment["id"])
-                    elapsed_time = time.time() - start_time
-                    break
-                except AsaasAPIError as e:
-                    if e.status_code == 404:
-                        if attempts % 10 == 0:
-                            print(f"       Tentativa {attempts}: Aguardando QR Code para R$ {valor:.2f}... ({elapsed:.1f}s)")
-                        time.sleep(retry_interval)
-                        continue
-                    else:
-                        raise
-            
-            elapsed_time = time.time() - start_time
-            
-            if pix_data is None:
-                print(f"[WARN] Pagamento R$ {valor:.2f}: QR Code nao gerado apos {elapsed_time:.2f}s ({attempts} tentativas)")
-                # Pular para próximo valor
-                continue
-            else:
-                self.assertIn("payload", pix_data)
-                print(f"[OK] Pagamento de R$ {valor:.2f} criado - QR Code obtido em {elapsed_time:.2f} segundos ({attempts} tentativa(s))")
+            # Aguardar QR Code ficar disponível
+            pix_data, elapsed_time = wait_for_pix_qr(client, payment["id"], max_wait=60, interval=2)
+            self.assertIsNotNone(pix_data, f"QR Code nao ficou disponivel apos {elapsed_time:.1f} segundos para valor R$ {valor:.2f}")
+            self.assertIn("payload", pix_data)
+            print(f"[OK] Pagamento de R$ {valor:.2f} criado - QR Code obtido em {elapsed_time:.1f} segundos")
 
     # ==========================================
     # Testes de Validação

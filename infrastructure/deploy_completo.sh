@@ -16,13 +16,12 @@ git fetch origin
 git reset --hard origin/main
 echo "✓ Código atualizado: $(git log --oneline -1)"
 
-# 2. Ativar venv (dependências já instaladas)
+# 2. Ativar venv e instalar dependências
 echo ""
-echo "2. Ativando ambiente virtual..."
+echo "2. Instalando dependências..."
 source venv/bin/activate
-# Instalação de requirements.txt removida - dependências já existem no venv
-# pip install -r requirements.txt --upgrade
-echo "✓ Ambiente virtual ativado (dependências já instaladas)"
+pip install -r requirements.txt --upgrade
+echo "✓ Dependências instaladas"
 
 # 3. Aplicar migrações
 echo ""
@@ -146,7 +145,7 @@ echo "🎉 DEPLOY CONCLUÍDO COM SUCESSO!"
 echo "=============================================="
 echo ""
 echo "✓ Código atualizado"
-echo "✓ Ambiente virtual preparado"
+echo "✓ Dependências instaladas"
 echo "✓ Migrações aplicadas"
 echo "✓ Arquivos estáticos coletados"
 echo "✓ Nginx configurado"
