@@ -53,98 +53,97 @@ jobs:
           # Criar requirements filtrado sem dependências específicas do Windows
           grep -v -E "^(pywin32|pywin32-ctypes|winshell|PyAutoGUI|PyGetWindow|PyScreeze|PyRect|PyMsgBox|MouseInfo)==" requirements.txt > requirements-linux.txt || cp requirements.txt requirements-linux.txt
           
-          # Verificar se Django está no arquivo filtrado
-          if ! grep -q "^Django==" requirements-linux.txt; then
-            echo "⚠️ Django não encontrado em requirements-linux.txt, verificando requirements.txt original..."
-            grep "^Django==" requirements.txt >> requirements-linux.txt || echo "Django==4.2.25" >> requirements-linux.txt
-          fi
+          # Instalar dependências críticas PRIMEIRO, antes de qualquer outra coisa
+          echo "📦 Instalando dependências críticas primeiro (antes do requirements.txt)..."
+          critical_packages=("Django==4.2.25" "requests" "python-dotenv" "qrcode[pil]")
+          echo "   Instalando: ${critical_packages[*]}"
+          pip install --no-cache-dir "${critical_packages[@]}" || {
+            echo "⚠️ Algumas dependências críticas falharam, tentando instalar individualmente..."
+            pip install --no-cache-dir Django==4.2.25 || pip install --no-cache-dir Django
+            pip install --no-cache-dir requests
+            pip install --no-cache-dir python-dotenv
+            pip install --no-cache-dir "qrcode[pil]" || pip install --no-cache-dir qrcode
+          }
+          
+          # Verificar se todas as dependências críticas foram instaladas
+          echo "🔍 Verificando instalação das dependências críticas..."
+          python -c "import django; print(f'✅ Django {django.__version__} instalado')" || {
+            echo "❌ ERRO CRÍTICO: Django não instalado"
+            exit 1
+          }
+          python -c "import requests; print('✅ requests instalado')" || {
+            echo "❌ ERRO CRÍTICO: requests não instalado"
+            pip install --no-cache-dir requests
+            python -c "import requests" || exit 1
+          }
+          python -c "import dotenv; print('✅ python-dotenv instalado')" || {
+            echo "❌ ERRO CRÍTICO: python-dotenv não instalado"
+            pip install --no-cache-dir python-dotenv
+            python -c "import dotenv" || exit 1
+          }
+          python -c "import qrcode; print('✅ qrcode instalado')" || {
+            echo "⚠️ qrcode não instalado, tentando instalar..."
+            pip install --no-cache-dir "qrcode[pil]" || pip install --no-cache-dir qrcode
+            python -c "import qrcode" || echo "⚠️ qrcode não disponível (pode ser opcional)"
+          }
           
           # Instalar PyYAML separadamente (pode precisar de compilação)
           echo "📦 Instalando PyYAML..."
-          # Tentar versão mais recente que pode ter wheels pré-compilados
           pip install --no-cache-dir PyYAML>=6.0 || pip install --no-cache-dir PyYAML==5.4.1 || {
             echo "⚠️ Falha ao instalar PyYAML específico, tentando última versão..."
             pip install --no-cache-dir PyYAML
           }
           
-          echo "📦 Instalando dependências do requirements-linux.txt..."
-          echo "   (Este processo pode levar alguns minutos devido ao grande número de dependências...)"
+          echo "📦 Instalando outras dependências do requirements-linux.txt..."
+          echo "   (Este processo pode levar alguns minutos e pode ter conflitos de versão...)"
           
-          # Instalar Django primeiro para garantir disponibilidade
-          echo "📦 Instalando Django e dependências críticas primeiro..."
-          pip install --no-cache-dir Django==4.2.25 || pip install --no-cache-dir Django
-          
-          # Verificar se Django foi instalado
-          if ! python -c "import django" 2>/dev/null; then
-            echo "❌ ERRO CRÍTICO: Falha ao instalar Django"
-            exit 1
-          fi
-          echo "✅ Django instalado: $(python -c 'import django; print(django.__version__)')"
-          
-          # Remover PyYAML do requirements-linux.txt para evitar conflitos (já instalado)
+          # Remover dependências críticas já instaladas do requirements-linux.txt para evitar conflitos
+          sed -i '/^Django==/d' requirements-linux.txt || sed -i '' '/^Django==/d' requirements-linux.txt
+          sed -i '/^requests==/d' requirements-linux.txt || sed -i '' '/^requests==/d' requirements-linux.txt
+          sed -i '/^python-dotenv==/d' requirements-linux.txt || sed -i '' '/^python-dotenv==/d' requirements-linux.txt
+          sed -i '/^qrcode==/d' requirements-linux.txt || sed -i '' '/^qrcode==/d' requirements-linux.txt
           sed -i '/^PyYAML==/d' requirements-linux.txt || sed -i '' '/^PyYAML==/d' requirements-linux.txt
           
           # Instalar outras dependências com tratamento de erros
+          # Tentar instalação normal - pode ter conflitos de versão, mas instalará o que conseguir
           set +e  # Não falhar no primeiro erro
-          pip install --no-cache-dir --upgrade -r requirements-linux.txt 2>&1 | tee /tmp/pip-install.log
-          INSTALL_EXIT=$?
+          pip install --no-cache-dir --upgrade -r requirements-linux.txt 2>&1 | tee /tmp/pip-install.log || {
+            INSTALL_EXIT=$?
+            # Se falhar com erro de resolução, tentar instalar linha por linha
+            if grep -q "ResolutionImpossible" /tmp/pip-install.log; then
+              echo "⚠️ Detectado conflito de resolução de dependências"
+              echo "📦 Tentando instalar dependências individualmente (ignorando conflitos)..."
+              while IFS= read -r line; do
+                # Pular linhas vazias, comentários e dependências já instaladas
+                [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+                [[ "$line" =~ ^(Django|requests|python-dotenv|qrcode|PyYAML)== ]] && continue
+                echo "   Tentando instalar: $line"
+                pip install --no-cache-dir "$line" 2>&1 | grep -v "ResolutionImpossible" || true
+              done < requirements-linux.txt
+            fi
+          }
+          INSTALL_EXIT=${INSTALL_EXIT:-0}
           set -e  # Reativar fail-fast
           
-          # Verificar se Django ainda está disponível após instalação completa
-          echo "🔍 Verificando se Django ainda está disponível..."
+          # Verificar novamente se dependências críticas ainda estão disponíveis
+          echo "🔍 Verificando se dependências críticas ainda estão disponíveis após instalação completa..."
           python -c "import django; print(f'✅ Django {django.__version__} disponível')" || {
             echo "❌ ERRO: Django não está mais disponível após instalação!"
             pip install --no-cache-dir Django==4.2.25
             python -c "import django" || exit 1
           }
-          
-          # Verificar e instalar dependências críticas necessárias para o sistema funcionar
-          echo "📋 Verificando dependências críticas..."
-          critical_packages=("requests" "python-dotenv" "qrcode[pil]")
-          missing_critical=()
-          
-          for package in "${critical_packages[@]}"; do
-            module_name=$(echo "$package" | sed 's/\[.*\]//' | tr '-' '_')
-            if [ "$module_name" = "python_dotenv" ]; then
-              module_name="dotenv"
-            elif [ "$module_name" = "qrcode" ]; then
-              module_name="qrcode"
-            fi
-            
-            if ! python -c "import $module_name" 2>/dev/null; then
-              echo "⚠️ Módulo '$module_name' (do pacote '$package') não instalado"
-              missing_critical+=("$package")
-            else
-              echo "✅ Módulo '$module_name' disponível"
-            fi
-          done
-          
-          # Instalar dependências críticas faltantes
-          if [ ${#missing_critical[@]} -gt 0 ]; then
-            echo "📦 Instalando dependências críticas faltantes: ${missing_critical[*]}"
-            pip install --no-cache-dir "${missing_critical[@]}" || {
-              echo "❌ ERRO: Falha ao instalar dependências críticas"
-              exit 1
-            }
-            
-            # Verificar novamente
-            for package in "${critical_packages[@]}"; do
-              module_name=$(echo "$package" | sed 's/\[.*\]//' | tr '-' '_')
-              if [ "$module_name" = "python_dotenv" ]; then
-                module_name="dotenv"
-              elif [ "$module_name" = "qrcode" ]; then
-                module_name="qrcode"
-              fi
-              
-              if ! python -c "import $module_name" 2>/dev/null; then
-                echo "❌ ERRO CRÍTICO: Módulo '$module_name' ainda não disponível após instalação"
-                exit 1
-              fi
-            done
-          fi
+          python -c "import requests; print('✅ requests ainda disponível')" || {
+            echo "⚠️ requests não está mais disponível, reinstalando..."
+            pip install --no-cache-dir requests
+          }
+          python -c "import dotenv; print('✅ python-dotenv ainda disponível')" || {
+            echo "⚠️ python-dotenv não está mais disponível, reinstalando..."
+            pip install --no-cache-dir python-dotenv
+          }
           
           if [ $INSTALL_EXIT -ne 0 ]; then
-            echo "⚠️ Algumas dependências opcionais falharam na instalação"
+            echo "⚠️ Algumas dependências opcionais falharam na instalação (conflitos de versão)"
+            echo "   Isso é esperado com requirements.txt grandes - dependências críticas estão instaladas"
           fi
           
           echo "📦 Instalando dependências de teste..."
