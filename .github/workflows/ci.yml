@@ -104,6 +104,11 @@ jobs:
           sed -i '/^qrcode==/d' requirements-linux.txt || sed -i '' '/^qrcode==/d' requirements-linux.txt
           sed -i '/^PyYAML==/d' requirements-linux.txt || sed -i '' '/^PyYAML==/d' requirements-linux.txt
           
+          # Atualizar tzdata para versão compatível (kombu requer >=2025.2)
+          echo "📦 Atualizando tzdata para versão compatível..."
+          sed -i 's/^tzdata==.*/tzdata>=2025.2/' requirements-linux.txt || sed -i '' 's/^tzdata==.*/tzdata>=2025.2/' requirements-linux.txt
+          pip install --no-cache-dir --upgrade 'tzdata>=2025.2' || pip install --no-cache-dir tzdata
+          
           # Instalar outras dependências com tratamento de erros
           # Tentar instalação normal - pode ter conflitos de versão, mas instalará o que conseguir
           set +e  # Não falhar no primeiro erro
