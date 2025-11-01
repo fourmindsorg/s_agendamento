@@ -43,9 +43,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          echo "📦 Instalando dependências do requirements.txt..."
+          pip install --no-cache-dir --upgrade --force-reinstall -r requirements.txt
+          echo "📦 Instalando dependências de teste..."
           pip install pytest pytest-django pytest-cov flake8
+          echo "✓ Verificando dependências críticas instaladas..."
+          pip list | grep -E "(Django|qrcode|requests|python-dotenv)" || echo "Verificação de dependências concluída"
+          echo "✅ Todas as dependências instaladas com sucesso"
 
       - name: Lint with flake8
         run: |

@@ -216,7 +216,7 @@
     <div class="pix-content">
         <!-- Status do Pagamento -->
         <div class="text-center mb-4">
-            <span class="status-badge status-{{ pix_data.status|lower }}">
+            <span class="status-badge status-{{ pix_data.status|lower|slugify }}">
                 <i class="fas fa-clock me-1"></i>
                 {{ pix_data.status|default:"PENDENTE" }}
             </span>
@@ -232,11 +232,24 @@
                 <img src="data:image/png;base64,{{ pix_data.qr_code_image }}" 
                      alt="QR Code PIX" 
                      class="qr-code-image">
+            {% elif pix_data.pix_copia_cola %}
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Dica:</strong> Use o código PIX abaixo para realizar o pagamento. O QR Code será gerado automaticamente.
+                </div>
+                <div class="qr-code-image d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <i class="fas fa-qrcode fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">QR Code será gerado automaticamente</p>
+                        <p class="small text-muted">Use o código copia e cola abaixo</p>
+                    </div>
+                </div>
             {% else %}
                 <div class="qr-code-image d-flex align-items-center justify-content-center">
                     <div class="text-center">
                         <i class="fas fa-qrcode fa-3x text-muted mb-2"></i>
                         <p class="text-muted">QR Code não disponível</p>
+                        <p class="small text-muted">Aguardando geração do código PIX</p>
                     </div>
                 </div>
             {% endif %}
@@ -263,7 +276,17 @@
             
             <div class="detail-row">
                 <span class="detail-label">Vencimento:</span>
-                <span class="detail-value">{{ pix_data.vencimento|date:"d/m/Y" }}</span>
+                <span class="detail-value">
+                    {% if pix_data.vencimento %}
+                        {% if pix_data.vencimento|length == 10 %}
+                            {{ pix_data.vencimento|slice:"8:10" }}/{{ pix_data.vencimento|slice:"5:7" }}/{{ pix_data.vencimento|slice:":4" }}
+                        {% else %}
+                            {{ pix_data.vencimento|date:"d/m/Y" }}
+                        {% endif %}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </span>
             </div>
             
             <div class="detail-row">

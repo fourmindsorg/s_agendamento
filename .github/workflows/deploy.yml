@@ -140,8 +140,11 @@ jobs:
               "sudo -u django git fetch origin",
               "sudo -u django git reset --hard origin/main",
               "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
-              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
-              "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
+              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip setuptools wheel'",
+              "echo Instalando dependências do requirements.txt...",
+              "sudo -u django bash -c 'venv/bin/pip install --no-cache-dir --upgrade --force-reinstall -r requirements.txt'",
+              "echo Verificando instalação das dependências críticas...",
+              "sudo -u django bash -c 'venv/bin/pip list | grep -E \"(Django|qrcode|requests|python-dotenv)\" || echo \"Algumas dependências podem não estar instaladas\"'",
               "sudo -u django bash -c 'venv/bin/python manage.py check --deploy'",
               "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
               "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
@@ -250,11 +253,14 @@ jobs:
             sudo -u django git reset --hard origin/main
             sudo -u django git --no-pager log --oneline -1 || true
             
-            echo "📦 Instalando dependências..."
+            echo "📦 Instalando dependências do requirements.txt..."
             sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'
-            sudo -u django bash -c 'venv/bin/pip install --upgrade pip'
-            sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
-            echo "✓ Dependências instaladas"
+            sudo -u django bash -c 'venv/bin/pip install --upgrade pip setuptools wheel'
+            echo "Instalando todas as dependências (isso pode levar alguns minutos)..."
+            sudo -u django bash -c 'venv/bin/pip install --no-cache-dir --upgrade --force-reinstall -r requirements.txt'
+            echo "Verificando dependências críticas instaladas..."
+            sudo -u django bash -c 'venv/bin/pip list | grep -E "(Django|qrcode|requests|python-dotenv|gunicorn|whitenoise)" || echo "Algumas dependências podem não estar listadas"'
+            echo "✓ Dependências instaladas e verificadas"
             
             echo "✅ Django checks"
             sudo -u django bash -c 'venv/bin/python manage.py check --deploy' || true

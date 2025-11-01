@@ -28,10 +28,40 @@ from django.views.decorators.http import require_POST
 from .models import PreferenciasUsuario, Plano, AssinaturaUsuario
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+
+
+def traduzir_status_asaas(status_en: str) -> str:
+    """
+    Traduz o status do Asaas (em inglês) para português.
+    
+    Args:
+        status_en: Status em inglês do Asaas (PENDING, RECEIVED, etc.)
+    
+    Returns:
+        Status traduzido para português
+    """
+    traducao_status = {
+        "PENDING": "PENDENTE",
+        "RECEIVED": "RECEBIDO",
+        "OVERDUE": "VENCIDO",
+        "REFUNDED": "REEMBOLSADO",
+        "RECEIVED_IN_CASH_UNDONE": "RECEBIDO EM ESPÉCIE (DESFEITO)",
+        "CHARGEBACK_REQUESTED": "CHARGEBACK SOLICITADO",
+        "CHARGEBACK_DISPUTE": "DISPUTA DE CHARGEBACK",
+        "AWAITING_CHARGEBACK_REVERSAL": "AGUARDANDO REVERSÃO DE CHARGEBACK",
+        "DUNNING_REQUESTED": "COBRANÇA SOLICITADA",
+        "DUNNING_RECEIVED": "COBRANÇA RECEBIDA",
+        "AWAITING_RISK_ANALYSIS": "AGUARDANDO ANÁLISE DE RISCO",
+        "APPROVED": "APROVADO",
+        "CANCELLED": "CANCELADO",
+        "DELETED": "DELETADO",
+    }
+    return traducao_status.get(status_en.upper(), status_en.upper())
+
 
 # Importação condicional do AsaasClient
 try:
@@ -823,6 +853,28 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
     ):
         """Processa o pagamento do plano"""
 
+        # Verificar se já existe assinatura aguardando pagamento
+        assinatura_aguardando = AssinaturaUsuario.objects.filter(
+            usuario=request.user, status="aguardando_pagamento"
+        ).first()
+
+        if assinatura_aguardando:
+            # Redirecionar para a página de pagamento da assinatura pendente
+            messages.warning(
+                request,
+                f"Você já possui uma assinatura aguardando pagamento. "
+                f"Finalize o pagamento pendente antes de criar uma nova assinatura."
+            )
+            if metodo_pagamento == "pix":
+                return redirect("authentication:payment_pix", assinatura_id=assinatura_aguardando.id)
+            else:
+                # Se for cartão, redirecionar para a seleção de planos ou mostrar erro
+                messages.error(
+                    request,
+                    "Não é possível criar uma nova assinatura enquanto há uma aguardando pagamento."
+                )
+                return redirect("authentication:plan_selection")
+
         # Calcular valor baseado no método de pagamento
         if metodo_pagamento == "pix":
             valor = plano.preco_pix
@@ -830,19 +882,40 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             valor = plano.preco_cartao
 
         # Verificar se já existe assinatura ativa
-        assinatura_ativa = AssinaturaUsuario.objects.filter(
-            usuario=request.user, status="ativa"
-        ).first()
+        # Buscar a assinatura ativa com a data_fim mais recente que ainda não expirou
+        assinatura_ativa = (
+            AssinaturaUsuario.objects.filter(
+                usuario=request.user, status="ativa"
+            )
+            .order_by("-data_fim")
+            .first()
+        )
 
-        # Se já tem assinatura ativa, começar nova assinatura no dia seguinte ao término da atual
-        if assinatura_ativa and assinatura_ativa.data_fim:
+        # Se já tem assinatura ativa e ainda não expirou,
+        # começar nova assinatura no dia seguinte ao término da atual
+        if (
+            assinatura_ativa
+            and assinatura_ativa.data_fim
+            and assinatura_ativa.data_fim >= timezone.now()
+        ):
             data_inicio = assinatura_ativa.data_fim + timedelta(days=1)
+            logging.info(
+                f"Nova assinatura será iniciada em {data_inicio.strftime('%Y-%m-%d')} "
+                f"(1 dia após o término da assinatura atual que termina em {assinatura_ativa.data_fim.strftime('%Y-%m-%d')})"
+            )
         else:
             data_inicio = timezone.now()
+            if assinatura_ativa:
+                logging.info(
+                    f"Assinatura ativa encontrada mas já expirou ou sem data_fim. "
+                    f"Nova assinatura será iniciada imediatamente."
+                )
 
         # Criar assinatura com status aguardando_pagamento
+        # Calcular data_fim baseada na data_inicio calculada
         data_fim = data_inicio + timedelta(days=plano.duracao_dias)
 
+        # Criar assinatura (data_inicio será definida depois devido a auto_now_add=True)
         assinatura = AssinaturaUsuario.objects.create(
             usuario=request.user,
             plano=plano,
@@ -850,6 +923,21 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             status="aguardando_pagamento",
             valor_pago=valor,
             metodo_pagamento=metodo_pagamento,
+        )
+        
+        # Atualizar data_inicio manualmente (já que tem auto_now_add=True)
+        # Isso permite definir uma data futura se necessário
+        if assinatura.data_inicio != data_inicio:
+            AssinaturaUsuario.objects.filter(id=assinatura.id).update(data_inicio=data_inicio)
+            # Recarregar o objeto para ter a data_inicio atualizada
+            assinatura.refresh_from_db()
+        
+        logging.info(
+            f"Assinatura criada: ID={assinatura.id}, "
+            f"Início={assinatura.data_inicio.strftime('%Y-%m-%d %H:%M:%S')}, "
+            f"Fim={assinatura.data_fim.strftime('%Y-%m-%d %H:%M:%S')}, "
+            f"Plano={plano.nome}, "
+            f"Status={assinatura.status}"
         )
 
         if metodo_pagamento == "pix":
@@ -901,7 +989,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             context["assinatura"] = assinatura
 
             # Gerar dados do PIX
-            qr_data = self.gerar_qr_code_pix(
+            pix_data = self.gerar_qr_code_pix(
                 assinatura.plano,
                 assinatura.valor_pago,
                 {
@@ -913,7 +1001,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 },
                 assinatura,
             )
-            context["qr_data"] = qr_data
+            context["pix_data"] = pix_data
 
         except AssinaturaUsuario.DoesNotExist:
             messages.error(self.request, "Assinatura não encontrada.")
@@ -924,19 +1012,59 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
     def gerar_qr_code_pix(self, plano, valor, billing_data, assinatura):
         """Gera dados para QR Code PIX usando API Asaas"""
 
-        # Se já tem payment_id, não precisa criar novamente
+        # Se já tem payment_id, buscar dados do Asaas novamente
         if assinatura.asaas_payment_id:
             logging.info(f"Usando payment_id existente: {assinatura.asaas_payment_id}")
+            
+            if ASAAS_AVAILABLE:
+                try:
+                    # Buscar dados atualizados do pagamento
+                    asaas_client = AsaasClient()
+                    payment_data = asaas_client.get_payment(assinatura.asaas_payment_id)
+                    pix_data = asaas_client.get_pix_qr(assinatura.asaas_payment_id)
+                    
+                    payload = pix_data.get("payload", "")
+                    qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
+                    
+                    # Se não houver imagem, gerar a partir do payload
+                    if not qr_code_image and payload:
+                        try:
+                            from financeiro.utils import generate_qr_code_from_payload
+                            qr_code_image = generate_qr_code_from_payload(payload)
+                        except Exception as e:
+                            logging.warning(f"Não foi possível gerar QR Code: {e}")
+                            qr_code_image = ""
+                    
+                    # Extrair data de vencimento do pagamento
+                    due_date = payment_data.get("dueDate", "")
+                    
+                    status_en = payment_data.get("status", "PENDING")
+                    return {
+                        "payment_id": assinatura.asaas_payment_id,
+                        "qr_code": payload,
+                        "qr_code_image": qr_code_image or "",
+                        "chave_pix": payload,
+                        "valor": float(valor),
+                        "descricao": f"Pagamento - {plano.nome}",
+                        "vencimento": due_date,
+                        "status": traduzir_status_asaas(status_en),
+                        "pix_copia_cola": payload,
+                    }
+                except Exception as e:
+                    logging.error(f"Erro ao buscar dados do Asaas: {e}")
+                    # Continuar para criar novo pagamento abaixo
+            
+            # Fallback se não conseguir buscar dados
             return {
                 "payment_id": assinatura.asaas_payment_id,
-                "qr_code": "qr_code_existente",
+                "qr_code": "",
                 "qr_code_image": "",
-                "chave_pix": "chave_pix_existente",
+                "chave_pix": "",
                 "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": "",
-                "status": "PENDING",
-                "pix_copia_cola": "qr_code_existente",
+                "status": traduzir_status_asaas("PENDING"),
+                "pix_copia_cola": "",
             }
 
         if not ASAAS_AVAILABLE:
@@ -959,9 +1087,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             )
 
             # Criar cobrança PIX
-            from datetime import datetime, timedelta
-
-            due_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+            due_date = (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
             payment_data = asaas_client.create_payment(
                 customer_id=customer_data["id"],
@@ -974,20 +1100,34 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             # Obter QR Code PIX
             pix_data = asaas_client.get_pix_qr(payment_data["id"])
 
+            # Extrair dados do PIX
+            payload = pix_data.get("payload", "")
+            qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
+            
+            # Se não houver imagem do QR Code, gerar a partir do payload
+            if not qr_code_image and payload:
+                try:
+                    from financeiro.utils import generate_qr_code_from_payload
+                    qr_code_image = generate_qr_code_from_payload(payload)
+                except Exception as e:
+                    logging.warning(f"Não foi possível gerar QR Code: {e}")
+                    qr_code_image = ""
+
             # Salvar payment_id na assinatura
             assinatura.asaas_payment_id = payment_data["id"]
             assinatura.save()
 
+            status_en = payment_data.get("status", "PENDING")
             return {
                 "payment_id": payment_data["id"],
-                "qr_code": pix_data.get("payload", ""),
-                "qr_code_image": pix_data.get("encodedImage", ""),
-                "chave_pix": pix_data.get("payload", ""),
+                "qr_code": payload,
+                "qr_code_image": qr_code_image or "",
+                "chave_pix": payload,
                 "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": due_date,
-                "status": payment_data.get("status", "PENDING"),
-                "pix_copia_cola": pix_data.get("payload", ""),
+                "status": traduzir_status_asaas(status_en),
+                "pix_copia_cola": payload,
             }
 
         except Exception as e:
@@ -1002,7 +1142,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 "valor": valor_float,
                 "descricao": f"Pagamento - {plano.nome}",
                 "vencimento": (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
-                "status": "PENDING",
+                "status": traduzir_status_asaas("PENDING"),
                 "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor_float}-{billing_data['cpf']}5204000053039865405{valor_float:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
                 "erro": "Modo simulação ativado",
             }

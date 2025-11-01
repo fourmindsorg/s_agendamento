@@ -75,12 +75,31 @@ except Exception:
     # Em desenvolvimento ou se o pacote não estiver instalado, seguir sem WhiteNoise
     pass
 
+# ========================================
 # Configurações da API Asaas
-ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY")
-ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox")  # 'sandbox' ou 'production'
+# ========================================
+# Para obter sua chave de API:
+# 1. Acesse https://www.asaas.com/minha-conta/integracoes/chaves-api (produção)
+#    ou https://sandbox.asaas.com/minha-conta/integracoes/chaves-api (sandbox)
+# 2. Gere uma nova chave de API
+# 3. Configure no arquivo .env: ASAAS_API_KEY=sua_chave_aqui
+
+# Configuração de API Keys por ambiente
+ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox").lower()  # 'sandbox' ou 'production'
+
+# Carregar chave de API baseado no ambiente
+if ASAAS_ENV == "sandbox":
+    ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_SANDBOX") or os.environ.get("ASAAS_API_KEY")
+else:
+    ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_PRODUCTION") or os.environ.get("ASAAS_API_KEY")
+
 ASAAS_WEBHOOK_TOKEN = os.environ.get(
     "ASAAS_WEBHOOK_TOKEN"
-)  # Token para validar webhooks
+)  # Token para validar webhooks (configure no painel do Asaas)
+
+# Habilitar/desabilitar funcionalidades do Asaas
+# Útil para desabilitar em desenvolvimento quando não há chave configurada
+ASAAS_ENABLED = bool(ASAAS_API_KEY)
 
 ROOT_URLCONF = "core.urls"
 
