@@ -47,22 +47,54 @@ jobs:
           echo "📦 Preparando requirements.txt para Linux (removendo dependências Windows-only)..."
           # Criar requirements filtrado sem dependências específicas do Windows
           grep -v -E "^(pywin32|pywin32-ctypes|winshell|PyAutoGUI|PyGetWindow|PyScreeze|PyRect|PyMsgBox|MouseInfo)==" requirements.txt > requirements-linux.txt || cp requirements.txt requirements-linux.txt
+          
+          # Verificar se Django está no arquivo filtrado
+          if ! grep -q "^Django==" requirements-linux.txt; then
+            echo "⚠️ Django não encontrado em requirements-linux.txt, verificando requirements.txt original..."
+            grep "^Django==" requirements.txt >> requirements-linux.txt || echo "Django==4.2.25" >> requirements-linux.txt
+          fi
+          
           echo "📦 Instalando dependências do requirements-linux.txt..."
           echo "   (Este processo pode levar alguns minutos devido ao grande número de dependências...)"
-          # Instalar com tratamento de erros - continuar mesmo se alguns pacotes falharem
+          
+          # Instalar Django primeiro para garantir disponibilidade
+          echo "📦 Instalando Django e dependências críticas primeiro..."
+          pip install --no-cache-dir Django==4.2.25 || pip install --no-cache-dir Django
+          
+          # Verificar se Django foi instalado
+          if ! python -c "import django" 2>/dev/null; then
+            echo "❌ ERRO CRÍTICO: Falha ao instalar Django"
+            exit 1
+          fi
+          echo "✅ Django instalado: $(python -c 'import django; print(django.__version__)')"
+          
+          # Instalar outras dependências com tratamento de erros
           set +e  # Não falhar no primeiro erro
           pip install --no-cache-dir --upgrade -r requirements-linux.txt 2>&1 | tee /tmp/pip-install.log
           INSTALL_EXIT=$?
           set -e  # Reativar fail-fast
+          
+          # Verificar se Django ainda está disponível após instalação completa
+          echo "🔍 Verificando se Django ainda está disponível..."
+          python -c "import django; print(f'✅ Django {django.__version__} disponível')" || {
+            echo "❌ ERRO: Django não está mais disponível após instalação!"
+            pip install --no-cache-dir Django==4.2.25
+            python -c "import django" || exit 1
+          }
+          
+          # Verificar outras dependências críticas
+          echo "📋 Verificando outras dependências críticas..."
+          python -c "import requests" || echo "⚠️ requests não instalado (opcional)"
+          python -c "import qrcode" || echo "⚠️ qrcode não instalado (opcional)"
+          python -c "import dotenv" || echo "⚠️ python-dotenv não instalado (opcional)"
+          
           if [ $INSTALL_EXIT -ne 0 ]; then
-            echo "⚠️ Algumas dependências falharam na instalação (podem ser opcionais)"
-            echo "📋 Verificando se dependências críticas foram instaladas..."
+            echo "⚠️ Algumas dependências opcionais falharam na instalação"
           fi
+          
           echo "📦 Instalando dependências de teste..."
           pip install pytest pytest-django pytest-cov flake8
-          echo "✓ Verificando dependências críticas instaladas..."
-          pip list | grep -E "(Django|qrcode|requests|python-dotenv)" || echo "Verificação de dependências concluída"
-          echo "✅ Dependências principais instaladas com sucesso"
+          echo "✅ Dependências críticas verificadas e instaladas com sucesso"
 
       - name: Lint with flake8
         run: |
@@ -81,6 +113,17 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
         run: |
+          # Verificar se Django está disponível antes de rodar migrações
+          echo "🔍 Verificando Django antes de rodar migrações..."
+          python -c "import django; print(f'✅ Django {django.__version__} disponível')" || {
+            echo "❌ Django não disponível! Tentando reinstalar..."
+            pip install --no-cache-dir Django==4.2.25
+            python -c "import django" || {
+              echo "❌ Falha crítica: Django não pode ser importado"
+              exit 1
+            }
+          }
+          echo "🔄 Executando migrações..."
           python manage.py migrate --settings=core.settings
 
       - name: Run tests
