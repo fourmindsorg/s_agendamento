@@ -41,6 +41,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libyaml-dev libffi-dev libssl-dev python3-dev
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
@@ -53,6 +58,14 @@ jobs:
             echo "⚠️ Django não encontrado em requirements-linux.txt, verificando requirements.txt original..."
             grep "^Django==" requirements.txt >> requirements-linux.txt || echo "Django==4.2.25" >> requirements-linux.txt
           fi
+          
+          # Instalar PyYAML separadamente (pode precisar de compilação)
+          echo "📦 Instalando PyYAML..."
+          # Tentar versão mais recente que pode ter wheels pré-compilados
+          pip install --no-cache-dir PyYAML>=6.0 || pip install --no-cache-dir PyYAML==5.4.1 || {
+            echo "⚠️ Falha ao instalar PyYAML específico, tentando última versão..."
+            pip install --no-cache-dir PyYAML
+          }
           
           echo "📦 Instalando dependências do requirements-linux.txt..."
           echo "   (Este processo pode levar alguns minutos devido ao grande número de dependências...)"
@@ -67,6 +80,9 @@ jobs:
             exit 1
           fi
           echo "✅ Django instalado: $(python -c 'import django; print(django.__version__)')"
+          
+          # Remover PyYAML do requirements-linux.txt para evitar conflitos (já instalado)
+          sed -i '/^PyYAML==/d' requirements-linux.txt || sed -i '' '/^PyYAML==/d' requirements-linux.txt
           
           # Instalar outras dependências com tratamento de erros
           set +e  # Não falhar no primeiro erro
