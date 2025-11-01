@@ -26,6 +26,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "0.0.0.0",
+    "3.80.178.120",
     "fourmindstech.com.br",
 ]
 

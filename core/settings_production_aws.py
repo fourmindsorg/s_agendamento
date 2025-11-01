@@ -10,6 +10,7 @@ DEBUG = False
 
 # Hosts permitidos
 ALLOWED_HOSTS = [
+    "52.20.60.108",
     "fourmindstech.com.br",
     "localhost",
     "127.0.0.1",
