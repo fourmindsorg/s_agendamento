@@ -42,25 +42,42 @@ def wait_for_pix_qr(client, payment_id, max_wait=60, interval=2):
     """
     start_time = time.time()
     elapsed = 0
+    tentativa = 0
     
     while elapsed < max_wait:
+        tentativa += 1
         try:
             pix_data = client.get_pix_qr(payment_id)
             elapsed_time = time.time() - start_time
-            if pix_data.get("payload"):
+            if pix_data and pix_data.get("payload"):
+                print(f"     [INFO] QR Code obtido na tentativa {tentativa} apos {elapsed_time:.1f} segundos")
                 return pix_data, elapsed_time
         except AsaasAPIError as e:
             # Se for 404, ainda não está disponível, continuar tentando
             if e.status_code == 404:
                 elapsed = time.time() - start_time
                 if elapsed < max_wait:
+                    # Mostrar progresso a cada 10 segundos
+                    if tentativa % 5 == 0:
+                        print(f"     [INFO] Tentativa {tentativa}: QR Code ainda nao disponivel ({elapsed:.1f}s)...")
                     time.sleep(interval)
                     continue
-            # Outro erro, relançar
+                else:
+                    # Timeout atingido
+                    elapsed_time = time.time() - start_time
+                    print(f"     [WARN] Timeout apos {elapsed_time:.1f} segundos ({tentativa} tentativas)")
+                    return None, elapsed_time
+            # Outro erro diferente de 404, relançar
+            raise
+        except Exception as e:
+            # Erro inesperado
+            elapsed_time = time.time() - start_time
+            print(f"     [ERRO] Erro inesperado na tentativa {tentativa}: {e}")
             raise
     
-    # Timeout
+    # Timeout (não deveria chegar aqui, mas por segurança)
     elapsed_time = time.time() - start_time
+    print(f"     [WARN] Timeout apos {elapsed_time:.1f} segundos ({tentativa} tentativas)")
     return None, elapsed_time
 
 
