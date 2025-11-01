@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import datetime, time
-from .models import Cliente, TipoServico, Agendamento
+from .models import Cliente, TipoServico, Agendamento, StatusAgendamento
 import re
 
 
@@ -292,9 +292,15 @@ class AgendamentoForm(forms.ModelForm):
         return cleaned_data
 
 
-class AgendamentoStatusForm(forms.ModelForm):
+class AgendamentoStatusForm(forms.Form):
     """Form para alterar status do agendamento"""
 
+    status = forms.ChoiceField(
+        choices=StatusAgendamento.choices,
+        widget=forms.RadioSelect(attrs={"class": "btn-check"}),
+        label="Status"
+    )
+    
     observacoes_status = forms.CharField(
         required=False,
         max_length=500,
@@ -308,28 +314,26 @@ class AgendamentoStatusForm(forms.ModelForm):
         help_text="Adicione observações sobre a mudança de status",
     )
 
-    class Meta:
-        model = Agendamento
-        fields = ["status"]
-        widgets = {"status": forms.RadioSelect(attrs={"class": "form-check-input m-0"})}
-
     def __init__(self, *args, **kwargs):
+        instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
+        
+        # Set initial status if editing
+        if instance:
+            self.fields['status'].initial = instance.status
 
-        # Personalizar choices se necessário
-        self.fields["status"].widget.attrs.update({"class": "btn-check"})
-
-    def save(self, commit=True):
-        agendamento = super().save(commit=False)
-
+    def save(self, instance):
+        """Save the status change to the instance"""
+        instance.status = self.cleaned_data["status"]
+        
         # Adicionar observações sobre mudança de status
         observacoes_status = self.cleaned_data.get("observacoes_status")
         if observacoes_status:
-            if agendamento.observacoes:
-                agendamento.observacoes += f"\n\n[{timezone.now().strftime('%d/%m/%Y %H:%M')}] Status alterado para {agendamento.get_status_display()}: {observacoes_status}"
+            if instance.observacoes:
+                instance.observacoes += f"\n\n[{timezone.now().strftime('%d/%m/%Y %H:%M')}] Status alterado para {instance.get_status_display()}: {observacoes_status}"
             else:
-                agendamento.observacoes = f"[{timezone.now().strftime('%d/%m/%Y %H:%M')}] Status alterado para {agendamento.get_status_display()}: {observacoes_status}"
-
-        if commit:
-            agendamento.save()
-        return agendamento
+                instance.observacoes = f"[{timezone.now().strftime('%d/%m/%Y %H:%M')}] Status alterado para {instance.get_status_display()}: {observacoes_status}"
+        
+        # Pular validação de data passada ao alterar apenas o status
+        instance.save(skip_date_validation=True)
+        return instance

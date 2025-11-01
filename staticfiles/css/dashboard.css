@@ -274,7 +274,7 @@
 Espaço Vazio para Celular (Smartphones - Máx. 600px)
 ===================================================
 */
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
 
   /*
       ===============================================
@@ -346,7 +346,7 @@ Espaço Vazio para Celular (Smartphones - Máx. 600px)
   .card .border-top {
     padding-top: 0.5rem !important;
   }
-}
+} */
 
 /*
 ===================================================

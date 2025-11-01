@@ -1,0 +1,115 @@
+<!-- Modal para Mensagens do Django -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="messageModalContent">
+            <div class="modal-header" id="messageModalHeader">
+                <h5 class="modal-title" id="messageModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="messageModalTitle">Informação</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="messageModalBody">
+                <p id="messageModalMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var messageQueue = [];
+
+function showMessageModal(type, message) {
+    const modalElement = document.getElementById('messageModal');
+    const modalContent = document.getElementById('messageModalContent');
+    const modalHeader = document.getElementById('messageModalHeader');
+    const modalTitle = document.getElementById('messageModalTitle');
+    const modalMessage = document.getElementById('messageModalMessage');
+    
+    // Remover classes existentes
+    modalContent.className = 'modal-content';
+    modalHeader.className = 'modal-header';
+    
+    // Configurar estilo baseado no tipo
+    let titleText = 'Informação';
+    let iconClass = 'fa-info-circle';
+    
+    if (type === 'error' || type === 'danger') {
+        modalContent.classList.add('border-danger');
+        modalHeader.classList.add('bg-danger', 'text-white');
+        titleText = 'Erro';
+        iconClass = 'fa-exclamation-triangle';
+    } else if (type === 'warning') {
+        modalContent.classList.add('border-warning');
+        modalHeader.classList.add('bg-warning', 'text-dark');
+        titleText = 'Aviso';
+        iconClass = 'fa-exclamation-circle';
+    } else if (type === 'success') {
+        modalContent.classList.add('border-success');
+        modalHeader.classList.add('bg-success', 'text-white');
+        titleText = 'Sucesso';
+        iconClass = 'fa-check-circle';
+    } else if (type === 'info') {
+        modalContent.classList.add('border-info');
+        modalHeader.classList.add('bg-info', 'text-white');
+        titleText = 'Informação';
+        iconClass = 'fa-info-circle';
+    } else {
+        modalContent.classList.add('border-primary');
+        modalHeader.classList.add('bg-primary', 'text-white');
+        titleText = 'Mensagem';
+        iconClass = 'fa-bell';
+    }
+    
+    // Atualizar conteúdo
+    modalTitle.textContent = titleText;
+    const iconElement = modalHeader.querySelector('i');
+    if (iconElement) {
+        iconElement.className = 'fas ' + iconClass + ' me-2';
+    }
+    modalMessage.textContent = message;
+    
+    // Criar e mostrar modal
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Processar próxima mensagem após fechar
+    modalElement.addEventListener('hidden.bs.modal', function hiddenHandler() {
+        modalElement.removeEventListener('hidden.bs.modal', hiddenHandler);
+        processNextMessage();
+    }, { once: true });
+}
+
+function processNextMessage() {
+    if (messageQueue.length > 0) {
+        const msg = messageQueue.shift();
+        showMessageModal(msg.tags, msg.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        messageQueue = [];
+        {% for message in messages %}
+            messageQueue.push({
+                level: '{{ message.level }}',
+                tags: '{{ message.tags }}',
+                message: '{{ message|escapejs }}',
+                extra_tags: '{{ message.extra_tags|default:""|escapejs }}'
+            });
+        {% endfor %}
+        
+        // Processar primeira mensagem
+        if (messageQueue.length > 0) {
+            const msg = messageQueue.shift();
+            showMessageModal(msg.tags, msg.message);
+        }
+    {% endif %}
+});
+
+// Função global para ser usada em outros scripts
+window.showMessageModal = showMessageModal;
+</script>

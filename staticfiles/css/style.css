@@ -2482,7 +2482,7 @@ small {
     }
 }
 
-@media (max-width: 600px) {
+/* @media (max-width: 600px) {
     .header-greeting {
         text-align: center;
         width: 100%;
@@ -2538,7 +2538,7 @@ small {
     .card .border-top {
         padding-top: 0.5rem !important;
     }
-}
+} */
 
 /* Delay nas animações dos cards */
 .row .col-md-3:nth-child(1) .card {

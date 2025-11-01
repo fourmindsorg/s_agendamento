@@ -170,8 +170,21 @@ class Agendamento(models.Model):
         if not self.valor_cobrado and self.servico:
             self.valor_cobrado = self.servico.preco
 
+        # Verificar se deve pular validação de data passada
+        # (por exemplo, quando apenas está mudando o status de um agendamento antigo)
+        skip_date_validation = kwargs.pop('skip_date_validation', False)
+        
         # Executar validações antes de salvar
-        self.full_clean()
+        if skip_date_validation:
+            # Validar apenas campos específicos, ignorando data_agendamento
+            errors = {}
+            if self.hora_inicio and self.hora_fim:
+                if self.hora_fim <= self.hora_inicio:
+                    errors["hora_fim"] = "Hora de fim deve ser maior que hora de início."
+            if errors:
+                raise ValidationError(errors)
+        else:
+            self.full_clean()
 
         super().save(*args, **kwargs)
 

@@ -9,6 +9,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
     DetailView,
+    View,
 )
 from authentication.mixins import SubscriptionRequiredMixin, ReadOnlyForExpiredMixin
 from django.db.models import Q, Count, Sum
@@ -919,39 +920,53 @@ class AgendamentoDeleteView(LoginRequiredMixin, SubscriptionRequiredMixin, Delet
         return super().delete(request, *args, **kwargs)
 
 
-class AgendamentoStatusUpdateView(
-    LoginRequiredMixin, SubscriptionRequiredMixin, UpdateView
-):
+class AgendamentoStatusUpdateView(LoginRequiredMixin, SubscriptionRequiredMixin, View):
     """View para alterar status do agendamento"""
-
-    model = Agendamento
-    form_class = AgendamentoStatusForm
+    
     template_name = "agendamentos/agendamento_status_form.html"
-    context_object_name = "agendamento"
 
     def get_queryset(self):
         return Agendamento.objects.filter(criado_por=self.request.user)
 
-    def get_success_url(self):
-        messages.success(
-            self.request,
-            f'Status do agendamento alterado para "{self.object.get_status_display()}" com sucesso!',
-        )
-        return reverse_lazy(
-            "agendamentos:agendamento_detail", kwargs={"pk": self.object.pk}
-        )
+    def get_object(self):
+        queryset = self.get_queryset()
+        pk = self.kwargs.get('pk')
+        return get_object_or_404(queryset, pk=pk)
 
-    def form_valid(self, form):
-        # Log da mudança de status
-        old_status = self.get_object().status
-        new_status = form.cleaned_data["status"]
+    def get(self, request, *args, **kwargs):
+        agendamento = self.get_object()
+        form = AgendamentoStatusForm(instance=agendamento)
+        return render(request, self.template_name, {
+            'form': form,
+            'agendamento': agendamento,
+        })
 
-        if old_status != new_status:
-            # Aqui você pode adicionar lógica adicional
-            # como envio de notificações, emails, etc.
-            pass
-
-        return super().form_valid(form)
+    def post(self, request, *args, **kwargs):
+        agendamento = self.get_object()
+        form = AgendamentoStatusForm(request.POST, instance=agendamento)
+        
+        if form.is_valid():
+            old_status = agendamento.status
+            new_status = form.cleaned_data["status"]
+            
+            # Save the status change
+            form.save(agendamento)
+            
+            if old_status != new_status:
+                # Aqui você pode adicionar lógica adicional
+                # como envio de notificações, emails, etc.
+                pass
+            
+            messages.success(
+                request,
+                f'Status do agendamento alterado para "{agendamento.get_status_display()}" com sucesso!',
+            )
+            return redirect('agendamentos:agendamento_detail', pk=agendamento.pk)
+        
+        return render(request, self.template_name, {
+            'form': form,
+            'agendamento': agendamento,
+        })
 
 
 # ========================================
