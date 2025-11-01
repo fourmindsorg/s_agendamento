@@ -1,0 +1,42 @@
+# Sistema de Agendamento - 4Minds
+# Dependências Python
+
+# Core Django
+Django==5.2.6
+asgiref==3.9.1
+sqlparse==0.5.3
+tzdata==2025.2
+
+# Banco de Dados PostgreSQL
+psycopg2-binary==2.9.9
+
+# Servidor WSGI para Produção
+gunicorn==21.2.0
+
+# Arquivos Estáticos em Produção
+whitenoise==6.6.0
+
+# Variáveis de Ambiente
+python-dotenv==1.0.0
+
+# HTTP Requests
+requests==2.31.0
+
+# QR Code Generation
+qrcode[pil]==7.4.2
+
+# Segurança - Rate Limiting
+django-ratelimit==4.1.0
+
+# AWS SDK (opcional)
+boto3==1.34.0
+django-storages==1.14.2
+
+# Performance - Redis Cache (opcional)
+django-redis==5.4.0
+
+# Testing (opcional, mas útil)
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+

@@ -46,6 +46,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-django pytest-cov flake8
+          
+      - name: Verify Django installation
+        run: |
+          python -c "import django; print(f'Django {django.get_version()} instalado com sucesso')"
 
       - name: Lint with flake8
         run: |
@@ -64,6 +68,7 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
         run: |
+          python -c "import django; print('Django:', django.get_version())"
           python manage.py migrate --settings=core.settings
 
       - name: Run tests
