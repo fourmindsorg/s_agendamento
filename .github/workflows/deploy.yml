@@ -139,9 +139,10 @@ jobs:
               "sudo -u django git config --global --add safe.directory /opt/s-agendamento || true",
               "sudo -u django git fetch origin",
               "sudo -u django git reset --hard origin/main",
-              "sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
-              "sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
-              "sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
+              "# Recriação do venv e instalação de requirements.txt removida - venv e dependências já existem",
+              "# sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'",
+              "# sudo -u django bash -c 'venv/bin/pip install --upgrade pip'",
+              "# sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'",
               "sudo -u django bash -c 'venv/bin/python manage.py check --deploy'",
               "sudo -u django bash -c 'venv/bin/python manage.py migrate --noinput'",
               "sudo -u django bash -c 'venv/bin/python manage.py collectstatic --noinput'",
@@ -250,11 +251,12 @@ jobs:
             sudo -u django git reset --hard origin/main
             sudo -u django git --no-pager log --oneline -1 || true
             
-            echo "📦 Instalando dependências..."
-            sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'
-            sudo -u django bash -c 'venv/bin/pip install --upgrade pip'
-            sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
-            echo "✓ Dependências instaladas"
+            echo "📦 Usando ambiente virtual existente..."
+            # Recriação do venv e instalação de requirements.txt removida - venv e dependências já existem
+            # sudo -u django bash -c 'rm -rf venv && python3 -m venv venv'
+            # sudo -u django bash -c 'venv/bin/pip install --upgrade pip'
+            # sudo -u django bash -c 'venv/bin/pip install -r requirements.txt --upgrade --quiet'
+            echo "✓ Usando venv e dependências existentes"
             
             echo "✅ Django checks"
             sudo -u django bash -c 'venv/bin/python manage.py check --deploy' || true
