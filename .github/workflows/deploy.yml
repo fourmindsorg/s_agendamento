@@ -131,9 +131,10 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "set -e",
-              "echo Instalando Python e venv (se necessário)...",
-              "sudo apt-get update -y",
-              "sudo apt-get install -y python3 python3-venv python3-pip",
+              "echo Verificando Python (se necessário)...",
+              "# Instalação de Python/pip removida - já está instalado no servidor",
+              "# sudo apt-get update -y",
+              "# sudo apt-get install -y python3 python3-venv python3-pip",
               "cd /opt/s-agendamento",
               "sudo chown -R django:django /opt/s-agendamento || true",
               "sudo -u django git config --global --add safe.directory /opt/s-agendamento || true",
@@ -238,9 +239,10 @@ jobs:
           ssh -i ~/.ssh/id_rsa ubuntu@${{ env.EC2_IP }} << 'EOF'
             set -e
             echo "📂 Entrando no diretório da aplicação..."
-            echo "🐍 Instalando Python e venv (se necessário)..."
-            sudo apt-get update -y
-            sudo apt-get install -y python3 python3-venv python3-pip
+            echo "🐍 Python já instalado no servidor..."
+            # Instalação de Python/pip removida - já está instalado no servidor
+            # sudo apt-get update -y
+            # sudo apt-get install -y python3 python3-venv python3-pip
             cd /opt/s-agendamento
             echo "🔧 Ajustando permissões e git safe.directory..."
             sudo chown -R django:django /opt/s-agendamento || true
