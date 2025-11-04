@@ -1,16 +1,22 @@
 import os
 from pathlib import Path
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # Carregar variáveis de ambiente do arquivo .env
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    # Carregar .env do diretório do projeto (BASE_DIR)
+    env_path = BASE_DIR / '.env'
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+    else:
+        # Fallback: tentar carregar do diretório atual
+        load_dotenv()
 except ImportError:
     pass
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -82,12 +88,18 @@ except Exception:
 # 1. Acesse https://www.asaas.com/minha-conta/integracoes/chaves-api (produção)
 #    ou https://sandbox.asaas.com/minha-conta/integracoes/chaves-api (sandbox)
 # 2. Gere uma nova chave de API
-# 3. Configure no arquivo .env: ASAAS_API_KEY=sua_chave_aqui
+# 3. Configure no arquivo .env:
+#    - ASAAS_ENV=production (ou sandbox)
+#    - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO_AQUI
+#    - ASAAS_API_KEY_SANDBOX=$aact_SUA_CHAVE_SANDBOX_AQUI
+#    - OU use ASAAS_API_KEY=$aact_SUA_CHAVE_AQUI (fallback para ambos)
 
 # Configuração de API Keys por ambiente
 ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox").lower()  # 'sandbox' ou 'production'
 
 # Carregar chave de API baseado no ambiente
+# Sandbox: usa ASAAS_API_KEY_SANDBOX ou ASAAS_API_KEY (fallback)
+# Production: usa ASAAS_API_KEY_PRODUCTION ou ASAAS_API_KEY (fallback)
 if ASAAS_ENV == "sandbox":
     ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_SANDBOX") or os.environ.get("ASAAS_API_KEY")
 else:
