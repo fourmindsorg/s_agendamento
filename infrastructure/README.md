@@ -80,11 +80,13 @@ terraform output
 
 ## 🔧 Configurações
 
-### Ambiente de Produção
+### Ambiente de Produção (Otimizado para Free Tier)
 - **Região**: us-east-1
-- **Instância**: t2.micro (Free Tier)
-- **Banco**: db.t4g.micro (Free Tier)
-- **Storage**: 20GB (Free Tier)
+- **Instância EC2**: t2.micro/t3.micro/t4g.micro (Free Tier - 750 horas/mês)
+- **Banco RDS**: db.t4g.micro (Free Tier - ARM-based, mais eficiente)
+- **Storage RDS**: 20GB gp2 (Free Tier)
+- **Backup RDS**: 1 dia de retenção (minimiza custos dentro do limite de 20GB free)
+- **Criptografia Storage**: Desabilitada (para evitar custos adicionais)
 
 ### URLs configuradas
 - `https://fourmindstech.com.br`

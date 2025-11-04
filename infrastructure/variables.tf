@@ -94,9 +94,9 @@ variable "db_password" {
 }
 
 variable "db_instance_class" {
-  description = "Classe da instância RDS"
+  description = "Classe da instância RDS (Free Tier: db.t4g.micro ou db.t2.micro)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.micro"
 }
 
 variable "db_engine_version" {
@@ -112,9 +112,9 @@ variable "db_allocated_storage" {
 }
 
 variable "db_max_allocated_storage" {
-  description = "Armazenamento máximo alocado do RDS (GB)"
+  description = "Armazenamento máximo alocado do RDS (GB) - Free Tier limitado a 20GB"
   type        = number
-  default     = 100
+  default     = 20
 }
 
 variable "db_storage_type" {
@@ -124,9 +124,9 @@ variable "db_storage_type" {
 }
 
 variable "backup_retention_period" {
-  description = "Período de retenção de backup (dias)"
+  description = "Período de retenção de backup (dias) - Free Tier limitado a 20GB de backup storage. Recomendado 3 dias para balancear segurança e custos (sistema armazena CPF - dados sensíveis LGPD)"
   type        = number
-  default     = 7
+  default     = 3
 }
 
 variable "backup_window" {
@@ -139,6 +139,12 @@ variable "maintenance_window" {
   description = "Janela de manutenção"
   type        = string
   default     = "sun:04:00-sun:05:00"
+}
+
+variable "db_storage_encrypted" {
+  description = "Habilita criptografia do storage RDS - RECOMENDADO MANTER TRUE para dados sensíveis (LGPD). Sistema armazena CPF de clientes."
+  type        = bool
+  default     = true
 }
 
 # Configurações S3

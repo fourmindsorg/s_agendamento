@@ -941,15 +941,15 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         )
 
         if metodo_pagamento == "pix":
-            # Gerar QR Code PIX via Asaas
-            qr_code_data = self.gerar_qr_code_pix(
-                plano, valor, billing_data, assinatura
-            )
-
-            # Armazenar dados do PIX na sessão
-            request.session["pix_data"] = qr_code_data
+            # Salvar dados de cobrança na sessão para usar na página de pagamento
+            # O QR Code real será gerado na PaymentPixView, não aqui
+            request.session["billing_data"] = billing_data
+            request.session["cpf_temporario"] = billing_data.get("cpf", "")
+            request.session["telefone_temporario"] = billing_data.get("telefone", "")
             request.session["assinatura_id"] = assinatura.id
 
+            # NÃO gerar QR Code aqui - PaymentPixView fará a geração real via Asaas
+            # Isso garante que sempre usaremos o payload real do Asaas, não mockado
             return redirect("authentication:payment_pix", assinatura_id=assinatura.id)
         else:
             # Simular processamento de cartão
@@ -988,20 +988,77 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             )
             context["assinatura"] = assinatura
 
-            # Gerar dados do PIX
-            pix_data = self.gerar_qr_code_pix(
-                assinatura.plano,
-                assinatura.valor_pago,
-                {
-                    "cpf": "00000000000",  # Em um sistema real, pegaria dos dados de cobrança
+            # Recuperar dados de cobrança da sessão ou usar dados do usuário
+            billing_data = self.request.session.get("billing_data", {})
+            
+            # Se não houver dados na sessão, usar dados do usuário como fallback
+            if not billing_data.get("cpf"):
+                # Tentar buscar CPF do cliente se disponível
+                from agendamentos.models import Cliente
+                try:
+                    cliente = Cliente.objects.filter(usuario=assinatura.usuario).first()
+                    if cliente and cliente.cpf:
+                        billing_data["cpf"] = cliente.cpf.replace(".", "").replace("-", "")
+                except:
+                    pass
+            
+            # Se ainda não tiver CPF, usar dados mínimos do usuário
+            if not billing_data.get("cpf"):
+                billing_data = {
+                    "cpf": self.request.session.get("cpf_temporario", ""),
                     "nome_completo": assinatura.usuario.get_full_name()
                     or assinatura.usuario.username,
                     "email": assinatura.usuario.email or "",
-                    "telefone": "",
-                },
-                assinatura,
-            )
-            context["pix_data"] = pix_data
+                    "telefone": self.request.session.get("telefone_temporario", ""),
+                }
+            
+            # Validar que temos CPF válido
+            if not billing_data.get("cpf") or len(billing_data.get("cpf", "").replace(".", "").replace("-", "")) != 11:
+                messages.error(
+                    self.request,
+                    "CPF não encontrado. Por favor, preencha os dados de cobrança novamente."
+                )
+                return redirect("authentication:checkout", plano_id=assinatura.plano.id)
+            
+            # Gerar dados do PIX
+            try:
+                pix_data = self.gerar_qr_code_pix(
+                    assinatura.plano,
+                    assinatura.valor_pago,
+                    billing_data,
+                    assinatura,
+                )
+                context["pix_data"] = pix_data
+            except Exception as e:
+                # Se houver erro ao gerar QR Code, mostrar mensagem
+                logging.error(f"Erro ao gerar QR Code na PaymentPixView: {e}", exc_info=True)
+                from financeiro.services.asaas import AsaasAPIError
+                
+                if isinstance(e, AsaasAPIError):
+                    error_msg = e.message
+                    if e.response and e.response.get("errors"):
+                        errors = e.response["errors"]
+                        if isinstance(errors, list) and len(errors) > 0:
+                            error_msg = errors[0].get("description", error_msg)
+                else:
+                    error_msg = str(e)
+                
+                messages.error(
+                    self.request,
+                    f"Erro ao gerar QR Code: {error_msg}. Por favor, tente novamente."
+                )
+                
+                # Retornar dados vazios para o template mostrar erro
+                context["pix_data"] = {
+                    "payment_id": "",
+                    "qr_code": "",
+                    "qr_code_image": "",
+                    "valor": float(assinatura.valor_pago),
+                    "descricao": f"Pagamento - {assinatura.plano.nome}",
+                    "status": "ERRO",
+                    "pix_copia_cola": "",
+                    "erro": error_msg,
+                }
 
         except AssinaturaUsuario.DoesNotExist:
             messages.error(self.request, "Assinatura não encontrada.")
@@ -1026,14 +1083,62 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     payload = pix_data.get("payload", "")
                     qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
                     
-                    # Se não houver imagem, gerar a partir do payload
-                    if not qr_code_image and payload:
+                    # Validar que o payload é válido (deve começar com 000201)
+                    if payload:
+                        if not payload.startswith("000201") or len(payload) < 50:
+                            logging.error(f"❌ Payload inválido recebido do Asaas para pagamento existente: {payload[:100]}...")
+                            raise Exception("Payload PIX inválido do Asaas")
+                        
+                        # SEMPRE gerar QR Code a partir do payload se disponível
                         try:
                             from financeiro.utils import generate_qr_code_from_payload
-                            qr_code_image = generate_qr_code_from_payload(payload)
+                            qr_code_gerado = generate_qr_code_from_payload(payload)
+                            if qr_code_gerado:
+                                qr_code_image = qr_code_gerado
+                                logging.info(f"✅ QR Code regenerado a partir do payload REAL do Asaas")
+                            else:
+                                logging.warning("Função generate_qr_code_from_payload retornou None para payment_id existente")
+                        except ImportError as e:
+                            logging.error(f"Biblioteca qrcode não instalada: {e}")
                         except Exception as e:
-                            logging.warning(f"Não foi possível gerar QR Code: {e}")
-                            qr_code_image = ""
+                            logging.error(f"Erro ao gerar QR Code do payload existente: {e}", exc_info=True)
+                    else:
+                        # Se não tem payload, tentar obter novamente (pode ter ficado disponível)
+                        from financeiro.services.asaas import AsaasAPIError
+                        import time
+                        
+                        logging.info("Payload não disponível, tentando obter novamente...")
+                        for retry in range(3):
+                            try:
+                                time.sleep(2)
+                                pix_data_retry = asaas_client.get_pix_qr(assinatura.asaas_payment_id)
+                                payload = pix_data_retry.get("payload", "")
+                                if payload:
+                                    logging.info(f"✅ Payload obtido na tentativa {retry + 1}")
+                                    break
+                            except AsaasAPIError as e:
+                                if e.status_code == 404:
+                                    logging.info(f"QR Code ainda não disponível (tentativa {retry + 1}/3)")
+                                    continue
+                                else:
+                                    raise
+                        
+                        if not payload:
+                            # Não bloquear - permitir que página seja exibida com mensagem de aguardo
+                            logging.warning(f"QR Code ainda não disponível após recarregar. Payment ID: {assinatura.asaas_payment_id}")
+                            return {
+                                "payment_id": assinatura.asaas_payment_id,
+                                "qr_code": "",
+                                "qr_code_image": "",
+                                "chave_pix": "",
+                                "valor": float(valor),
+                                "descricao": f"Pagamento - {plano.nome}",
+                                "vencimento": payment_data.get("dueDate", ""),
+                                "status": traduzir_status_asaas(payment_data.get("status", "PENDING")),
+                                "pix_copia_cola": "",
+                                "qr_code_aguardando": True,
+                                "payment_id_asaas": assinatura.asaas_payment_id,
+                            }
                     
                     # Extrair data de vencimento do pagamento
                     due_date = payment_data.get("dueDate", "")
@@ -1051,8 +1156,29 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                         "pix_copia_cola": payload,
                     }
                 except Exception as e:
-                    logging.error(f"Erro ao buscar dados do Asaas: {e}")
-                    # Continuar para criar novo pagamento abaixo
+                    # Se houver erro ao buscar dados (ex: QR Code ainda não disponível), não criar novo pagamento
+                    # Retornar dados de aguardo para permitir que usuário recarregue
+                    from financeiro.services.asaas import AsaasAPIError
+                    
+                    if isinstance(e, AsaasAPIError) and e.status_code == 404:
+                        logging.info(f"QR Code ainda não disponível ao recarregar. Payment ID: {assinatura.asaas_payment_id}")
+                    else:
+                        logging.warning(f"Erro ao buscar dados do Asaas: {e}")
+                    
+                    # Retornar dados de aguardo em vez de criar novo pagamento
+                    return {
+                        "payment_id": assinatura.asaas_payment_id or "",
+                        "qr_code": "",
+                        "qr_code_image": "",
+                        "chave_pix": "",
+                        "valor": float(valor),
+                        "descricao": f"Pagamento - {plano.nome}",
+                        "vencimento": "",
+                        "status": traduzir_status_asaas("PENDING"),
+                        "pix_copia_cola": "",
+                        "qr_code_aguardando": True,
+                        "payment_id_asaas": assinatura.asaas_payment_id or "",
+                    }
             
             # Fallback se não conseguir buscar dados
             return {
@@ -1074,50 +1200,277 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             # Inicializar cliente Asaas
             asaas_client = AsaasClient()
 
+            # Limpar e validar CPF antes de enviar ao Asaas
+            cpf_limpo = billing_data.get("cpf", "").replace(".", "").replace("-", "").replace("/", "").strip()
+            
+            # Validar que o CPF tem 11 dígitos
+            if not cpf_limpo or len(cpf_limpo) != 11 or not cpf_limpo.isdigit():
+                raise ValueError(
+                    f"CPF inválido: '{billing_data.get('cpf', '')}'. "
+                    f"O CPF deve ter 11 dígitos numéricos."
+                )
+            
+            # Validar dados antes de enviar ao Asaas
+            nome_completo = billing_data.get("nome_completo", "").strip()
+            email = billing_data.get("email", "").strip()
+            
+            if not nome_completo:
+                raise ValueError("Nome completo é obrigatório")
+            if not email or "@" not in email:
+                raise ValueError("Email válido é obrigatório")
+            
+            # Limpar telefone
+            telefone_limpo = billing_data.get("telefone", "").replace("(", "").replace(")", "").replace("-", "").replace(" ", "").strip()
+            
+            logging.info(f"Criando cliente no Asaas:")
+            logging.info(f"   Nome: {nome_completo}")
+            logging.info(f"   Email: {email}")
+            logging.info(f"   CPF: {cpf_limpo[:3]}***{cpf_limpo[-2:]}")
+            logging.info(f"   Telefone: {telefone_limpo if telefone_limpo else 'Não informado'}")
+            
             # Criar cliente no Asaas
-            customer_data = asaas_client.create_customer(
-                name=billing_data["nome_completo"],
-                email=billing_data["email"],
-                cpf_cnpj=billing_data["cpf"].replace(".", "").replace("-", ""),
-                phone=billing_data["telefone"]
-                .replace("(", "")
-                .replace(")", "")
-                .replace("-", "")
-                .replace(" ", ""),
-            )
+            try:
+                customer_data = asaas_client.create_customer(
+                    name=nome_completo,
+                    email=email,
+                    cpf_cnpj=cpf_limpo,
+                    phone=telefone_limpo if telefone_limpo else None,
+                )
+                logging.info(f"✅ Cliente criado no Asaas: {customer_data.get('id')}")
+            except Exception as customer_error:
+                logging.error(f"❌ Erro ao criar cliente no Asaas: {customer_error}")
+                # Re-raise para ser capturado pelo except externo com tratamento apropriado
+                raise
 
             # Criar cobrança PIX
             due_date = (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+            
+            # Validar valor
+            if valor <= 0:
+                raise ValueError(f"Valor inválido: {valor}. O valor deve ser maior que zero.")
+            
+            logging.info(f"Criando pagamento PIX no Asaas:")
+            logging.info(f"   Customer ID: {customer_data.get('id')}")
+            logging.info(f"   Valor: R$ {valor:.2f}")
+            logging.info(f"   Vencimento: {due_date}")
+            logging.info(f"   Descrição: Pagamento - {plano.nome}")
 
-            payment_data = asaas_client.create_payment(
-                customer_id=customer_data["id"],
-                value=float(valor),
-                due_date=due_date,
-                billing_type="PIX",
-                description=f"Pagamento - {plano.nome}",
-            )
+            try:
+                payment_data = asaas_client.create_payment(
+                    customer_id=customer_data["id"],
+                    value=float(valor),
+                    due_date=due_date,
+                    billing_type="PIX",
+                    description=f"Pagamento - {plano.nome}",
+                )
+                logging.info(f"✅ Pagamento criado no Asaas: {payment_data.get('id')}")
+                logging.info(f"   Status: {payment_data.get('status')}")
+                logging.info(f"   Valor: R$ {payment_data.get('value')}")
+                logging.info(f"   Tipo de Cobrança: {payment_data.get('billingType')}")
+                
+                # Validar que o pagamento foi criado como PIX
+                if payment_data.get('billingType') != 'PIX':
+                    logging.warning(f"⚠️ ATENÇÃO: Pagamento criado com tipo '{payment_data.get('billingType')}' em vez de 'PIX'")
+            except Exception as payment_error:
+                logging.error(f"❌ Erro ao criar pagamento no Asaas: {payment_error}")
+                # Re-raise para ser capturado pelo except externo
+                raise
 
-            # Obter QR Code PIX
-            pix_data = asaas_client.get_pix_qr(payment_data["id"])
-
-            # Extrair dados do PIX
-            payload = pix_data.get("payload", "")
+            # Aguardar um pouco antes de começar a buscar o QR Code (pode levar alguns segundos)
+            import time
+            logging.info("Aguardando 2 segundos antes de começar a buscar QR Code...")
+            time.sleep(2)
+            
+            # Obter QR Code PIX - pode levar alguns segundos para ficar disponível
+            # O QR Code pode demorar até 30-60 segundos após criar o pagamento
+            # Tentar até 15 vezes com intervalo de 3 segundos (total: até 45 segundos)
+            from financeiro.services.asaas import AsaasAPIError
+            
+            pix_data = None
+            payload = ""
+            max_tentativas = 15
+            max_wait_seconds = 45
+            tentativa = 0
+            start_time = time.time()
+            
+            logging.info(f"Aguardando QR Code PIX ficar disponível para pagamento {payment_data['id']}...")
+            logging.info(f"Configuração: até {max_tentativas} tentativas, máximo {max_wait_seconds}s")
+            
+            while (tentativa < max_tentativas) and (time.time() - start_time < max_wait_seconds) and not payload:
+                tentativa += 1
+                elapsed = time.time() - start_time
+                
+                # Log de progresso a cada 3 tentativas ou a cada 10 segundos
+                if tentativa == 1 or tentativa % 3 == 0 or elapsed >= 10:
+                    logging.info(f"Tentativa {tentativa}/{max_tentativas} - Tempo decorrido: {elapsed:.1f}s/{max_wait_seconds}s")
+                
+                try:
+                    pix_data = asaas_client.get_pix_qr(payment_data["id"])
+                    logging.info(f"✅ Tentativa {tentativa}: Dados retornados do Asaas get_pix_qr: {list(pix_data.keys())}")
+                    
+                    payload = pix_data.get("payload", "")
+                    if payload:
+                        logging.info(f"✅ Payload obtido com sucesso na tentativa {tentativa} (após {elapsed:.1f}s)")
+                        break
+                    else:
+                        logging.info(f"⚠️ Payload vazio na tentativa {tentativa}, aguardando... (elapsed: {elapsed:.1f}s)")
+                        if tentativa < max_tentativas and (time.time() - start_time < max_wait_seconds):
+                            time.sleep(3)  # Aguardar 3 segundos antes de tentar novamente
+                            
+                except AsaasAPIError as e:
+                    # Se for erro 404, o QR Code ainda não está disponível - continuar tentando
+                    if e.status_code == 404:
+                        logging.info(f"⚠️ Tentativa {tentativa}: QR Code ainda não disponível (404) - aguardando... (elapsed: {elapsed:.1f}s)")
+                        if tentativa < max_tentativas and (time.time() - start_time < max_wait_seconds):
+                            time.sleep(3)  # Aguardar 3 segundos antes de tentar novamente
+                            continue
+                        else:
+                            # Timeout atingido - não bloquear, permitir que usuário recarregue a página
+                            elapsed = time.time() - start_time
+                            logging.warning(
+                                f"⚠️ QR Code não ficou disponível após {elapsed:.1f}s ({tentativa} tentativas). "
+                                f"Pagamento criado: {payment_data['id']}. Permitindo acesso à página para recarregar."
+                            )
+                            # Não levantar exceção - permitir que a página seja exibida
+                            break
+                    else:
+                        # Outro erro (não é 404) - relançar
+                        logging.error(f"❌ Erro ao obter QR Code na tentativa {tentativa}: {e.message} (status: {e.status_code})")
+                        raise
+                        
+                except Exception as e:
+                    logging.warning(f"Erro inesperado ao obter QR Code na tentativa {tentativa}: {e}")
+                    if tentativa < max_tentativas and (time.time() - start_time < max_wait_seconds):
+                        time.sleep(3)
+                    else:
+                        raise Exception(
+                            f"Erro ao obter QR Code PIX após {elapsed:.1f} segundos: {str(e)}. "
+                            f"O pagamento foi criado com sucesso (ID: {payment_data['id']}). "
+                            f"Tente recarregar a página em alguns instantes."
+                        )
+            
+            # Se não conseguiu obter QR Code, permitir que a página seja exibida mesmo assim
+            # O usuário pode recarregar a página para tentar novamente
+            if not pix_data or not payload:
+                elapsed = time.time() - start_time
+                logging.warning(
+                    f"⚠️ QR Code não disponível após {elapsed:.1f}s. "
+                    f"Pagamento criado: {payment_data['id']}. "
+                    f"Retornando dados vazios para permitir recarregamento da página."
+                )
+                
+                # Salvar payment_id na assinatura para que possa tentar novamente ao recarregar
+                assinatura.asaas_payment_id = payment_data["id"]
+                assinatura.save()
+                logging.info(f"✅ Payment ID salvo na assinatura: {payment_data['id']}")
+                
+                # Retornar dados com payment_id para que possa tentar novamente
+                return {
+                    "payment_id": payment_data["id"],
+                    "qr_code": "",
+                    "qr_code_image": "",
+                    "chave_pix": "",
+                    "valor": float(valor),
+                    "descricao": f"Pagamento - {plano.nome}",
+                    "vencimento": due_date,
+                    "status": traduzir_status_asaas(payment_data.get("status", "PENDING")),
+                    "pix_copia_cola": "",
+                    "qr_code_aguardando": True,  # Flag para indicar que está aguardando
+                    "payment_id_asaas": payment_data["id"],  # Para tentar novamente
+                }
+            
             qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
             
-            # Se não houver imagem do QR Code, gerar a partir do payload
-            if not qr_code_image and payload:
+            logging.info(f"Payload recebido: SIM (tamanho: {len(payload)})")
+            logging.info(f"QR Code do Asaas (imagem): {'SIM' if qr_code_image else 'NÃO (será gerado localmente)'}")
+            
+            # Validar que o payload parece ser um payload PIX válido
+            if not payload.startswith("000201") or len(payload) < 50:
+                raise Exception(f"Payload PIX inválido recebido do Asaas. Payload: {payload[:100]}...")
+            
+            logging.info(f"✅ Payload PIX válido confirmado (inicia com '000201')")
+            
+            # SEMPRE gerar QR Code a partir do payload se disponível
+            # Isso garante que sempre teremos um QR Code válido para pagamento
+            if payload:
                 try:
                     from financeiro.utils import generate_qr_code_from_payload
-                    qr_code_image = generate_qr_code_from_payload(payload)
+                    logging.info("Tentando gerar QR Code a partir do payload...")
+                    qr_code_gerado = generate_qr_code_from_payload(payload)
+                    if qr_code_gerado:
+                        qr_code_image = qr_code_gerado
+                        logging.info(f"✅ QR Code gerado com sucesso! Tamanho: {len(qr_code_gerado)} caracteres")
+                    else:
+                        logging.error("❌ Função generate_qr_code_from_payload retornou None")
+                except ImportError as e:
+                    logging.error(f"❌ Biblioteca qrcode não instalada: {e}")
+                    logging.error("Execute: pip install qrcode[pil]")
                 except Exception as e:
-                    logging.warning(f"Não foi possível gerar QR Code: {e}")
-                    qr_code_image = ""
+                    logging.error(f"❌ Erro ao gerar QR Code do payload: {e}", exc_info=True)
+            else:
+                logging.error("❌ Payload não disponível! Não é possível gerar QR Code")
+                logging.error(f"Dados completos do pix_data: {pix_data}")
+            
+            # Validação final
+            if not qr_code_image:
+                logging.error(f"❌ CRÍTICO: QR Code não disponível após todas as tentativas!")
+                logging.error(f"   - Payload presente: {bool(payload)}")
+                logging.error(f"   - Payload: {payload[:100] if payload else 'N/A'}...")
+                logging.error(f"   - Chaves do pix_data: {list(pix_data.keys())}")
+            else:
+                logging.info(f"✅ QR Code disponível para exibição (tamanho: {len(qr_code_image)} caracteres)")
 
             # Salvar payment_id na assinatura
             assinatura.asaas_payment_id = payment_data["id"]
             assinatura.save()
+            
+            # Salvar também no banco de dados (AsaasPayment) para persistência
+            try:
+                from financeiro.models import AsaasPayment
+                payment_db, created = AsaasPayment.objects.get_or_create(
+                    asaas_id=payment_data["id"],
+                    defaults={
+                        "customer_id": customer_data["id"],
+                        "amount": valor,
+                        "billing_type": "PIX",
+                        "status": payment_data.get("status", "PENDING"),
+                        "qr_code_base64": qr_code_image,
+                        "copy_paste_payload": payload,
+                    }
+                )
+                if not created:
+                    # Atualizar se já existir
+                    payment_db.qr_code_base64 = qr_code_image
+                    payment_db.copy_paste_payload = payload
+                    payment_db.status = payment_data.get("status", "PENDING")
+                    payment_db.save()
+                logging.info(f"Pagamento salvo no banco: {payment_db.asaas_id}")
+            except Exception as e:
+                logging.warning(f"Erro ao salvar pagamento no banco: {e}")
 
             status_en = payment_data.get("status", "PENDING")
+            
+            # ÚLTIMA TENTATIVA: Se ainda não tiver QR Code mas tem payload, FORÇAR geração
+            if not qr_code_image and payload:
+                logging.warning("⚠️ QR Code não gerado, tentando novamente...")
+                try:
+                    from financeiro.utils import generate_qr_code_from_payload
+                    qr_code_image = generate_qr_code_from_payload(payload, size=12)  # Tamanho maior
+                    if qr_code_image:
+                        logging.info(f"✅ QR Code gerado na última tentativa! Tamanho: {len(qr_code_image)}")
+                    else:
+                        logging.error("❌ Falha na última tentativa de gerar QR Code")
+                except Exception as e:
+                    logging.error(f"❌ Erro na última tentativa: {e}", exc_info=True)
+            
+            # Validação final antes de retornar
+            if not qr_code_image:
+                logging.error("❌ CRÍTICO: QR Code não disponível após todas as tentativas!")
+                logging.error(f"   - Payload presente: {bool(payload)}")
+                logging.error(f"   - Payload: {payload[:100] if payload else 'N/A'}...")
+            else:
+                logging.info(f"✅ CONFIRMADO: QR Code pronto para exibição (tamanho: {len(qr_code_image)} caracteres)")
+            
             return {
                 "payment_id": payment_data["id"],
                 "qr_code": payload,
@@ -1131,20 +1484,60 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             }
 
         except Exception as e:
-            logging.error(f"Erro ao gerar PIX via Asaas: {str(e)}")
-            # Fallback para simulação em caso de erro
-            valor_float = float(valor)
+            logging.error(f"Erro ao gerar PIX via Asaas: {str(e)}", exc_info=True)
+            
+            # Extrair mensagem de erro específica do Asaas se disponível
+            from financeiro.services.asaas import AsaasAPIError
+            
+            error_message = str(e)
+            error_details = ""
+            
+            # Se for erro da API Asaas, extrair detalhes
+            if isinstance(e, AsaasAPIError):
+                error_message = e.message
+                if e.response:
+                    # Tentar extrair mensagens de erro específicas do Asaas
+                    errors = e.response.get("errors", [])
+                    if errors:
+                        error_details = "; ".join([err.get("description", "") for err in errors if isinstance(err, dict)])
+                        error_message = error_details or error_message
+                    else:
+                        error_message = e.response.get("message", e.message)
+                logging.error(f"Detalhes do erro Asaas: {e.response}")
+            
+            # Mensagens de erro mais específicas para o usuário
+            if "CPF" in error_message.upper() or "cpf" in error_message.lower() or "invalid_object" in error_message.lower():
+                user_message = "Erro: CPF inválido. Por favor, verifique o CPF informado e tente novamente."
+            elif "email" in error_message.lower():
+                user_message = "Erro: Email inválido. Por favor, verifique o email informado."
+            elif "name" in error_message.lower() or "nome" in error_message.lower():
+                user_message = "Erro: Nome obrigatório. Por favor, preencha o nome completo."
+            elif "value" in error_message.lower() or "valor" in error_message.lower():
+                user_message = "Erro: Valor inválido. Por favor, verifique o valor do plano."
+            elif "customer" in error_message.lower() or "cliente" in error_message.lower():
+                user_message = "Erro ao criar cliente. Verifique os dados informados e tente novamente."
+            else:
+                # Mensagem genérica mas com detalhes do erro
+                user_message = f"Erro ao processar pagamento: {error_message}. Por favor, verifique os dados e tente novamente."
+            
+            messages.error(self.request, user_message)
+            
+            # Log detalhado para debug
+            logging.error(f"Mensagem de erro para usuário: {user_message}")
+            logging.error(f"Erro completo: {error_message}")
+            
+            # Retornar dados vazios - não usar payload mockado
             return {
-                "payment_id": f"sim_{plano.id}_{int(timezone.now().timestamp())}",
-                "qr_code": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor_float}-{billing_data['cpf']}",
+                "payment_id": "",
+                "qr_code": "",
                 "qr_code_image": "",
-                "chave_pix": "contato@sistema.com.br",
-                "valor": valor_float,
+                "chave_pix": "",
+                "valor": float(valor),
                 "descricao": f"Pagamento - {plano.nome}",
-                "vencimento": (timezone.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
-                "status": traduzir_status_asaas("PENDING"),
-                "pix_copia_cola": f"00020126580014br.gov.bcb.pix0136{plano.id}-{valor_float}-{billing_data['cpf']}5204000053039865405{valor_float:.2f}5802BR5913Sistema Agend6009SAO PAULO62070503***6304",
-                "erro": "Modo simulação ativado",
+                "vencimento": "",
+                "status": "ERRO",
+                "pix_copia_cola": "",
+                "erro": error_message,
             }
 
 

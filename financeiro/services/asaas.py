@@ -84,16 +84,46 @@ class AsaasClient:
             
             if not response.ok:
                 error_data = {}
-                try:
-                    error_data = response.json()
-                except:
-                    error_data = {"message": response.text}
+                is_html_response = False
                 
-                logger.error(
-                    f"Erro na API Asaas [{response.status_code}]: {endpoint} - {error_data}"
-                )
+                # Detectar se a resposta é HTML (erro do servidor) ou JSON (erro da API)
+                content_type = response.headers.get("Content-Type", "").lower()
+                if "text/html" in content_type or response.text.strip().startswith("<!doctype"):
+                    is_html_response = True
+                    # Para respostas HTML, usar mensagem padrão baseada no status code
+                    if response.status_code == 404:
+                        error_message = "Recurso não encontrado. O QR Code PIX pode ainda não estar disponível."
+                    else:
+                        error_message = f"Erro HTTP {response.status_code} do servidor Asaas"
+                    error_data = {"message": error_message, "html_response": True}
+                else:
+                    # Tentar parsear como JSON
+                    try:
+                        error_data = response.json()
+                        error_message = error_data.get("message", f"Erro HTTP {response.status_code}")
+                        
+                        # Se houver array de erros, usar a primeira mensagem
+                        if "errors" in error_data and isinstance(error_data["errors"], list) and len(error_data["errors"]) > 0:
+                            first_error = error_data["errors"][0]
+                            if isinstance(first_error, dict):
+                                error_message = first_error.get("description", first_error.get("message", error_message))
+                    except:
+                        # Se não conseguir parsear JSON, usar texto da resposta
+                        error_message = response.text[:200] if len(response.text) < 200 else response.text[:200] + "..."
+                        error_data = {"message": error_message}
+                
+                # Log apenas dados relevantes (não HTML completo)
+                if is_html_response:
+                    logger.error(
+                        f"Erro na API Asaas [{response.status_code}]: {endpoint} - Resposta HTML (não JSON)"
+                    )
+                else:
+                    logger.error(
+                        f"Erro na API Asaas [{response.status_code}]: {endpoint} - {error_data}"
+                    )
+                
                 raise AsaasAPIError(
-                    message=error_data.get("message", f"Erro HTTP {response.status_code}"),
+                    message=error_message,
                     status_code=response.status_code,
                     response=error_data,
                 )
@@ -350,9 +380,25 @@ class AsaasClient:
         
         Returns:
             Dict com qrCode (base64), payload e expiresAt
+        
+        Raises:
+            AsaasAPIError: Se não conseguir obter o QR Code
         """
         response = self._request("GET", f"payments/{payment_id}/pix", timeout=15)
-        return response.json()
+        data = response.json()
+        
+        # Validar que recebemos dados válidos
+        if not isinstance(data, dict):
+            raise AsaasAPIError(
+                message="Resposta inválida ao obter QR Code PIX",
+                status_code=None,
+                response=data
+            )
+        
+        # Log para debug
+        logger.info(f"QR Code PIX obtido para pagamento {payment_id}: {list(data.keys())}")
+        
+        return data
 
     def get_payment_barcode(self, payment_id: str) -> Dict[str, Any]:
         """

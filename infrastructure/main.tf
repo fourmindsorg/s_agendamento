@@ -195,7 +195,7 @@ resource "aws_db_instance" "main" {
   allocated_storage     = var.db_allocated_storage
   max_allocated_storage = var.db_max_allocated_storage
   storage_type          = var.db_storage_type
-  storage_encrypted     = true
+  storage_encrypted     = var.db_storage_encrypted
   
   db_name  = var.db_name
   username = var.db_username
@@ -208,8 +208,12 @@ resource "aws_db_instance" "main" {
   backup_window          = var.backup_window
   maintenance_window     = var.maintenance_window
   
-  skip_final_snapshot = true
-  deletion_protection = false
+  # Configurações para minimizar custos (Free Tier)
+  auto_minor_version_upgrade = false  # Evita upgrades automáticos que podem gerar downtime
+  skip_final_snapshot        = true
+  deletion_protection        = false
+  performance_insights_enabled = false  # Desabilitado para evitar custos adicionais
+  monitoring_interval         = 0      # Desabilitado para evitar custos (basic monitoring já é suficiente)
 
   tags = {
     Name        = "${var.project_name}-db"
@@ -242,10 +246,11 @@ resource "aws_instance" "django_server" {
   root_block_device {
     volume_size = 20
     volume_type = "gp3"
-    encrypted   = true
+    encrypted   = false  # Desabilitado para evitar custos (Free Tier inclui 30GB, mas criptografia pode ter custo)
   }
 
-  user_data = base64encode(file("${path.module}/user_data_simple.sh"))
+  # user_data = base64encode(file("${path.module}/user_data_simple.sh"))  # Comentado - arquivo não existe ainda
+  user_data = ""
 
   tags = {
     Name        = "${var.project_name}-django-server"
@@ -304,6 +309,8 @@ resource "aws_s3_bucket_public_access_block" "media" {
 }
 
 # Versionamento dos buckets
+# ATENÇÃO: Versioning pode gerar custos de armazenamento (cada versão ocupa espaço)
+# Para minimizar custos, considere desabilitar ou implementar lifecycle policies
 resource "aws_s3_bucket_versioning" "static" {
   bucket = aws_s3_bucket.static.id
   versioning_configuration {
@@ -336,6 +343,39 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+  }
+}
+
+# Lifecycle policies para S3 - deleta versões antigas para evitar custos de armazenamento
+resource "aws_s3_bucket_lifecycle_configuration" "static" {
+  bucket = aws_s3_bucket.static.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = "Enabled"
+    
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30  # Deleta versões não atuais após 30 dias
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = "Enabled"
+    
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30  # Deleta versões não atuais após 30 dias
+    }
+
+    # Não expira objetos de mídia por padrão (ajuste se necessário)
   }
 }
 

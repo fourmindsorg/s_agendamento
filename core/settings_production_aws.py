@@ -113,10 +113,20 @@ CACHES = {
 # Email (configurar conforme necessário)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# Configurações da API Asaas (desabilitada)
-ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY", "")
-ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox")
-ASAAS_WEBHOOK_TOKEN = os.environ.get("ASAAS_WEBHOOK_TOKEN", "")
+# Configurações da API Asaas
+# O settings.py já contém a lógica para carregar chaves por ambiente:
+# - Sandbox: ASAAS_API_KEY_SANDBOX ou ASAAS_API_KEY (fallback)
+# - Production: ASAAS_API_KEY_PRODUCTION ou ASAAS_API_KEY (fallback)
+# 
+# Como este arquivo faz "from .settings import *", as configurações do Asaas
+# já estão herdadas. Apenas garantimos que está habilitado em produção.
+# 
+# IMPORTANTE: Configure as variáveis de ambiente no servidor AWS:
+# - ASAAS_ENV=production (ou sandbox)
+# - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO
+# - ASAAS_API_KEY_SANDBOX=$aact_SUA_CHAVE_SANDBOX (opcional)
 
-# Desabilitar funcionalidades pagas
-ASAAS_ENABLED = False
+# Garantir que Asaas está habilitado se a chave estiver configurada
+# (herda de settings.py via import *)
+if not ASAAS_ENABLED and ASAAS_API_KEY:
+    ASAAS_ENABLED = True
