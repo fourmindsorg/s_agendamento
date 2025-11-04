@@ -149,3 +149,24 @@ STATICFILES_FINDERS = [
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
+
+# Configurações da API Asaas
+# Forçar ambiente de produção neste arquivo de settings
+# O settings.py já contém a lógica para carregar chaves por ambiente:
+# - Sandbox: ASAAS_API_KEY_SANDBOX ou ASAAS_API_KEY (fallback)
+# - Production: ASAAS_API_KEY_PRODUCTION ou ASAAS_API_KEY (fallback)
+# 
+# Como este arquivo faz "from .settings import *", as configurações do Asaas
+# já estão herdadas. Forçamos ambiente de produção aqui.
+# 
+# IMPORTANTE: Configure as variáveis de ambiente no servidor:
+# - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO (obrigatório)
+
+# Forçar ambiente de produção
+ASAAS_ENV = "production"
+
+# Recarregar chave de API para produção após forçar ambiente
+ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_PRODUCTION") or os.environ.get("ASAAS_API_KEY")
+
+# Garantir que Asaas está habilitado se a chave estiver configurada
+ASAAS_ENABLED = bool(ASAAS_API_KEY)

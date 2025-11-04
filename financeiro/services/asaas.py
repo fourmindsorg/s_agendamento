@@ -33,10 +33,33 @@ class AsaasClient:
     """
 
     def __init__(self, api_key=None, env=None):
-        # Detectar se está em produção (DEBUG=False indica produção)
-        # Esta verificação deve ser feita ANTES de ler ASAAS_ENV para garantir que
-        # em produção sempre use ASAAS_API_KEY_PRODUCTION
-        is_production = not getattr(settings, "DEBUG", True)
+        # Detectar se está em produção usando MÚLTIPLOS critérios:
+        # 1. DEBUG=False indica produção
+        # 2. Settings module contém "production"
+        # 3. ASAAS_ENV="production" no settings
+        # 4. env="production" passado explicitamente
+        debug_value = getattr(settings, "DEBUG", True)
+        settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+        is_production_settings = "production" in settings_module.lower() if settings_module else False
+        asaas_env_value = getattr(settings, "ASAAS_ENV", "").lower()
+        is_production_env = asaas_env_value == "production"
+        
+        # Detectar produção por múltiplos critérios
+        is_production = (
+            not debug_value or  # DEBUG=False
+            is_production_settings or  # Settings module contém "production"
+            is_production_env or  # ASAAS_ENV="production"
+            env == "production"  # Passado explicitamente
+        )
+        
+        # Log para debug (apenas se não houver api_key configurada)
+        if not api_key:
+            logger.debug(
+                f"AsaasClient init - DEBUG={debug_value}, "
+                f"SETTINGS_MODULE={settings_module}, "
+                f"env={env}, "
+                f"is_production={is_production}"
+            )
         
         # Se estiver em produção, forçar env="production"
         # Caso contrário, usar o env passado ou o do settings
@@ -64,12 +87,24 @@ class AsaasClient:
         
         if not self.api_key:
             # Mensagem de erro específica: sempre usar ASAAS_API_KEY_PRODUCTION em produção
+            # Usar is_production calculado acima para garantir consistência
             if is_production or self.env == "production":
                 env_var = "ASAAS_API_KEY_PRODUCTION"
                 env_display = "production"
             else:
                 env_var = "ASAAS_API_KEY_SANDBOX"
                 env_display = "sandbox"
+            
+            # Log detalhado para debug
+            logger.error(
+                f"ASAAS_API_KEY não configurada! "
+                f"DEBUG={debug_value}, "
+                f"SETTINGS_MODULE={settings_module}, "
+                f"ASAAS_ENV={asaas_env_value}, "
+                f"is_production={is_production}, "
+                f"env={env_display}, "
+                f"ASAAS_API_KEY_PRODUCTION={'sim' if os.environ.get('ASAAS_API_KEY_PRODUCTION') else 'não'}"
+            )
             
             raise RuntimeError(
                 f"ASAAS_API_KEY não configurada nas variáveis de ambiente. "
