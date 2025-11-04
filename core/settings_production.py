@@ -19,7 +19,8 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+# Forçar DEBUG=False em produção (não permitir sobrescrever via env)
+DEBUG = False
 
 # Hosts permitidos para produção
 ALLOWED_HOSTS = [
