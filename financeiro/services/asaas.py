@@ -33,14 +33,36 @@ class AsaasClient:
     """
 
     def __init__(self, api_key=None, env=None):
-        self.api_key = api_key or getattr(settings, "ASAAS_API_KEY", None)
-        self.env = env or getattr(settings, "ASAAS_ENV", "sandbox")
+        # Detectar se está em produção (DEBUG=False indica produção)
+        # Esta verificação deve ser feita ANTES de ler ASAAS_ENV para garantir que
+        # em produção sempre use ASAAS_API_KEY_PRODUCTION
+        is_production = not getattr(settings, "DEBUG", True)
+        
+        # Se estiver em produção, forçar env="production"
+        # Caso contrário, usar o env passado ou o do settings
+        if is_production:
+            self.env = "production"
+        else:
+            self.env = env or getattr(settings, "ASAAS_ENV", "sandbox")
+        
         self.base = ASAAS_BASE.get(self.env, ASAAS_BASE["sandbox"])
         
+        # Carregar API key baseado no ambiente detectado
+        if not api_key:
+            if is_production or self.env == "production":
+                # Em produção, usar ASAAS_API_KEY_PRODUCTION
+                self.api_key = (
+                    os.environ.get("ASAAS_API_KEY_PRODUCTION") or
+                    getattr(settings, "ASAAS_API_KEY", None)
+                )
+            else:
+                # Em sandbox, usar ASAAS_API_KEY_SANDBOX
+                self.api_key = (
+                    os.environ.get("ASAAS_API_KEY_SANDBOX") or
+                    getattr(settings, "ASAAS_API_KEY", None)
+                )
+        
         if not self.api_key:
-            # Detectar se está em produção (DEBUG=False indica produção)
-            is_production = not getattr(settings, "DEBUG", True)
-            
             # Mensagem de erro específica: sempre usar ASAAS_API_KEY_PRODUCTION em produção
             if is_production or self.env == "production":
                 env_var = "ASAAS_API_KEY_PRODUCTION"
