@@ -92,6 +92,7 @@ class AsaasClient:
                 f"ASAAS_API_KEY={'sim' if os.environ.get('ASAAS_API_KEY') else 'não'}"
             )
             
+            # Mensagem de erro simplificada - sempre menciona apenas ASAAS_API_KEY
             raise RuntimeError(
                 f"ASAAS_API_KEY não configurada nas variáveis de ambiente. "
                 f"Configure ASAAS_API_KEY no arquivo .env. "
