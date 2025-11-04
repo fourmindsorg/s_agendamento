@@ -10,9 +10,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 import os
 from django.core.wsgi import get_wsgi_application
 
-# Usar settings de produção por padrão em servidor
+# Usar settings de desenvolvimento por padrão
 # Pode ser sobrescrito pela variável de ambiente DJANGO_SETTINGS_MODULE
-# Em desenvolvimento local, sobrescreva via env: export DJANGO_SETTINGS_MODULE=core.settings
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings_production")
+# Para produção, configure via systemd: Environment=DJANGO_SETTINGS_MODULE=core.settings_production
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
 application = get_wsgi_application()
