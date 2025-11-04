@@ -119,14 +119,17 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # - Production: ASAAS_API_KEY_PRODUCTION ou ASAAS_API_KEY (fallback)
 # 
 # Como este arquivo faz "from .settings import *", as configurações do Asaas
-# já estão herdadas. Apenas garantimos que está habilitado em produção.
+# já estão herdadas. Forçamos ambiente de produção aqui.
 # 
 # IMPORTANTE: Configure as variáveis de ambiente no servidor AWS:
-# - ASAAS_ENV=production (ou sandbox)
-# - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO
-# - ASAAS_API_KEY_SANDBOX=$aact_SUA_CHAVE_SANDBOX (opcional)
+# - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO (obrigatório)
+# - ASAAS_API_KEY_SANDBOX=$aact_SUA_CHAVE_SANDBOX (opcional, não usado em produção)
+
+# Forçar ambiente de produção em AWS
+ASAAS_ENV = "production"
+
+# Recarregar chave de API para produção após forçar ambiente
+ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_PRODUCTION") or os.environ.get("ASAAS_API_KEY")
 
 # Garantir que Asaas está habilitado se a chave estiver configurada
-# (herda de settings.py via import *)
-if not ASAAS_ENABLED and ASAAS_API_KEY:
-    ASAAS_ENABLED = True
+ASAAS_ENABLED = bool(ASAAS_API_KEY)
