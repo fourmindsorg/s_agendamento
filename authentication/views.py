@@ -978,18 +978,17 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
 
     template_name = "authentication/payment_pix.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        """Verificar assinatura e CPF antes de processar"""
         assinatura_id = self.kwargs.get("assinatura_id")
-
+        
         try:
             assinatura = AssinaturaUsuario.objects.get(
-                id=assinatura_id, usuario=self.request.user
+                id=assinatura_id, usuario=request.user
             )
-            context["assinatura"] = assinatura
-
+            
             # Recuperar dados de cobrança da sessão ou usar dados do usuário
-            billing_data = self.request.session.get("billing_data", {})
+            billing_data = request.session.get("billing_data", {})
             
             # Se não houver dados na sessão, usar dados do usuário como fallback
             if not billing_data.get("cpf"):
@@ -1005,64 +1004,101 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             # Se ainda não tiver CPF, usar dados mínimos do usuário
             if not billing_data.get("cpf"):
                 billing_data = {
-                    "cpf": self.request.session.get("cpf_temporario", ""),
+                    "cpf": request.session.get("cpf_temporario", ""),
                     "nome_completo": assinatura.usuario.get_full_name()
                     or assinatura.usuario.username,
                     "email": assinatura.usuario.email or "",
-                    "telefone": self.request.session.get("telefone_temporario", ""),
+                    "telefone": request.session.get("telefone_temporario", ""),
                 }
             
             # Validar que temos CPF válido
             if not billing_data.get("cpf") or len(billing_data.get("cpf", "").replace(".", "").replace("-", "")) != 11:
                 messages.error(
-                    self.request,
+                    request,
                     "CPF não encontrado. Por favor, preencha os dados de cobrança novamente."
                 )
+                from django.shortcuts import redirect
                 return redirect("authentication:checkout", plano_id=assinatura.plano.id)
-            
-            # Gerar dados do PIX
-            try:
-                pix_data = self.gerar_qr_code_pix(
-                    assinatura.plano,
-                    assinatura.valor_pago,
-                    billing_data,
-                    assinatura,
-                )
-                context["pix_data"] = pix_data
-            except Exception as e:
-                # Se houver erro ao gerar QR Code, mostrar mensagem
-                logging.error(f"Erro ao gerar QR Code na PaymentPixView: {e}", exc_info=True)
-                from financeiro.services.asaas import AsaasAPIError
                 
-                if isinstance(e, AsaasAPIError):
-                    error_msg = e.message
-                    if e.response and e.response.get("errors"):
-                        errors = e.response["errors"]
-                        if isinstance(errors, list) and len(errors) > 0:
-                            error_msg = errors[0].get("description", error_msg)
-                else:
-                    error_msg = str(e)
-                
-                messages.error(
-                    self.request,
-                    f"Erro ao gerar QR Code: {error_msg}. Por favor, tente novamente."
-                )
-                
-                # Retornar dados vazios para o template mostrar erro
-                context["pix_data"] = {
-                    "payment_id": "",
-                    "qr_code": "",
-                    "qr_code_image": "",
-                    "valor": float(assinatura.valor_pago),
-                    "descricao": f"Pagamento - {assinatura.plano.nome}",
-                    "status": "ERRO",
-                    "pix_copia_cola": "",
-                    "erro": error_msg,
-                }
-
         except AssinaturaUsuario.DoesNotExist:
-            messages.error(self.request, "Assinatura não encontrada.")
+            messages.error(request, "Assinatura não encontrada.")
+            from django.shortcuts import redirect
             return redirect("authentication:plan_selection")
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assinatura_id = self.kwargs.get("assinatura_id")
+
+        assinatura = AssinaturaUsuario.objects.get(
+            id=assinatura_id, usuario=self.request.user
+        )
+        context["assinatura"] = assinatura
+
+        # Recuperar dados de cobrança da sessão ou usar dados do usuário
+        billing_data = self.request.session.get("billing_data", {})
+        
+        # Se não houver dados na sessão, usar dados do usuário como fallback
+        if not billing_data.get("cpf"):
+            # Tentar buscar CPF do cliente se disponível
+            from agendamentos.models import Cliente
+            try:
+                cliente = Cliente.objects.filter(usuario=assinatura.usuario).first()
+                if cliente and cliente.cpf:
+                    billing_data["cpf"] = cliente.cpf.replace(".", "").replace("-", "")
+            except:
+                pass
+        
+        # Se ainda não tiver CPF, usar dados mínimos do usuário
+        if not billing_data.get("cpf"):
+            billing_data = {
+                "cpf": self.request.session.get("cpf_temporario", ""),
+                "nome_completo": assinatura.usuario.get_full_name()
+                or assinatura.usuario.username,
+                "email": assinatura.usuario.email or "",
+                "telefone": self.request.session.get("telefone_temporario", ""),
+            }
+        
+        # Gerar dados do PIX
+        try:
+            pix_data = self.gerar_qr_code_pix(
+                assinatura.plano,
+                assinatura.valor_pago,
+                billing_data,
+                assinatura,
+            )
+            context["pix_data"] = pix_data
+        except Exception as e:
+            # Se houver erro ao gerar QR Code, mostrar mensagem
+            logging.error(f"Erro ao gerar QR Code na PaymentPixView: {e}", exc_info=True)
+            from financeiro.services.asaas import AsaasAPIError
+            
+            if isinstance(e, AsaasAPIError):
+                error_msg = e.message
+                if e.response and e.response.get("errors"):
+                    errors = e.response["errors"]
+                    if isinstance(errors, list) and len(errors) > 0:
+                        error_msg = errors[0].get("description", error_msg)
+            else:
+                error_msg = str(e)
+            
+            messages.error(
+                self.request,
+                f"Erro ao gerar QR Code: {error_msg}. Por favor, tente novamente."
+            )
+            
+            # Retornar dados vazios para o template mostrar erro
+            context["pix_data"] = {
+                "payment_id": "",
+                "qr_code": "",
+                "qr_code_image": "",
+                "valor": float(assinatura.valor_pago),
+                "descricao": f"Pagamento - {assinatura.plano.nome}",
+                "status": "ERRO",
+                "pix_copia_cola": "",
+                "erro": error_msg,
+            }
 
         return context
 
