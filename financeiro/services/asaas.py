@@ -50,15 +50,22 @@ class AsaasClient:
         hostname = socket.gethostname()
         is_not_localhost = hostname not in ["localhost", "127.0.0.1", "::1"] and "localhost" not in hostname.lower()
         
+        # Verificar se o domínio/hostname indica produção
+        # Produção geralmente tem hostname de AWS ou domínio específico
+        is_production_hostname = (
+            is_not_localhost and 
+            ("ip-" in hostname or "ec2" in hostname.lower() or "aws" in hostname.lower() or "fourmindstech" in hostname.lower())
+        )
+        
         # Detectar produção por múltiplos critérios
         # IMPORTANTE: Se QUALQUER critério indicar produção, forçar produção
-        # Prioridade: DEBUG=False é o mais confiável
+        # Prioridade: DEBUG=False é o mais confiável, mas também verificar hostname
         is_production = (
             not debug_value or  # DEBUG=False (mais confiável)
             is_production_settings or  # Settings module contém "production"
             is_production_env or  # ASAAS_ENV="production"
-            env == "production"  # Passado explicitamente
-            # Não usar is_not_localhost sozinho para evitar falsos positivos
+            env == "production" or  # Passado explicitamente
+            is_production_hostname  # Hostname indica produção (AWS/EC2)
         )
         
         # SEMPRE forçar env="production" se qualquer critério indicar produção
