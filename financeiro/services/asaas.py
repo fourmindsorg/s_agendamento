@@ -38,9 +38,16 @@ class AsaasClient:
         self.base = ASAAS_BASE.get(self.env, ASAAS_BASE["sandbox"])
         
         if not self.api_key:
+            # Mensagem de erro específica baseada no ambiente
+            if self.env == "production":
+                env_var = "ASAAS_API_KEY_PRODUCTION"
+            else:
+                env_var = "ASAAS_API_KEY_SANDBOX"
+            
             raise RuntimeError(
-                "ASAAS_API_KEY não configurada nas variáveis de ambiente. "
-                "Configure a variável ASAAS_API_KEY no arquivo .env"
+                f"ASAAS_API_KEY não configurada nas variáveis de ambiente. "
+                f"Configure {env_var} no arquivo .env (ou use ASAAS_API_KEY como fallback). "
+                f"Ambiente atual: {self.env}"
             )
         
         self.session = requests.Session()
