@@ -43,18 +43,14 @@ print()
 
 # 4. Verificar variáveis de ambiente
 print("4. Variáveis de Ambiente:")
-asaas_key_prod = os.environ.get("ASAAS_API_KEY_PRODUCTION")
-asaas_key_sandbox = os.environ.get("ASAAS_API_KEY_SANDBOX")
 asaas_key = os.environ.get("ASAAS_API_KEY")
 asaas_env_env = os.environ.get("ASAAS_ENV")
 
-print(f"   ASAAS_API_KEY_PRODUCTION: {'✅ Configurada' if asaas_key_prod else '❌ NÃO configurada'}")
-if asaas_key_prod:
-    print(f"      Tamanho: {len(asaas_key_prod)} caracteres")
-    print(f"      Inicia com: {asaas_key_prod[:10]}...")
+print(f"   ASAAS_API_KEY: {'✅ Configurada' if asaas_key else '❌ NÃO configurada'}")
+if asaas_key:
+    print(f"      Tamanho: {len(asaas_key)} caracteres")
+    print(f"      Inicia com: {asaas_key[:10]}...")
 
-print(f"   ASAAS_API_KEY_SANDBOX: {'✅ Configurada' if asaas_key_sandbox else '⚠️ Não configurada (ok em produção)'}")
-print(f"   ASAAS_API_KEY (fallback): {'✅ Configurada' if asaas_key else '⚠️ Não configurada'}")
 print(f"   ASAAS_ENV (env): {asaas_env_env if asaas_env_env else 'Não configurada'}")
 print()
 
@@ -125,10 +121,8 @@ if env_path:
         try:
             with open(env_file, 'r') as f:
                 content = f.read()
-                has_prod_key = "ASAAS_API_KEY_PRODUCTION" in content
-                has_sandbox_key = "ASAAS_API_KEY_SANDBOX" in content
-                print(f"   Contém ASAAS_API_KEY_PRODUCTION: {'✅ Sim' if has_prod_key else '❌ Não'}")
-                print(f"   Contém ASAAS_API_KEY_SANDBOX: {'✅ Sim' if has_sandbox_key else '⚠️ Não (ok em produção)'}")
+                has_key = "ASAAS_API_KEY" in content
+                print(f"   Contém ASAAS_API_KEY: {'✅ Sim' if has_key else '❌ Não'}")
         except Exception as e:
             print(f"   ⚠️ Erro ao ler arquivo: {e}")
 else:
@@ -149,10 +143,10 @@ if not is_production:
     print("   - Verifique se ASAAS_ENV='production' no settings")
     print()
 
-if not asaas_key_prod:
-    print("❌ ASAAS_API_KEY_PRODUCTION não está configurada!")
+if not asaas_key:
+    print("❌ ASAAS_API_KEY não está configurada!")
     print("   - Configure no arquivo .env:")
-    print("     ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_AQUI")
+    print("     ASAAS_API_KEY=$aact_SUA_CHAVE_AQUI")
     print("   - Ou configure como variável de ambiente do sistema")
     print()
 

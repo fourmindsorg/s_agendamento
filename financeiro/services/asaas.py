@@ -70,30 +70,16 @@ class AsaasClient:
         
         self.base = ASAAS_BASE.get(self.env, ASAAS_BASE["sandbox"])
         
-        # Carregar API key baseado no ambiente detectado
+        # Carregar API key
         if not api_key:
-            if is_production or self.env == "production":
-                # Em produção, usar ASAAS_API_KEY_PRODUCTION
-                self.api_key = (
-                    os.environ.get("ASAAS_API_KEY_PRODUCTION") or
-                    getattr(settings, "ASAAS_API_KEY", None)
-                )
-            else:
-                # Em sandbox, usar ASAAS_API_KEY_SANDBOX
-                self.api_key = (
-                    os.environ.get("ASAAS_API_KEY_SANDBOX") or
-                    getattr(settings, "ASAAS_API_KEY", None)
-                )
+            self.api_key = (
+                os.environ.get("ASAAS_API_KEY") or
+                getattr(settings, "ASAAS_API_KEY", None)
+            )
         
         if not self.api_key:
-            # Mensagem de erro específica: sempre usar ASAAS_API_KEY_PRODUCTION em produção
-            # Usar is_production calculado acima para garantir consistência
-            if is_production or self.env == "production":
-                env_var = "ASAAS_API_KEY_PRODUCTION"
-                env_display = "production"
-            else:
-                env_var = "ASAAS_API_KEY_SANDBOX"
-                env_display = "sandbox"
+            # Determinar ambiente para mensagem de erro
+            env_display = "production" if (is_production or self.env == "production") else "sandbox"
             
             # Log detalhado para debug
             logger.error(
@@ -103,12 +89,12 @@ class AsaasClient:
                 f"ASAAS_ENV={asaas_env_value}, "
                 f"is_production={is_production}, "
                 f"env={env_display}, "
-                f"ASAAS_API_KEY_PRODUCTION={'sim' if os.environ.get('ASAAS_API_KEY_PRODUCTION') else 'não'}"
+                f"ASAAS_API_KEY={'sim' if os.environ.get('ASAAS_API_KEY') else 'não'}"
             )
             
             raise RuntimeError(
                 f"ASAAS_API_KEY não configurada nas variáveis de ambiente. "
-                f"Configure {env_var} no arquivo .env (ou use ASAAS_API_KEY como fallback). "
+                f"Configure ASAAS_API_KEY no arquivo .env. "
                 f"Ambiente atual: {env_display}"
             )
         

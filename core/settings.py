@@ -90,20 +90,13 @@ except Exception:
 # 2. Gere uma nova chave de API
 # 3. Configure no arquivo .env:
 #    - ASAAS_ENV=production (ou sandbox)
-#    - ASAAS_API_KEY_PRODUCTION=$aact_SUA_CHAVE_PRODUCAO_AQUI
-#    - ASAAS_API_KEY_SANDBOX=$aact_SUA_CHAVE_SANDBOX_AQUI
-#    - OU use ASAAS_API_KEY=$aact_SUA_CHAVE_AQUI (fallback para ambos)
+#    - ASAAS_API_KEY=$aact_SUA_CHAVE_AQUI
 
 # Configuração de API Keys por ambiente
 ASAAS_ENV = os.environ.get("ASAAS_ENV", "sandbox").lower()  # 'sandbox' ou 'production'
 
-# Carregar chave de API baseado no ambiente
-# Sandbox: usa ASAAS_API_KEY_SANDBOX ou ASAAS_API_KEY (fallback)
-# Production: usa ASAAS_API_KEY_PRODUCTION ou ASAAS_API_KEY (fallback)
-if ASAAS_ENV == "sandbox":
-    ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_SANDBOX") or os.environ.get("ASAAS_API_KEY")
-else:
-    ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY_PRODUCTION") or os.environ.get("ASAAS_API_KEY")
+# Carregar chave de API
+ASAAS_API_KEY = os.environ.get("ASAAS_API_KEY")
 
 ASAAS_WEBHOOK_TOKEN = os.environ.get(
     "ASAAS_WEBHOOK_TOKEN"
