@@ -92,16 +92,17 @@ class AsaasClient:
             # IMPORTANTE: Se critérios indicam produção, SEMPRE forçar produção
             # Mesmo se ASAAS_ENV estiver definido como "sandbox", em produção deve usar produção
             self.env = "production"
-            # Log para debug
-            if not api_key:
-                logger.info(
-                    f"AsaasClient - FORÇANDO produção (detecção automática): "
-                    f"DEBUG={debug_value}, "
-                    f"SETTINGS_MODULE={settings_module}, "
-                    f"ASAAS_ENV={asaas_env_value}, "
-                    f"hostname={hostname}, "
-                    f"env_passado={env}"
-                )
+            # Log detalhado para debug (sempre logar em produção para ajudar diagnóstico)
+            logger.info(
+                f"AsaasClient - FORÇANDO produção (detecção automática): "
+                f"DEBUG={debug_value}, "
+                f"SETTINGS_MODULE={settings_module}, "
+                f"ASAAS_ENV={asaas_env_value}, "
+                f"hostname={hostname}, "
+                f"is_production_hostname={is_production_hostname}, "
+                f"is_production_settings={is_production_settings}, "
+                f"env_passado={env}"
+            )
         elif asaas_env_value:
             # ASAAS_ENV está explicitamente definido e não é produção - respeitar (para desenvolvimento/local)
             self.env = asaas_env_value
