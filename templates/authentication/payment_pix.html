@@ -436,15 +436,114 @@ function copyPixCode() {
     });
 }
 
-function checkPaymentStatus() {
-    // Simular verificação de status
-    showNotification('Verificando status do pagamento...', 'info');
+function checkPaymentStatus(event) {
+    event.preventDefault();
+    const assinaturaId = {{ assinatura.id }};
+    const btn = event.target.closest('button') || event.target;
+    const originalText = btn.innerHTML;
     
-    // Em um sistema real, aqui seria feita uma requisição AJAX
-    // para verificar o status do pagamento no Asaas
+    // Mostrar loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verificando...';
+    
+    // Fazer requisição AJAX
+    fetch(`/authentication/ajax/pagamento/status/${assinaturaId}/`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        
+        if (data.status === 'success') {
+            if (data.pagamento_confirmado) {
+                // Mostrar modal de sucesso
+                showPaymentSuccessModal(data);
+            } else {
+                showNotification(data.message || 'Pagamento ainda não confirmado. Aguarde alguns instantes.', 'info');
+            }
+        } else {
+            showNotification(data.message || 'Erro ao verificar pagamento', 'error');
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        console.error('Erro:', error);
+        showNotification('Erro ao verificar pagamento. Tente novamente.', 'error');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showPaymentSuccessModal(data) {
+    // Criar modal de sucesso
+    const modalHtml = `
+        <div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-labelledby="paymentSuccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="paymentSuccessModalLabel">
+                            <i class="fas fa-check-circle me-2"></i>Pagamento Confirmado!
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle fa-4x text-success"></i>
+                        </div>
+                        <h4 class="mb-3">Seu pagamento foi confirmado com sucesso!</h4>
+                        <p class="text-muted mb-3">Sua assinatura está agora <strong>ativa</strong> e você já pode usar todos os recursos do sistema.</p>
+                        ${data.data_inicio ? `<p class="mb-1"><strong>Início:</strong> ${new Date(data.data_inicio).toLocaleDateString('pt-BR')}</p>` : ''}
+                        ${data.data_fim ? `<p class="mb-0"><strong>Válido até:</strong> ${new Date(data.data_fim).toLocaleDateString('pt-BR')}</p>` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'agendamentos:dashboard' %}" class="btn btn-success">
+                            <i class="fas fa-arrow-right me-1"></i>Ir para o Dashboard
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior se existir
+    const existingModal = document.getElementById('paymentSuccessModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Adicionar modal ao body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+    modal.show();
+    
+    // Redirecionar para dashboard após 5 segundos se usuário não fechar
     setTimeout(function() {
-        showNotification('Status verificado. Atualize a página para ver mudanças.', 'success');
-    }, 2000);
+        if (document.getElementById('paymentSuccessModal')) {
+            window.location.href = "{% url 'agendamentos:dashboard' %}";
+        }
+    }, 5000);
 }
 
 function showNotification(message, type) {
@@ -469,10 +568,59 @@ function showNotification(message, type) {
     }, 5000);
 }
 
-// Auto-refresh a cada 30 segundos para verificar status
-setInterval(function() {
-    // Em um sistema real, aqui seria feita uma verificação do status
-    console.log('Verificando status do pagamento...');
-}, 30000);
+// Polling automático para verificar status do pagamento
+let pollingInterval = null;
+let pollingAttempts = 0;
+const MAX_POLLING_ATTEMPTS = 60; // 60 tentativas = 5 minutos (5s cada)
+
+function startPaymentPolling() {
+    // Verificar se pagamento já foi confirmado
+    const assinaturaStatus = '{{ assinatura.status }}';
+    if (assinaturaStatus === 'ativa') {
+        return; // Não precisa fazer polling se já está ativa
+    }
+    
+    // Verificar se tem payment_id
+    {% if pix_data.payment_id %}
+    const assinaturaId = {{ assinatura.id }};
+    
+    pollingInterval = setInterval(function() {
+        pollingAttempts++;
+        
+        if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
+            clearInterval(pollingInterval);
+            console.log('Polling interrompido após máximo de tentativas');
+            return;
+        }
+        
+        // Fazer requisição silenciosa
+        fetch(`/authentication/ajax/pagamento/status/${assinaturaId}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.pagamento_confirmado) {
+                // Parar polling
+                clearInterval(pollingInterval);
+                
+                // Mostrar modal de sucesso
+                showPaymentSuccessModal(data);
+            }
+        })
+        .catch(error => {
+            console.error('Erro no polling:', error);
+        });
+    }, 5000); // Verificar a cada 5 segundos
+    {% endif %}
+}
+
+// Iniciar polling quando página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    startPaymentPolling();
+});
 </script>
 {% endblock %}

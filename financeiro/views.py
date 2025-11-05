@@ -248,7 +248,60 @@ def asaas_webhook(request):
             p.webhook_event_id = event_id
             p.save()
             logger.info(f"Pagamento atualizado via webhook: {payment_id} - Status: {p.status}")
-            # Aqui você pode adicionar lógica para liberar assinatura/recursos no seu sistema
+            
+            # ✅ ATUALIZAR STATUS DA ASSINATURA QUANDO PAGAMENTO FOR RECEBIDO
+            try:
+                from authentication.models import AssinaturaUsuario
+                from django.utils import timezone
+                
+                # Buscar assinatura relacionada ao payment_id
+                assinaturas = AssinaturaUsuario.objects.filter(asaas_payment_id=payment_id)
+                
+                # Se não encontrar pelo payment_id, tentar buscar pelo externalReference
+                if not assinaturas.exists():
+                    external_ref = obj.get("externalReference", "")
+                    if external_ref and external_ref.startswith("assinatura_"):
+                        try:
+                            assinatura_id = int(external_ref.replace("assinatura_", ""))
+                            assinaturas = AssinaturaUsuario.objects.filter(id=assinatura_id)
+                            if assinaturas.exists():
+                                # Atualizar payment_id na assinatura
+                                for assinatura in assinaturas:
+                                    assinatura.asaas_payment_id = payment_id
+                                    assinatura.save()
+                                logger.info(f"✅ Payment ID {payment_id} vinculado à assinatura {assinatura_id} via externalReference")
+                        except (ValueError, AssinaturaUsuario.DoesNotExist):
+                            pass
+                
+                for assinatura in assinaturas:
+                    # Atualizar status para "ativa" se ainda estiver aguardando pagamento
+                    if assinatura.status == "aguardando_pagamento":
+                        assinatura.status = "ativa"
+                        
+                        # Se data_inicio ainda não foi definida ou está no passado, definir como agora
+                        if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
+                            assinatura.data_inicio = timezone.now()
+                        
+                        # Recalcular data_fim baseada na data_inicio atual
+                        from datetime import timedelta
+                        assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
+                        
+                        assinatura.save()
+                        logger.info(
+                            f"✅ Assinatura {assinatura.id} atualizada para 'ativa' após pagamento {payment_id}. "
+                            f"Usuário: {assinatura.usuario.username}, "
+                            f"Início: {assinatura.data_inicio.strftime('%Y-%m-%d %H:%M:%S')}, "
+                            f"Fim: {assinatura.data_fim.strftime('%Y-%m-%d %H:%M:%S')}"
+                        )
+                    else:
+                        logger.info(
+                            f"Assinatura {assinatura.id} já estava com status '{assinatura.status}', "
+                            f"não foi alterada após pagamento {payment_id}"
+                        )
+                        
+            except Exception as e:
+                logger.error(f"Erro ao atualizar assinatura após pagamento {payment_id}: {e}", exc_info=True)
+                # Não bloquear resposta do webhook se houver erro ao atualizar assinatura
         except AsaasPayment.DoesNotExist:
             # ⚠️ CORREÇÃO: Não fazer chamadas síncronas à API dentro do webhook
             # Webhooks devem responder rapidamente (< 5s) para evitar timeout

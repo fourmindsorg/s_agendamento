@@ -43,6 +43,11 @@ urlpatterns = [
         name="payment_pix",
     ),
     path(
+        "ajax/pagamento/status/<int:assinatura_id>/",
+        views.check_payment_status,
+        name="check_payment_status",
+    ),
+    path(
         "pagamento/sucesso/<int:assinatura_id>/",
         views.PaymentSuccessView.as_view(),
         name="payment_success",

@@ -1307,12 +1307,14 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             logging.info(f"   Descrição: Pagamento - {plano.nome}")
 
             try:
+                # Criar pagamento com external_reference para vincular à assinatura
                 payment_data = asaas_client.create_payment(
                     customer_id=customer_data["id"],
                     value=float(valor),
                     due_date=due_date,
                     billing_type="PIX",
                     description=f"Pagamento - {plano.nome}",
+                    external_reference=f"assinatura_{assinatura.id}",  # Vincular à assinatura
                 )
                 logging.info(f"✅ Pagamento criado no Asaas: {payment_data.get('id')}")
                 logging.info(f"   Status: {payment_data.get('status')}")
@@ -1748,3 +1750,126 @@ def asaas_webhook(request):
     except Exception as e:
         logging.error(f"Erro no webhook Asaas: {str(e)}")
         return JsonResponse({"status": "error", "message": str(e)})
+
+
+@login_required
+def check_payment_status(request, assinatura_id):
+    """
+    Endpoint AJAX para verificar status do pagamento de uma assinatura.
+    Retorna status atual da assinatura e do pagamento.
+    """
+    try:
+        assinatura = AssinaturaUsuario.objects.get(
+            id=assinatura_id, usuario=request.user
+        )
+        
+        response_data = {
+            "status": "success",
+            "assinatura_status": assinatura.status,
+            "payment_id": assinatura.asaas_payment_id,
+            "pagamento_confirmado": False,
+        }
+        
+        # Se já está ativa, pagamento foi confirmado
+        if assinatura.status == "ativa":
+            response_data["pagamento_confirmado"] = True
+            response_data["message"] = "Pagamento confirmado! Sua assinatura está ativa."
+            response_data["data_inicio"] = assinatura.data_inicio.isoformat() if assinatura.data_inicio else None
+            response_data["data_fim"] = assinatura.data_fim.isoformat() if assinatura.data_fim else None
+            return JsonResponse(response_data)
+        
+        # Se tem payment_id, verificar status no Asaas
+        if assinatura.asaas_payment_id:
+            try:
+                from financeiro.services.asaas import AsaasClient, AsaasAPIError
+                from financeiro.models import AsaasPayment
+                
+                # Primeiro tentar buscar no banco local
+                try:
+                    payment = AsaasPayment.objects.get(asaas_id=assinatura.asaas_payment_id)
+                    if payment.status in ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH_UNDONE"]:
+                        # Pagamento confirmado - atualizar assinatura
+                        if assinatura.status == "aguardando_pagamento":
+                            assinatura.status = "ativa"
+                            from django.utils import timezone
+                            from datetime import timedelta
+                            if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
+                                assinatura.data_inicio = timezone.now()
+                            assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
+                            assinatura.save()
+                            logging.info(f"✅ Assinatura {assinatura.id} atualizada para 'ativa' via verificação AJAX")
+                        
+                        response_data["pagamento_confirmado"] = True
+                        response_data["assinatura_status"] = assinatura.status
+                        response_data["message"] = "Pagamento confirmado! Sua assinatura está ativa."
+                        response_data["data_inicio"] = assinatura.data_inicio.isoformat() if assinatura.data_inicio else None
+                        response_data["data_fim"] = assinatura.data_fim.isoformat() if assinatura.data_fim else None
+                        return JsonResponse(response_data)
+                    else:
+                        response_data["payment_status"] = payment.status
+                        response_data["message"] = f"Pagamento ainda não confirmado. Status: {payment.status}"
+                except AsaasPayment.DoesNotExist:
+                    # Se não existe no banco, buscar na API
+                    try:
+                        client = AsaasClient()
+                        payment_data = client.get_payment(assinatura.asaas_payment_id)
+                        payment_status = payment_data.get("status", "UNKNOWN")
+                        
+                        # Salvar no banco local
+                        from financeiro.models import AsaasPayment
+                        AsaasPayment.objects.update_or_create(
+                            asaas_id=assinatura.asaas_payment_id,
+                            defaults={
+                                "customer_id": payment_data.get("customer", ""),
+                                "amount": payment_data.get("value", assinatura.valor_pago or 0),
+                                "billing_type": payment_data.get("billingType", "PIX"),
+                                "status": payment_status,
+                            }
+                        )
+                        
+                        if payment_status in ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH_UNDONE"]:
+                            # Pagamento confirmado - atualizar assinatura
+                            if assinatura.status == "aguardando_pagamento":
+                                assinatura.status = "ativa"
+                                from django.utils import timezone
+                                from datetime import timedelta
+                                if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
+                                    assinatura.data_inicio = timezone.now()
+                                assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
+                                assinatura.save()
+                                logging.info(f"✅ Assinatura {assinatura.id} atualizada para 'ativa' via verificação AJAX (API)")
+                            
+                            response_data["pagamento_confirmado"] = True
+                            response_data["assinatura_status"] = assinatura.status
+                            response_data["message"] = "Pagamento confirmado! Sua assinatura está ativa."
+                            response_data["data_inicio"] = assinatura.data_inicio.isoformat() if assinatura.data_inicio else None
+                            response_data["data_fim"] = assinatura.data_fim.isoformat() if assinatura.data_fim else None
+                            return JsonResponse(response_data)
+                        else:
+                            response_data["payment_status"] = payment_status
+                            response_data["message"] = f"Pagamento ainda não confirmado. Status: {payment_status}"
+                    except AsaasAPIError as e:
+                        response_data["status"] = "error"
+                        response_data["message"] = f"Erro ao verificar pagamento: {e.message}"
+                        return JsonResponse(response_data, status=500)
+            except Exception as e:
+                logging.error(f"Erro ao verificar pagamento: {e}", exc_info=True)
+                response_data["status"] = "error"
+                response_data["message"] = f"Erro ao verificar pagamento: {str(e)}"
+                return JsonResponse(response_data, status=500)
+        else:
+            response_data["message"] = "Aguardando criação do pagamento..."
+        
+        return JsonResponse(response_data)
+        
+    except AssinaturaUsuario.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "Assinatura não encontrada"},
+            status=404
+        )
+    except Exception as e:
+        logging.error(f"Erro ao verificar status do pagamento: {e}", exc_info=True)
+        return JsonResponse(
+            {"status": "error", "message": f"Erro interno: {str(e)}"},
+            status=500
+        )
