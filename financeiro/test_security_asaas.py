@@ -6,6 +6,7 @@ a integração com o Asaas está protegida contra vulnerabilidades comuns.
 """
 
 import json
+import os
 import re
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -678,9 +679,14 @@ class AsaasSecurityTestCase(TestCase):
 
     def test_asaas_client_validates_api_key(self):
         """Testa que AsaasClient valida a API key"""
+        # Mock tanto settings quanto variável de ambiente
         with patch('django.conf.settings.ASAAS_API_KEY', None):
-            with self.assertRaises(RuntimeError):
-                AsaasClient()
+            with patch.dict(os.environ, {'ASAAS_API_KEY': ''}, clear=False):
+                # Remover ASAAS_API_KEY se existir
+                if 'ASAAS_API_KEY' in os.environ:
+                    os.environ.pop('ASAAS_API_KEY', None)
+                with self.assertRaises(RuntimeError):
+                    AsaasClient()
 
     def test_asaas_client_sanitizes_urls(self):
         """Testa que URLs são construídas corretamente"""

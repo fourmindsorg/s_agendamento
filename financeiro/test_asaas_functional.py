@@ -88,12 +88,17 @@ class AsaasFunctionalTestCase(TestCase):
         """Configuração inicial"""
         self.client = Client()
         
-        # Verificar se API está configurada
-        self.api_key = getattr(settings, "ASAAS_API_KEY", None)
+        # Verificar se API está configurada (verifica settings e variável de ambiente)
+        import os
+        self.api_key = (
+            os.environ.get("ASAAS_API_KEY") or 
+            getattr(settings, "ASAAS_API_KEY", None)
+        )
         self.env = getattr(settings, "ASAAS_ENV", "sandbox")
         
-        if not self.api_key:
-            self.skipTest("ASAAS_API_KEY não configurada. Configure no arquivo .env")
+        # Verificar se a chave existe e não é apenas um placeholder
+        if not self.api_key or self.api_key == "test_api_key_for_ci":
+            self.skipTest("ASAAS_API_KEY não configurada ou inválida. Configure uma chave válida do Asaas.")
         
         # Criar usuário de teste
         self.user = User.objects.create_user(
