@@ -3,12 +3,42 @@ from pathlib import Path
 from .settings import *
 
 # Carregar variáveis de ambiente do arquivo .env
+# IMPORTANTE: settings_production herda de settings, mas recarrega o .env aqui
+# para garantir que funcione mesmo se settings.py não tiver carregado
 try:
     from dotenv import load_dotenv
-
-    load_dotenv()
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # BASE_DIR ainda não está definido aqui, então usar Path(__file__)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    env_path = BASE_DIR / '.env'
+    
+    if env_path.exists():
+        # Usar caminho absoluto e override=True para garantir que funcione
+        load_dotenv(dotenv_path=str(env_path.absolute()), override=True)
+        logger.info(f"✅ [PRODUCTION] Arquivo .env carregado de: {env_path.absolute()}")
+    else:
+        # Fallback: tentar carregar do diretório atual
+        load_dotenv(override=True)
+        logger.warning(f"⚠️ [PRODUCTION] Arquivo .env não encontrado em {env_path.absolute()}, tentando diretório atual")
+        
+    # Verificar se ASAAS_API_KEY foi carregada (log sempre em produção para diagnóstico)
+    asaas_key_loaded = bool(os.environ.get("ASAAS_API_KEY"))
+    if asaas_key_loaded:
+        logger.info("✅ [PRODUCTION] ASAAS_API_KEY carregada com sucesso")
+    else:
+        logger.error("❌ [PRODUCTION] ASAAS_API_KEY NÃO foi carregada! Verifique o arquivo .env")
+        
 except ImportError:
-    pass
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning("⚠️ [PRODUCTION] python-dotenv não instalado, variáveis de ambiente devem ser configuradas manualmente")
+except Exception as e:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error(f"❌ [PRODUCTION] Erro ao carregar .env: {e}", exc_info=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

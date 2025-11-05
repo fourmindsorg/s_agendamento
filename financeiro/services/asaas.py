@@ -131,6 +131,14 @@ class AsaasClient:
             # SEMPRE usar self.env para mensagem de erro (já foi forçado para "production" se necessário)
             env_display = self.env
             
+            # Verificar múltiplas fontes para diagnóstico
+            from pathlib import Path
+            base_dir = Path(__file__).resolve().parent.parent.parent
+            env_path = base_dir / '.env'
+            env_exists = env_path.exists()
+            env_key_in_os = bool(os.environ.get("ASAAS_API_KEY"))
+            env_key_in_settings = bool(getattr(settings, "ASAAS_API_KEY", None))
+            
             # Log detalhado para debug
             logger.error(
                 f"ASAAS_API_KEY não configurada! "
@@ -139,8 +147,25 @@ class AsaasClient:
                 f"ASAAS_ENV={asaas_env_value}, "
                 f"is_production={is_production}, "
                 f"env_display={env_display}, "
-                f"ASAAS_API_KEY={'sim' if os.environ.get('ASAAS_API_KEY') else 'não'}"
+                f"BASE_DIR={base_dir}, "
+                f".env existe={env_exists}, "
+                f".env path={env_path}, "
+                f"ASAAS_API_KEY em os.environ={'sim' if env_key_in_os else 'não'}, "
+                f"ASAAS_API_KEY em settings={'sim' if env_key_in_settings else 'não'}"
             )
+            
+            # Tentar recarregar o .env uma última vez
+            if env_exists and not env_key_in_os:
+                try:
+                    from dotenv import load_dotenv
+                    load_dotenv(dotenv_path=str(env_path.absolute()), override=True)
+                    # Tentar novamente
+                    self.api_key = os.environ.get("ASAAS_API_KEY") or getattr(settings, "ASAAS_API_KEY", None)
+                    if self.api_key:
+                        logger.info("✅ ASAAS_API_KEY carregada após tentativa de recarregamento")
+                        return  # Sucesso, não precisa lançar erro
+                except Exception as reload_error:
+                    logger.error(f"Erro ao tentar recarregar .env: {reload_error}")
             
             # Mensagem de erro simplificada - sempre menciona apenas ASAAS_API_KEY
             # O env_display já foi forçado para "production" se qualquer critério indicar produção

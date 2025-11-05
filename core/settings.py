@@ -7,16 +7,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Carregar variáveis de ambiente do arquivo .env
 try:
     from dotenv import load_dotenv
-
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
     # Carregar .env do diretório do projeto (BASE_DIR)
     env_path = BASE_DIR / '.env'
     if env_path.exists():
-        load_dotenv(dotenv_path=env_path)
+        # Usar caminho absoluto para garantir que funcione em produção
+        load_dotenv(dotenv_path=str(env_path.absolute()), override=True)
+        logger.debug(f"✅ Arquivo .env carregado de: {env_path.absolute()}")
     else:
         # Fallback: tentar carregar do diretório atual
-        load_dotenv()
+        load_dotenv(override=True)
+        logger.warning(f"⚠️ Arquivo .env não encontrado em {env_path.absolute()}, tentando diretório atual")
+        
+    # Log diagnóstico (apenas se DEBUG=True para não expor informações sensíveis)
+    if os.environ.get("DEBUG", "False").lower() == "true":
+        asaas_key_loaded = bool(os.environ.get("ASAAS_API_KEY"))
+        logger.debug(f"ASAAS_API_KEY carregada: {'SIM' if asaas_key_loaded else 'NÃO'}")
 except ImportError:
-    pass
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning("⚠️ python-dotenv não instalado, variáveis de ambiente devem ser configuradas manualmente")
+except Exception as e:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error(f"❌ Erro ao carregar .env: {e}")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
