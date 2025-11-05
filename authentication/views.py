@@ -586,13 +586,17 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
             # Verificar e atualizar assinaturas pendentes antes de exibir
             assinaturas_pendentes = assinaturas_historico.filter(status="aguardando_pagamento")
             if assinaturas_pendentes.exists():
-                self.verificar_e_atualizar_pagamentos_pendentes(assinaturas_pendentes)
+                logging.info(f"🔄 Verificando {assinaturas_pendentes.count()} assinatura(s) pendente(s) antes de exibir histórico")
+                assinaturas_atualizadas = self.verificar_e_atualizar_pagamentos_pendentes(assinaturas_pendentes)
+                if assinaturas_atualizadas:
+                    logging.info(f"✅ {len(assinaturas_atualizadas)} assinatura(s) atualizada(s) antes de exibir histórico")
                 # Recarregar assinaturas para ter os status atualizados
                 assinaturas_historico = (
                     AssinaturaUsuario.objects.filter(usuario=self.request.user)
                     .select_related("plano")
                     .order_by("-data_inicio")
                 )
+                logging.info(f"📋 Histórico recarregado com status atualizados")
             
             context["assinaturas_historico"] = assinaturas_historico
         except Exception:
@@ -635,33 +639,47 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
         Antes de retornar, verifica via API do Asaas se algum pagamento foi confirmado.
         """
         try:
+            logging.info(f"🔍 Verificando assinaturas pendentes para usuário {self.request.user.id}")
+            
             # Buscar assinaturas aguardando pagamento
             assinaturas_pendentes = AssinaturaUsuario.objects.filter(
                 usuario=self.request.user, status="aguardando_pagamento"
             )
             
             if not assinaturas_pendentes.exists():
+                logging.info(f"✅ Usuário {self.request.user.id} não tem assinaturas pendentes")
                 return False
+            
+            logging.info(f"🔍 Encontradas {assinaturas_pendentes.count()} assinatura(s) pendente(s) para usuário {self.request.user.id}")
             
             # Verificar via API do Asaas se algum pagamento foi confirmado
             assinaturas_atualizadas = self.verificar_e_atualizar_pagamentos_pendentes(assinaturas_pendentes)
             
+            # Recarregar do banco para ter certeza que temos os dados atualizados
             # Se todas as assinaturas foram atualizadas para "ativa", retornar False
             assinaturas_ainda_pendentes = AssinaturaUsuario.objects.filter(
                 usuario=self.request.user, status="aguardando_pagamento"
             )
             
-            return assinaturas_ainda_pendentes.exists()
+            if assinaturas_ainda_pendentes.exists():
+                logging.info(f"⚠️ Ainda há {assinaturas_ainda_pendentes.count()} assinatura(s) pendente(s) para usuário {self.request.user.id}")
+                return True
+            else:
+                logging.info(f"✅ Todas as assinaturas foram atualizadas! Não há mais pendentes para usuário {self.request.user.id}")
+                return False
             
         except Exception as e:
             logging.error(
-                f"Erro ao verificar assinatura aguardando para usuário {self.request.user.id}: {e}",
+                f"❌ Erro ao verificar assinatura aguardando para usuário {self.request.user.id}: {e}",
                 exc_info=True
             )
             # Em caso de erro, retornar o status atual do banco
-            return AssinaturaUsuario.objects.filter(
+            tem_pendentes = AssinaturaUsuario.objects.filter(
                 usuario=self.request.user, status="aguardando_pagamento"
             ).exists()
+            if tem_pendentes:
+                logging.warning(f"⚠️ Retornando True devido a erro (há pendentes no banco)")
+            return tem_pendentes
     
     def verificar_e_atualizar_pagamentos_pendentes(self, assinaturas):
         """
@@ -684,26 +702,37 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
             from django.conf import settings
             asaas_api_key = getattr(settings, "ASAAS_API_KEY", None)
             if not asaas_api_key:
-                logging.debug("Asaas API key não configurada, pulando verificação de pagamentos")
+                logging.warning("⚠️ Asaas API key não configurada, pulando verificação de pagamentos")
                 return assinaturas_atualizadas
             
+            logging.info(f"🔍 Iniciando verificação de {assinaturas.count()} assinatura(s) pendente(s)")
             asaas_client = AsaasClient()
             
             for assinatura in assinaturas:
+                logging.info(f"🔍 Verificando assinatura ID {assinatura.id}, status atual: {assinatura.status}")
+                
                 # Só verificar se tem payment_id
                 if not assinatura.asaas_payment_id:
+                    logging.warning(f"⚠️ Assinatura {assinatura.id} não tem asaas_payment_id, pulando verificação")
                     continue
                 
+                logging.info(f"🔍 Assinatura {assinatura.id} tem payment_id: {assinatura.asaas_payment_id}")
+                
                 try:
+                    payment_status = None
+                    
                     # Primeiro tentar buscar no banco local
                     try:
                         payment = AsaasPayment.objects.get(asaas_id=assinatura.asaas_payment_id)
                         payment_status = payment.status
+                        logging.info(f"📦 Status encontrado no banco local: {payment_status} para payment_id {assinatura.asaas_payment_id}")
                     except AsaasPayment.DoesNotExist:
                         # Se não existe no banco, buscar na API
+                        logging.info(f"📡 Payment_id {assinatura.asaas_payment_id} não encontrado no banco local, buscando na API...")
                         try:
                             payment_data = asaas_client.get_payment(assinatura.asaas_payment_id)
                             payment_status = payment_data.get("status", "UNKNOWN")
+                            logging.info(f"📡 Status obtido da API: {payment_status} para payment_id {assinatura.asaas_payment_id}")
                             
                             # Salvar no banco local
                             AsaasPayment.objects.update_or_create(
@@ -715,48 +744,71 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
                                     "status": payment_status,
                                 }
                             )
+                            logging.info(f"💾 Dados do pagamento salvos no banco local")
                         except AsaasAPIError as e:
                             # Se erro 404, pagamento ainda não disponível ou não existe
                             if e.status_code == 404:
-                                logging.debug(f"Pagamento {assinatura.asaas_payment_id} ainda não disponível na API")
+                                logging.warning(f"⚠️ Pagamento {assinatura.asaas_payment_id} retornou 404 na API (não encontrado ou ainda não disponível)")
                                 continue
                             else:
-                                logging.warning(f"Erro ao buscar pagamento {assinatura.asaas_payment_id}: {e.message}")
+                                logging.error(f"❌ Erro ao buscar pagamento {assinatura.asaas_payment_id} na API: {e.message} (status_code: {e.status_code})")
                                 continue
                     
+                    if not payment_status:
+                        logging.warning(f"⚠️ Não foi possível obter status do pagamento {assinatura.asaas_payment_id}")
+                        continue
+                    
                     # Verificar se pagamento foi confirmado
-                    if payment_status in ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH_UNDONE"]:
+                    status_confirmados = ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH_UNDONE"]
+                    if payment_status in status_confirmados:
+                        logging.info(f"✅ Pagamento {assinatura.asaas_payment_id} confirmado! Status: {payment_status}")
+                        
                         # Atualizar assinatura para "ativa"
                         if assinatura.status == "aguardando_pagamento":
-                            assinatura.status = "ativa"
+                            # Recarregar do banco para garantir que temos a versão mais recente
+                            assinatura.refresh_from_db()
                             
-                            # Se data_inicio ainda não foi definida ou está no passado, definir como agora
-                            if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
-                                assinatura.data_inicio = timezone.now()
-                            
-                            # Recalcular data_fim baseada na data_inicio atual
-                            from datetime import timedelta
-                            assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
-                            
-                            assinatura.save()
-                            assinaturas_atualizadas.append(assinatura)
-                            
-                            logging.info(
-                                f"✅ Assinatura {assinatura.id} atualizada para 'ativa' após verificação via API. "
-                                f"Payment ID: {assinatura.asaas_payment_id}, "
-                                f"Status pagamento: {payment_status}"
-                            )
+                            # Verificar novamente o status (pode ter sido atualizado por outro processo)
+                            if assinatura.status == "aguardando_pagamento":
+                                assinatura.status = "ativa"
+                                
+                                # Se data_inicio ainda não foi definida ou está no passado, definir como agora
+                                if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
+                                    assinatura.data_inicio = timezone.now()
+                                
+                                # Recalcular data_fim baseada na data_inicio atual
+                                from datetime import timedelta
+                                assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
+                                
+                                assinatura.save()
+                                assinaturas_atualizadas.append(assinatura)
+                                
+                                logging.info(
+                                    f"✅✅✅ Assinatura {assinatura.id} ATUALIZADA para 'ativa' após verificação via API! "
+                                    f"Payment ID: {assinatura.asaas_payment_id}, "
+                                    f"Status pagamento: {payment_status}, "
+                                    f"Data início: {assinatura.data_inicio}, "
+                                    f"Data fim: {assinatura.data_fim}"
+                                )
+                            else:
+                                logging.info(f"ℹ️ Assinatura {assinatura.id} já foi atualizada por outro processo, status atual: {assinatura.status}")
+                        else:
+                            logging.info(f"ℹ️ Assinatura {assinatura.id} já não está mais 'aguardando_pagamento', status atual: {assinatura.status}")
+                    else:
+                        logging.info(f"⏳ Pagamento {assinatura.asaas_payment_id} ainda não confirmado. Status atual: {payment_status}")
                     
                 except Exception as e:
                     logging.error(
-                        f"Erro ao verificar pagamento {assinatura.asaas_payment_id} para assinatura {assinatura.id}: {e}",
+                        f"❌ Erro ao verificar pagamento {assinatura.asaas_payment_id} para assinatura {assinatura.id}: {e}",
                         exc_info=True
                     )
                     continue
             
+            logging.info(f"✅ Verificação concluída. {len(assinaturas_atualizadas)} assinatura(s) atualizada(s)")
+            
         except Exception as e:
             logging.error(
-                f"Erro ao verificar pagamentos pendentes via API Asaas: {e}",
+                f"❌ Erro geral ao verificar pagamentos pendentes via API Asaas: {e}",
                 exc_info=True
             )
         
