@@ -722,10 +722,13 @@ class AsaasSecurityTestCase(TestCase):
         with patch('django.conf.settings.ASAAS_API_KEY', self.test_api_key):
             for env in invalid_environments:
                 with self.subTest(env=env):
-                    # Deve usar sandbox como padrão para ambientes inválidos
+                    # Quando um env explícito é passado (mesmo que inválido), 
+                    # o cliente deve usar esse valor (permite testes de segurança)
                     client = AsaasClient(env=env)
-                    # Deve usar sandbox como fallback
-                    self.assertEqual(client.env, env)  # Mas aceita qualquer valor
-                    # A URL base deve ser válida
+                    # O env deve ser o valor passado
+                    self.assertEqual(client.env, env)
+                    # Mas a URL base deve ser válida (usa sandbox como fallback)
                     self.assertIn("asaas.com", client.base)
+                    # A URL base deve ser a do sandbox quando env é inválido
+                    self.assertEqual(client.base, "https://api-sandbox.asaas.com/v3/")
 

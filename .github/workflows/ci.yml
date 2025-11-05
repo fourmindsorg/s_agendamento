@@ -67,6 +67,8 @@ jobs:
           DB_PORT: 5432
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
+          ASAAS_API_KEY: ${{ secrets.ASAAS_API_KEY_SANDBOX || 'test_api_key_for_ci' }}
+          ASAAS_ENV: sandbox
         run: |
           python -c "import django; print('Django:', django.get_version())"
           python manage.py migrate --settings=core.settings
@@ -80,6 +82,8 @@ jobs:
           DB_PORT: 5432
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
+          ASAAS_API_KEY: ${{ secrets.ASAAS_API_KEY_SANDBOX || 'test_api_key_for_ci' }}
+          ASAAS_ENV: sandbox
         run: |
           python manage.py test --settings=core.settings
 
@@ -93,6 +97,8 @@ jobs:
           DB_PORT: 5432
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: True
+          ASAAS_API_KEY: ${{ secrets.ASAAS_API_KEY_SANDBOX || 'test_api_key_for_ci' }}
+          ASAAS_ENV: sandbox
         run: |
           pytest --cov=. --cov-report=xml --cov-report=html || echo "No tests to run"
 

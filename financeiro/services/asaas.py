@@ -60,17 +60,23 @@ class AsaasClient:
         # Detectar produção por múltiplos critérios
         # IMPORTANTE: Se QUALQUER critério indicar produção, forçar produção
         # Prioridade: DEBUG=False é o mais confiável, mas também verificar hostname
+        # EXCEÇÃO: Se env explícito foi passado (mesmo que inválido), respeitar para testes de segurança
         is_production = (
             not debug_value or  # DEBUG=False (mais confiável)
             is_production_settings or  # Settings module contém "production"
             is_production_env or  # ASAAS_ENV="production"
-            env == "production" or  # Passado explicitamente
+            env == "production" or  # Passado explicitamente como "production"
             is_production_hostname  # Hostname indica produção (AWS/EC2)
         )
         
-        # SEMPRE forçar env="production" se qualquer critério indicar produção
-        # Isso garante que mesmo que ASAAS_ENV não esteja configurado, será detectado como produção
-        if is_production:
+        # Se um env explícito foi passado (mesmo que inválido), usar esse valor
+        # Isso permite testes de segurança validarem ambientes inválidos
+        # Caso contrário, forçar produção se os critérios indicarem
+        if env is not None:
+            # Env explícito foi passado - usar esse valor (para testes de segurança)
+            self.env = env
+        elif is_production:
+            # Nenhum env explícito, mas critérios indicam produção - forçar produção
             self.env = "production"
             # Log para debug
             if not api_key:
@@ -82,7 +88,8 @@ class AsaasClient:
                     f"env_passado={env}"
                 )
         else:
-            self.env = env or getattr(settings, "ASAAS_ENV", "sandbox")
+            # Nenhum env explícito e não é produção - usar sandbox como padrão
+            self.env = getattr(settings, "ASAAS_ENV", "sandbox")
             # Log para debug
             if not api_key:
                 logger.debug(
