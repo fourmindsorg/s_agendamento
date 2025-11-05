@@ -14,7 +14,7 @@ try:
         load_dotenv(dotenv_path=env_path)
     else:
         # Fallback: tentar carregar do diretório atual
-        load_dotenv()
+    load_dotenv()
 except ImportError:
     pass
 
