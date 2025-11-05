@@ -53,16 +53,41 @@ echo "👤 Usuário detectado: $GUNICORN_USER"
 echo ""
 
 # Verificar caminho do Gunicorn
-GUNICORN_PATH="/opt/s-agendamento/venv/bin/gunicorn"
-if [ ! -f "$GUNICORN_PATH" ]; then
-    # Tentar .venv
+echo "🔍 Verificando caminho do Gunicorn..."
+GUNICORN_PATH=""
+
+# Tentar .venv primeiro (mais comum)
+if [ -f "/opt/s-agendamento/.venv/bin/gunicorn" ]; then
     GUNICORN_PATH="/opt/s-agendamento/.venv/bin/gunicorn"
-    if [ ! -f "$GUNICORN_PATH" ]; then
-        echo "⚠️  Gunicorn não encontrado em /opt/s-agendamento/venv/bin/gunicorn"
-        echo "   Verificando alternativas..."
-        GUNICORN_PATH=$(which gunicorn 2>/dev/null || echo "/opt/s-agendamento/venv/bin/gunicorn")
+    echo "   ✅ Encontrado em: .venv/bin/gunicorn"
+elif [ -f "/opt/s-agendamento/venv/bin/gunicorn" ]; then
+    GUNICORN_PATH="/opt/s-agendamento/venv/bin/gunicorn"
+    echo "   ✅ Encontrado em: venv/bin/gunicorn"
+else
+    # Tentar usar which
+    GUNICORN_PATH=$(which gunicorn 2>/dev/null || echo "")
+    if [ -n "$GUNICORN_PATH" ]; then
+        echo "   ✅ Encontrado via which: $GUNICORN_PATH"
+    else
+        echo "   ❌ Gunicorn não encontrado!"
+        echo "   Verificando diretórios..."
+        if [ -d "/opt/s-agendamento/.venv" ]; then
+            echo "   Diretório .venv existe"
+        fi
+        if [ -d "/opt/s-agendamento/venv" ]; then
+            echo "   Diretório venv existe"
+        fi
+        echo "   Tentando instalar gunicorn..."
+        GUNICORN_PATH="/opt/s-agendamento/.venv/bin/gunicorn"
     fi
 fi
+
+if [ -z "$GUNICORN_PATH" ] || [ ! -f "$GUNICORN_PATH" ]; then
+    echo "⚠️  Gunicorn não encontrado, usando caminho padrão"
+    GUNICORN_PATH="/opt/s-agendamento/.venv/bin/gunicorn"
+fi
+
+echo "   📍 Caminho final: $GUNICORN_PATH"
 
 echo "📝 Criando novo arquivo systemd..."
 
@@ -125,4 +150,5 @@ echo ""
 echo "=========================================="
 echo "  Concluído!"
 echo "=========================================="
+
 
