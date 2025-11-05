@@ -53,3 +53,12 @@ git pull origin main
 - Se não usar `--global`, a exceção será apenas para este repositório
 - A opção mais segura é usar `--global` apenas se você confiar no diretório
 
+## 🔄 Se aparecer erro de permissão depois
+
+Se após resolver o "dubious ownership" aparecer:
+```
+error: cannot open .git/FETCH_HEAD: Permission denied
+```
+
+Veja o arquivo `_RESOLVER_GIT_PERMISSOES.md` para resolver problemas de permissão.
+
