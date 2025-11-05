@@ -1116,8 +1116,21 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     payment_data = asaas_client.get_payment(assinatura.asaas_payment_id)
                     pix_data = asaas_client.get_pix_qr(assinatura.asaas_payment_id)
                     
-                    payload = pix_data.get("payload", "")
-                    qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
+                    # Verificar múltiplos campos possíveis para o payload
+                    payload = (
+                        pix_data.get("payload") or 
+                        pix_data.get("copyPaste") or 
+                        pix_data.get("pixCopiaECola") or
+                        ""
+                    )
+                    
+                    # Verificar múltiplos campos possíveis para a imagem do QR code
+                    qr_code_image = (
+                        pix_data.get("qrCode") or 
+                        pix_data.get("encodedImage") or 
+                        pix_data.get("qrCodeBase64") or
+                        ""
+                    )
                     
                     # Validar que o payload é válido (deve começar com 000201)
                     if payload:
@@ -1345,12 +1358,21 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     pix_data = asaas_client.get_pix_qr(payment_data["id"])
                     logging.info(f"✅ Tentativa {tentativa}: Dados retornados do Asaas get_pix_qr: {list(pix_data.keys())}")
                     
-                    payload = pix_data.get("payload", "")
+                    # Verificar múltiplos campos possíveis para o payload
+                    payload = (
+                        pix_data.get("payload") or 
+                        pix_data.get("copyPaste") or 
+                        pix_data.get("pixCopiaECola") or
+                        ""
+                    )
+                    
                     if payload:
                         logging.info(f"✅ Payload obtido com sucesso na tentativa {tentativa} (após {elapsed:.1f}s)")
+                        logging.info(f"   Tamanho do payload: {len(payload)} caracteres")
                         break
                     else:
-                        logging.info(f"⚠️ Payload vazio na tentativa {tentativa}, aguardando... (elapsed: {elapsed:.1f}s)")
+                        logging.warning(f"⚠️ Payload vazio na tentativa {tentativa}, aguardando... (elapsed: {elapsed:.1f}s)")
+                        logging.warning(f"   Chaves disponíveis no pix_data: {list(pix_data.keys())}")
                         if tentativa < max_tentativas and (time.time() - start_time < max_wait_seconds):
                             time.sleep(3)  # Aguardar 3 segundos antes de tentar novamente
                             
@@ -1420,10 +1442,17 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     "mensagem_aguardo": "O código PIX está sendo gerado. Aguarde alguns segundos e recarregue a página.",
                 }
             
-            qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
+            # Verificar múltiplos campos possíveis para a imagem do QR code
+            qr_code_image = (
+                pix_data.get("qrCode") or 
+                pix_data.get("encodedImage") or 
+                pix_data.get("qrCodeBase64") or
+                ""
+            )
             
             logging.info(f"Payload recebido: SIM (tamanho: {len(payload)})")
             logging.info(f"QR Code do Asaas (imagem): {'SIM' if qr_code_image else 'NÃO (será gerado localmente)'}")
+            logging.info(f"Chaves disponíveis no pix_data: {list(pix_data.keys())}")
             
             # Validar que o payload parece ser um payload PIX válido
             if not payload.startswith("000201") or len(payload) < 50:

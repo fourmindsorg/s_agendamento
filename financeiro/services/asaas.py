@@ -515,22 +515,54 @@ class AsaasClient:
         
         Raises:
             AsaasAPIError: Se não conseguir obter o QR Code
+        
+        Nota: O endpoint correto da API Asaas é /pixQrCode (não /pix)
+        Documentação: https://docs.asaas.com/reference/obter-qr-code-para-pagamentos-via-pix
         """
-        response = self._request("GET", f"payments/{payment_id}/pix", timeout=15)
-        data = response.json()
-        
-        # Validar que recebemos dados válidos
-        if not isinstance(data, dict):
-            raise AsaasAPIError(
-                message="Resposta inválida ao obter QR Code PIX",
-                status_code=None,
-                response=data
-            )
-        
-        # Log para debug
-        logger.info(f"QR Code PIX obtido para pagamento {payment_id}: {list(data.keys())}")
-        
-        return data
+        # Tentar primeiro com o endpoint correto da documentação oficial
+        # GET /v3/payments/{id}/pixQrCode
+        try:
+            response = self._request("GET", f"payments/{payment_id}/pixQrCode", timeout=15)
+            data = response.json()
+            
+            # Validar que recebemos dados válidos
+            if not isinstance(data, dict):
+                raise AsaasAPIError(
+                    message="Resposta inválida ao obter QR Code PIX",
+                    status_code=None,
+                    response=data
+                )
+            
+            # Log para debug
+            logger.info(f"✅ QR Code PIX obtido para pagamento {payment_id}: {list(data.keys())}")
+            
+            return data
+            
+        except AsaasAPIError as e:
+            # Se o endpoint /pixQrCode não funcionar, tentar o endpoint alternativo /pix
+            if e.status_code == 404:
+                logger.warning(f"Endpoint /pixQrCode retornou 404, tentando endpoint alternativo /pix...")
+                try:
+                    response = self._request("GET", f"payments/{payment_id}/pix", timeout=15)
+                    data = response.json()
+                    
+                    if not isinstance(data, dict):
+                        raise AsaasAPIError(
+                            message="Resposta inválida ao obter QR Code PIX (endpoint alternativo)",
+                            status_code=None,
+                            response=data
+                        )
+                    
+                    logger.info(f"✅ QR Code PIX obtido via endpoint alternativo /pix: {list(data.keys())}")
+                    return data
+                    
+                except AsaasAPIError as e2:
+                    # Se ambos falharem, relançar o erro original
+                    logger.error(f"❌ Ambos os endpoints falharam. Erro original: {e.message}, Erro alternativo: {e2.message}")
+                    raise e
+            else:
+                # Para outros erros, relançar
+                raise
 
     def get_payment_barcode(self, payment_id: str) -> Dict[str, Any]:
         """
