@@ -692,7 +692,8 @@ class AsaasSecurityTestCase(TestCase):
         """Testa que URLs são construídas corretamente"""
         with patch('django.conf.settings.ASAAS_API_KEY', self.test_api_key):
             with patch('django.conf.settings.ASAAS_ENV', 'sandbox'):
-                client = AsaasClient()
+                # Forçar env='sandbox' explicitamente para o teste
+                client = AsaasClient(env='sandbox')
                 url = client._url("customers")
                 self.assertTrue(url.startswith("https://api-sandbox.asaas.com"))
                 self.assertNotIn('<script>', url)
