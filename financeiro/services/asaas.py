@@ -61,6 +61,7 @@ class AsaasClient:
         # IMPORTANTE: Se QUALQUER critério indicar produção, forçar produção
         # Prioridade: DEBUG=False é o mais confiável, mas também verificar hostname
         # EXCEÇÃO: Se env explícito foi passado (mesmo que inválido), respeitar para testes de segurança
+        # EXCEÇÃO: Se ASAAS_ENV está explicitamente definido no settings, respeitar (para testes)
         is_production = (
             not debug_value or  # DEBUG=False (mais confiável)
             is_production_settings or  # Settings module contém "production"
@@ -71,12 +72,14 @@ class AsaasClient:
         
         # Se um env explícito foi passado (mesmo que inválido), usar esse valor
         # Isso permite testes de segurança validarem ambientes inválidos
-        # Caso contrário, forçar produção se os critérios indicarem
         if env is not None:
             # Env explícito foi passado - usar esse valor (para testes de segurança)
             self.env = env
+        elif asaas_env_value:
+            # ASAAS_ENV está explicitamente definido no settings - respeitar (para testes)
+            self.env = asaas_env_value
         elif is_production:
-            # Nenhum env explícito, mas critérios indicam produção - forçar produção
+            # Nenhum env explícito e ASAAS_ENV não definido, mas critérios indicam produção - forçar produção
             self.env = "production"
             # Log para debug
             if not api_key:
@@ -88,8 +91,8 @@ class AsaasClient:
                     f"env_passado={env}"
                 )
         else:
-            # Nenhum env explícito e não é produção - usar sandbox como padrão
-            self.env = getattr(settings, "ASAAS_ENV", "sandbox")
+            # Nenhum env explícito, ASAAS_ENV não definido e não é produção - usar sandbox como padrão
+            self.env = "sandbox"
             # Log para debug
             if not api_key:
                 logger.debug(
