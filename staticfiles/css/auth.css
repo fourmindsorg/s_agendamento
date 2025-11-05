@@ -508,7 +508,7 @@ a:hover {
 .badge {
     padding: 6px 12px;
     font-weight: 500;
-    white-space: nowrap;
+    /* white-space: nowrap; */
 }
 
 /* Mobile card styling */
