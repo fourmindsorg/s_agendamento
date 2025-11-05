@@ -31,22 +31,31 @@ class Command(BaseCommand):
         self.stdout.write(f"   Existe: {'SIM' if env_path.exists() else 'NAO'}")
         
         if env_path.exists():
-            self.stdout.write(f"   Tamanho: {env_path.stat().st_size} bytes")
-            self.stdout.write(f"   Permissões: {oct(env_path.stat().st_mode)[-3:]}")
-            
-            # Verificar se contém ASAAS_API_KEY (sem mostrar o valor)
-            with open(env_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                has_key = 'ASAAS_API_KEY' in content
-                self.stdout.write(f"   Contem ASAAS_API_KEY: {'SIM' if has_key else 'NAO'}")
+            try:
+                stat_info = env_path.stat()
+                self.stdout.write(f"   Tamanho: {stat_info.st_size} bytes")
+                self.stdout.write(f"   Permissões: {oct(stat_info.st_mode)[-3:]}")
                 
-                if has_key:
-                    # Mostrar apenas os primeiros caracteres
-                    for line in content.split('\n'):
-                        if line.strip().startswith('ASAAS_API_KEY='):
-                            key_preview = line.split('=')[1][:20] + '...' if len(line.split('=')[1]) > 20 else line.split('=')[1]
-                            self.stdout.write(f"   Preview: ASAAS_API_KEY={key_preview}")
-                            break
+                # Tentar ler o arquivo
+                try:
+                    with open(env_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        has_key = 'ASAAS_API_KEY' in content
+                        self.stdout.write(f"   Contem ASAAS_API_KEY: {'SIM' if has_key else 'NAO'}")
+                        
+                        if has_key:
+                            # Mostrar apenas os primeiros caracteres
+                            for line in content.split('\n'):
+                                if line.strip().startswith('ASAAS_API_KEY='):
+                                    key_preview = line.split('=')[1][:20] + '...' if len(line.split('=')[1]) > 20 else line.split('=')[1]
+                                    self.stdout.write(f"   Preview: ASAAS_API_KEY={key_preview}")
+                                    break
+                except PermissionError:
+                    self.stdout.write(self.style.ERROR("   [ERRO] Sem permissao para ler o arquivo .env"))
+                    self.stdout.write(self.style.WARNING("   [DICA] Execute: sudo chown ubuntu:ubuntu /opt/s-agendamento/.env"))
+                    self.stdout.write(self.style.WARNING("   [DICA] OU ajuste as permissoes: sudo chmod 644 /opt/s-agendamento/.env"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"   [ERRO] Erro ao ler arquivo: {e}"))
         else:
             self.stdout.write(self.style.ERROR("   [ERRO] Arquivo .env nao encontrado!"))
             self.stdout.write(self.style.WARNING("   [DICA] Crie o arquivo .env baseado no .env.example"))
