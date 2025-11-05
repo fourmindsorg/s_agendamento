@@ -1144,9 +1144,10 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                         import time
                         
                         logging.info("Payload não disponível, tentando obter novamente...")
-                        for retry in range(3):
+                        # Quando já existe payment_id, tentar mais vezes (pode ter ficado disponível)
+                        for retry in range(6):  # Aumentado de 3 para 6 tentativas
                             try:
-                                time.sleep(2)
+                                time.sleep(3)  # Aguardar 3 segundos entre tentativas
                                 pix_data_retry = asaas_client.get_pix_qr(assinatura.asaas_payment_id)
                                 payload = pix_data_retry.get("payload", "")
                                 if payload:
@@ -1154,7 +1155,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                                     break
                             except AsaasAPIError as e:
                                 if e.status_code == 404:
-                                    logging.info(f"QR Code ainda não disponível (tentativa {retry + 1}/3)")
+                                    logging.info(f"QR Code ainda não disponível (tentativa {retry + 1}/6)")
                                     continue
                                 else:
                                     raise
@@ -1171,9 +1172,10 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                                 "descricao": f"Pagamento - {plano.nome}",
                                 "vencimento": payment_data.get("dueDate", ""),
                                 "status": traduzir_status_asaas(payment_data.get("status", "PENDING")),
-                                "pix_copia_cola": "",
+                                "pix_copia_cola": "",  # Vazio porque ainda não está disponível
                                 "qr_code_aguardando": True,
                                 "payment_id_asaas": assinatura.asaas_payment_id,
+                                "payment_info": f"ID do Pagamento: {assinatura.asaas_payment_id}",  # Para mostrar ao usuário
                             }
                     
                     # Extrair data de vencimento do pagamento
@@ -1318,14 +1320,14 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
             time.sleep(1)  # Reduzido de 2s para 1s
             
             # Obter QR Code PIX - pode levar alguns segundos para ficar disponível
-            # TIMEOUT REDUZIDO: Tentar apenas 2-3 vezes com intervalo de 3 segundos (total: ~10 segundos)
-            # Se não conseguir em 10s, retornar página para usuário recarregar
+            # TIMEOUT OTIMIZADO: Tentar 5 vezes com intervalo de 3 segundos (total: ~15 segundos)
+            # Se não conseguir em 15s, retornar página para usuário recarregar (QR code pode ainda estar sendo gerado)
             from financeiro.services.asaas import AsaasAPIError
             
             pix_data = None
             payload = ""
-            max_tentativas = 3  # Reduzido para 3 tentativas rápidas
-            max_wait_seconds = 10  # Timeout reduzido para 10 segundos
+            max_tentativas = 5  # Aumentado para 5 tentativas (melhor chance de obter QR code)
+            max_wait_seconds = 15  # Timeout aumentado para 15 segundos
             tentativa = 0
             start_time = time.time()
             
@@ -1400,6 +1402,8 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 logging.info(f"✅ Payment ID salvo na assinatura: {payment_data['id']}")
                 
                 # Retornar dados com payment_id para que possa tentar novamente
+                # IMPORTANTE: Se não conseguiu o payload em 10s, ainda pode estar sendo gerado
+                # O usuário pode recarregar a página para tentar novamente
                 return {
                     "payment_id": payment_data["id"],
                     "qr_code": "",
@@ -1409,9 +1413,11 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                     "descricao": f"Pagamento - {plano.nome}",
                     "vencimento": due_date,
                     "status": traduzir_status_asaas(payment_data.get("status", "PENDING")),
-                    "pix_copia_cola": "",
+                    "pix_copia_cola": "",  # Vazio porque ainda não está disponível
                     "qr_code_aguardando": True,  # Flag para indicar que está aguardando
                     "payment_id_asaas": payment_data["id"],  # Para tentar novamente
+                    "payment_info": f"ID do Pagamento: {payment_data['id']}",  # Para mostrar ao usuário
+                    "mensagem_aguardo": "O código PIX está sendo gerado. Aguarde alguns segundos e recarregue a página.",
                 }
             
             qr_code_image = pix_data.get("encodedImage") or pix_data.get("qrCode", "")
