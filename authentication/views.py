@@ -577,11 +577,24 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
 
         # Histórico de assinaturas do usuário (inclui planos anteriores)
         try:
-            context["assinaturas_historico"] = (
+            assinaturas_historico = (
                 AssinaturaUsuario.objects.filter(usuario=self.request.user)
                 .select_related("plano")
                 .order_by("-data_inicio")
             )
+            
+            # Verificar e atualizar assinaturas pendentes antes de exibir
+            assinaturas_pendentes = assinaturas_historico.filter(status="aguardando_pagamento")
+            if assinaturas_pendentes.exists():
+                self.verificar_e_atualizar_pagamentos_pendentes(assinaturas_pendentes)
+                # Recarregar assinaturas para ter os status atualizados
+                assinaturas_historico = (
+                    AssinaturaUsuario.objects.filter(usuario=self.request.user)
+                    .select_related("plano")
+                    .order_by("-data_inicio")
+                )
+            
+            context["assinaturas_historico"] = assinaturas_historico
         except Exception:
             context["assinaturas_historico"] = []
 
@@ -617,16 +630,137 @@ class PlanSelectionView(LoginRequiredMixin, TemplateView):
             return False
 
     def tem_assinatura_aguardando_pagamento(self):
-        """Verifica se o usuário tem assinatura aguardando pagamento"""
+        """
+        Verifica se o usuário tem assinatura aguardando pagamento.
+        Antes de retornar, verifica via API do Asaas se algum pagamento foi confirmado.
+        """
         try:
+            # Buscar assinaturas aguardando pagamento
+            assinaturas_pendentes = AssinaturaUsuario.objects.filter(
+                usuario=self.request.user, status="aguardando_pagamento"
+            )
+            
+            if not assinaturas_pendentes.exists():
+                return False
+            
+            # Verificar via API do Asaas se algum pagamento foi confirmado
+            assinaturas_atualizadas = self.verificar_e_atualizar_pagamentos_pendentes(assinaturas_pendentes)
+            
+            # Se todas as assinaturas foram atualizadas para "ativa", retornar False
+            assinaturas_ainda_pendentes = AssinaturaUsuario.objects.filter(
+                usuario=self.request.user, status="aguardando_pagamento"
+            )
+            
+            return assinaturas_ainda_pendentes.exists()
+            
+        except Exception as e:
+            logging.error(
+                f"Erro ao verificar assinatura aguardando para usuário {self.request.user.id}: {e}",
+                exc_info=True
+            )
+            # Em caso de erro, retornar o status atual do banco
             return AssinaturaUsuario.objects.filter(
                 usuario=self.request.user, status="aguardando_pagamento"
             ).exists()
+    
+    def verificar_e_atualizar_pagamentos_pendentes(self, assinaturas):
+        """
+        Verifica via API do Asaas se os pagamentos das assinaturas foram confirmados
+        e atualiza o status automaticamente.
+        
+        Args:
+            assinaturas: QuerySet de AssinaturaUsuario com status "aguardando_pagamento"
+        
+        Returns:
+            Lista de assinaturas que foram atualizadas
+        """
+        assinaturas_atualizadas = []
+        
+        try:
+            from financeiro.services.asaas import AsaasClient, AsaasAPIError
+            from financeiro.models import AsaasPayment
+            
+            # Verificar se Asaas está configurado (tem API key)
+            from django.conf import settings
+            asaas_api_key = getattr(settings, "ASAAS_API_KEY", None)
+            if not asaas_api_key:
+                logging.debug("Asaas API key não configurada, pulando verificação de pagamentos")
+                return assinaturas_atualizadas
+            
+            asaas_client = AsaasClient()
+            
+            for assinatura in assinaturas:
+                # Só verificar se tem payment_id
+                if not assinatura.asaas_payment_id:
+                    continue
+                
+                try:
+                    # Primeiro tentar buscar no banco local
+                    try:
+                        payment = AsaasPayment.objects.get(asaas_id=assinatura.asaas_payment_id)
+                        payment_status = payment.status
+                    except AsaasPayment.DoesNotExist:
+                        # Se não existe no banco, buscar na API
+                        try:
+                            payment_data = asaas_client.get_payment(assinatura.asaas_payment_id)
+                            payment_status = payment_data.get("status", "UNKNOWN")
+                            
+                            # Salvar no banco local
+                            AsaasPayment.objects.update_or_create(
+                                asaas_id=assinatura.asaas_payment_id,
+                                defaults={
+                                    "customer_id": payment_data.get("customer", ""),
+                                    "amount": payment_data.get("value", assinatura.valor_pago or 0),
+                                    "billing_type": payment_data.get("billingType", "PIX"),
+                                    "status": payment_status,
+                                }
+                            )
+                        except AsaasAPIError as e:
+                            # Se erro 404, pagamento ainda não disponível ou não existe
+                            if e.status_code == 404:
+                                logging.debug(f"Pagamento {assinatura.asaas_payment_id} ainda não disponível na API")
+                                continue
+                            else:
+                                logging.warning(f"Erro ao buscar pagamento {assinatura.asaas_payment_id}: {e.message}")
+                                continue
+                    
+                    # Verificar se pagamento foi confirmado
+                    if payment_status in ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH_UNDONE"]:
+                        # Atualizar assinatura para "ativa"
+                        if assinatura.status == "aguardando_pagamento":
+                            assinatura.status = "ativa"
+                            
+                            # Se data_inicio ainda não foi definida ou está no passado, definir como agora
+                            if not assinatura.data_inicio or assinatura.data_inicio < timezone.now():
+                                assinatura.data_inicio = timezone.now()
+                            
+                            # Recalcular data_fim baseada na data_inicio atual
+                            from datetime import timedelta
+                            assinatura.data_fim = assinatura.data_inicio + timedelta(days=assinatura.plano.duracao_dias)
+                            
+                            assinatura.save()
+                            assinaturas_atualizadas.append(assinatura)
+                            
+                            logging.info(
+                                f"✅ Assinatura {assinatura.id} atualizada para 'ativa' após verificação via API. "
+                                f"Payment ID: {assinatura.asaas_payment_id}, "
+                                f"Status pagamento: {payment_status}"
+                            )
+                    
+                except Exception as e:
+                    logging.error(
+                        f"Erro ao verificar pagamento {assinatura.asaas_payment_id} para assinatura {assinatura.id}: {e}",
+                        exc_info=True
+                    )
+                    continue
+            
         except Exception as e:
             logging.error(
-                f"Erro ao verificar assinatura aguardando para usuário {self.request.user.id}: {e}"
+                f"Erro ao verificar pagamentos pendentes via API Asaas: {e}",
+                exc_info=True
             )
-            return False
+        
+        return assinaturas_atualizadas
 
 
 class PlanConfirmationView(LoginRequiredMixin, TemplateView):
