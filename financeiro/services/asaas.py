@@ -57,6 +57,19 @@ class AsaasClient:
             ("ip-" in hostname or "ec2" in hostname.lower() or "aws" in hostname.lower() or "fourmindstech" in hostname.lower())
         )
         
+        # Verificar também ALLOWED_HOSTS para detectar produção
+        # Se o domínio contém "fourmindstech", é produção
+        try:
+            allowed_hosts = getattr(settings, 'ALLOWED_HOSTS', [])
+            for host in allowed_hosts:
+                if host and host not in ['localhost', '127.0.0.1', '0.0.0.0'] and 'fourmindstech' in host.lower():
+                    is_production_hostname = True
+                    logger.debug(f"Detectado domínio de produção em ALLOWED_HOSTS: {host}")
+                    break
+        except Exception as e:
+            logger.debug(f"Erro ao verificar ALLOWED_HOSTS: {e}")
+            pass
+        
         # Detectar produção por múltiplos critérios
         # IMPORTANTE: Se QUALQUER critério indicar produção, forçar produção
         # Prioridade: DEBUG=False é o mais confiável, mas também verificar hostname
