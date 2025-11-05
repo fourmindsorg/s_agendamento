@@ -250,22 +250,25 @@ def asaas_webhook(request):
             logger.info(f"Pagamento atualizado via webhook: {payment_id} - Status: {p.status}")
             # Aqui você pode adicionar lógica para liberar assinatura/recursos no seu sistema
         except AsaasPayment.DoesNotExist:
-            # Opcional: buscar via API e criar registro
+            # ⚠️ CORREÇÃO: Não fazer chamadas síncronas à API dentro do webhook
+            # Webhooks devem responder rapidamente (< 5s) para evitar timeout
+            # Criar registro básico com dados do payload ou agendar processamento assíncrono
             try:
-                client = get_asaas_client()
-                if client:
-                    fetched = client.get_payment(payment_id)
-                    AsaasPayment.objects.create(
-                        asaas_id=fetched["id"],
-                        customer_id=fetched.get("customer"),
-                        amount=fetched.get("value"),
-                        billing_type=fetched.get("billingType"),
-                        status=fetched.get("status"),
-                        webhook_event_id=event_id,
-                    )
-                    logger.info(f"Pagamento criado via webhook: {payment_id}")
+                # Criar registro básico com dados disponíveis no payload
+                # Evitar chamada à API que pode demorar e causar timeout
+                AsaasPayment.objects.create(
+                    asaas_id=payment_id,
+                    customer_id=obj.get("customer", ""),
+                    amount=obj.get("value", 0),
+                    billing_type=obj.get("billingType", "PIX"),
+                    status=obj.get("status", "PENDING"),
+                    webhook_event_id=event_id,
+                )
+                logger.info(f"Pagamento criado via webhook (sem chamada à API): {payment_id}")
             except Exception as e:
-                logger.error(f"Erro ao buscar pagamento do Asaas: {e}", exc_info=True)
+                # Se não conseguir criar, logar mas não bloquear resposta do webhook
+                logger.error(f"Erro ao criar pagamento via webhook: {e}", exc_info=True)
+                # Não re-raise - webhook deve sempre retornar 200
 
     elif event_type == "PAYMENT_OVERDUE" and obj:
         payment_id = obj.get("id")

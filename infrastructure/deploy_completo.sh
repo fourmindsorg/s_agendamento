@@ -59,6 +59,10 @@ server {
     location / {
         include proxy_params;
         proxy_pass http://unix:/opt/s-agendamento/s-agendamento.sock;
+        # Aumentado para 120s para evitar 502 Bad Gateway em operações longas (geração de QR code)
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
     }
 }
 
@@ -90,6 +94,10 @@ server {
     location / {
         include proxy_params;
         proxy_pass http://unix:/opt/s-agendamento/s-agendamento.sock;
+        # Aumentado para 120s para evitar 502 Bad Gateway em operações longas (geração de QR code)
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
     }
 }
 EOF
@@ -99,7 +107,7 @@ echo ""
 echo "6. Aplicando configuração do Supervisor..."
 sudo tee /etc/supervisor/conf.d/s-agendamento.conf > /dev/null <<'EOF'
 [program:s-agendamento]
-command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3
+command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3 --timeout 120
 directory=/opt/s-agendamento
 user=django
 autostart=true

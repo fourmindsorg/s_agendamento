@@ -1314,18 +1314,18 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
 
             # Aguardar um pouco antes de começar a buscar o QR Code (pode levar alguns segundos)
             import time
-            logging.info("Aguardando 2 segundos antes de começar a buscar QR Code...")
-            time.sleep(2)
+            logging.info("Aguardando 1 segundo antes de começar a buscar QR Code...")
+            time.sleep(1)  # Reduzido de 2s para 1s
             
             # Obter QR Code PIX - pode levar alguns segundos para ficar disponível
-            # O QR Code pode demorar até 30-60 segundos após criar o pagamento
-            # Tentar até 15 vezes com intervalo de 3 segundos (total: até 45 segundos)
+            # TIMEOUT REDUZIDO: Tentar apenas 2-3 vezes com intervalo de 3 segundos (total: ~10 segundos)
+            # Se não conseguir em 10s, retornar página para usuário recarregar
             from financeiro.services.asaas import AsaasAPIError
             
             pix_data = None
             payload = ""
-            max_tentativas = 15
-            max_wait_seconds = 45
+            max_tentativas = 3  # Reduzido para 3 tentativas rápidas
+            max_wait_seconds = 10  # Timeout reduzido para 10 segundos
             tentativa = 0
             start_time = time.time()
             
@@ -1336,9 +1336,8 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 tentativa += 1
                 elapsed = time.time() - start_time
                 
-                # Log de progresso a cada 3 tentativas ou a cada 10 segundos
-                if tentativa == 1 or tentativa % 3 == 0 or elapsed >= 10:
-                    logging.info(f"Tentativa {tentativa}/{max_tentativas} - Tempo decorrido: {elapsed:.1f}s/{max_wait_seconds}s")
+                # Log de progresso a cada tentativa
+                logging.info(f"Tentativa {tentativa}/{max_tentativas} - Tempo decorrido: {elapsed:.1f}s/{max_wait_seconds}s")
                 
                 try:
                     pix_data = asaas_client.get_pix_qr(payment_data["id"])
@@ -1377,7 +1376,7 @@ class PaymentPixView(LoginRequiredMixin, TemplateView):
                 except Exception as e:
                     logging.warning(f"Erro inesperado ao obter QR Code na tentativa {tentativa}: {e}")
                     if tentativa < max_tentativas and (time.time() - start_time < max_wait_seconds):
-                        time.sleep(3)
+                        time.sleep(3)  # Aguardar 3 segundos antes de tentar novamente
                     else:
                         raise Exception(
                             f"Erro ao obter QR Code PIX após {elapsed:.1f} segundos: {str(e)}. "

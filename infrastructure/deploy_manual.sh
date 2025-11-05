@@ -760,9 +760,10 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        # Aumentado para 120s para evitar 502 Bad Gateway em operações longas (geração de QR code)
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
         
         # Headers de segurança
         add_header X-Frame-Options "SAMEORIGIN" always;
@@ -790,7 +791,7 @@ if command -v supervisorctl >/dev/null 2>&1; then
     # Usar Supervisor
     tee /etc/supervisor/conf.d/s-agendamento.conf > /dev/null << 'EOF'
 [program:s-agendamento]
-command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3 --timeout 60 --max-requests 1000 --max-requests-jitter 100
+command=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3 --timeout 120 --max-requests 1000 --max-requests-jitter 100
 directory=/opt/s-agendamento
 user=django
 autostart=true
@@ -820,7 +821,7 @@ User=django
 Group=django
 WorkingDirectory=/opt/s-agendamento
 Environment=DJANGO_SETTINGS_MODULE=core.settings_production
-ExecStart=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3 --timeout 60
+ExecStart=/opt/s-agendamento/venv/bin/gunicorn core.wsgi:application --bind unix:/opt/s-agendamento/s-agendamento.sock --workers 3 --timeout 120
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
 RestartSec=3
