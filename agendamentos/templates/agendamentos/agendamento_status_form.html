@@ -141,7 +141,7 @@
             <div class="char-counter" id="char-counter">0/500</div>
           </div>
 
-          <!-- Alertas -->
+          <!-- Alertas - Agora usando modais Bootstrap -->
           <div id="status-alerts"></div>
 
           {% if form.non_field_errors %}
@@ -157,7 +157,7 @@
             <a href="{% url 'agendamentos:agendamento_detail' agendamento.pk %}" class="btn-cancel">
               <i class="fas fa-times me-2"></i>Cancelar
             </a>
-            <button type="submit" class="btn-custom justify-content-center" id="btn-salvar">
+            <button type="button" class="btn-custom justify-content-center" id="btn-salvar">
               <i class="fas fa-save me-2"></i>Alterar Status
             </button>
           </div>
@@ -254,6 +254,53 @@
   </div>
 </div>
 
+<!-- Modal de Confirmação de Status -->
+<div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="confirmStatusModalHeader">
+        <h5 class="modal-title" id="confirmStatusModalLabel">
+          <i class="fas fa-question-circle me-2"></i>Confirmar Alteração de Status
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmStatusModalBody">
+        <p id="confirmStatusModalMessage">Tem certeza que deseja alterar o status deste agendamento?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" id="confirmStatusBtn">
+          <i class="fas fa-check me-1"></i>Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Informação de Status -->
+<div class="modal fade" id="infoStatusModal" tabindex="-1" aria-labelledby="infoStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="infoStatusModalHeader">
+        <h5 class="modal-title" id="infoStatusModalLabel">
+          <i class="fas fa-info-circle me-2"></i>Informação
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="infoStatusModalBody">
+        <p id="infoStatusModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+          <i class="fas fa-check me-1"></i>Entendi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const statusRadios = document.querySelectorAll('input[name="{{ form.status.name }}"]');
@@ -261,27 +308,59 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnSalvar = document.getElementById('btn-salvar');
     const observacoesInput = document.getElementById('observacoes_status');
     const charCounter = document.getElementById('char-counter');
+    const form = document.querySelector('form');
     
     const statusAlerts = {
         'confirmado': {
             type: 'info',
+            icon: 'info-circle',
+            title: 'Confirmação de Agendamento',
             message: 'Cliente será notificado sobre a confirmação.'
         },
         'em_andamento': {
             type: 'warning',
+            icon: 'exclamation-triangle',
+            title: 'Iniciar Atendimento',
             message: 'Marque apenas quando o atendimento iniciar.'
         },
         'concluido': {
             type: 'success',
+            icon: 'check-circle',
+            title: 'Finalizar Atendimento',
             message: 'O agendamento será finalizado e contabilizado.'
         },
         'cancelado': {
             type: 'danger',
+            icon: 'exclamation-circle',
+            title: 'Cancelar Agendamento',
             message: 'Esta ação não pode ser facilmente revertida.'
         },
         'nao_compareceu': {
             type: 'warning',
+            icon: 'user-times',
+            title: 'Marcar Falta',
             message: 'Use quando o cliente não comparecer.'
+        }
+    };
+    
+    const confirmMessages = {
+        'cancelado': {
+            title: 'Confirmar Cancelamento',
+            message: 'Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser facilmente revertida.',
+            headerClass: 'bg-danger text-white',
+            btnClass: 'btn-danger'
+        },
+        'nao_compareceu': {
+            title: 'Confirmar Falta',
+            message: 'Tem certeza que o cliente não compareceu?',
+            headerClass: 'bg-warning text-dark',
+            btnClass: 'btn-warning'
+        },
+        'concluido': {
+            title: 'Confirmar Conclusão',
+            message: 'Tem certeza que deseja finalizar este atendimento?',
+            headerClass: 'bg-success text-white',
+            btnClass: 'btn-success'
         }
     };
     
@@ -289,11 +368,14 @@ document.addEventListener('DOMContentLoaded', function() {
         alertsContainer.innerHTML = '';
         if (statusAlerts[status]) {
             const alert = statusAlerts[status];
-            alertsContainer.innerHTML = `
-                <div class="alert alert-${alert.type} mt-3">
-                    <i class="fas fa-info-circle me-2"></i>${alert.message}
+            const alertHTML = `
+                <div class="alert alert-${alert.type} mt-3 alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${alert.icon} me-2"></i>
+                    <strong>${alert.title}:</strong> ${alert.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             `;
+            alertsContainer.innerHTML = alertHTML;
         }
     }
     
@@ -311,6 +393,37 @@ document.addEventListener('DOMContentLoaded', function() {
         btnSalvar.innerHTML = `<i class="fas fa-save me-2"></i>${text}`;
     }
     
+    function showConfirmModal(status) {
+        const confirmModal = document.getElementById('confirmStatusModal');
+        const confirmModalHeader = document.getElementById('confirmStatusModalHeader');
+        const confirmModalLabel = document.getElementById('confirmStatusModalLabel');
+        const confirmModalMessage = document.getElementById('confirmStatusModalMessage');
+        const confirmStatusBtn = document.getElementById('confirmStatusBtn');
+        
+        if (confirmMessages[status]) {
+            const config = confirmMessages[status];
+            confirmModalHeader.className = `modal-header ${config.headerClass}`;
+            confirmModalLabel.innerHTML = `<i class="fas fa-question-circle me-2"></i>${config.title}`;
+            confirmModalMessage.textContent = config.message;
+            confirmStatusBtn.className = `btn ${config.btnClass}`;
+            
+            // Remover event listeners anteriores
+            const newConfirmBtn = confirmStatusBtn.cloneNode(true);
+            confirmStatusBtn.parentNode.replaceChild(newConfirmBtn, confirmStatusBtn);
+            
+            // Adicionar novo event listener
+            newConfirmBtn.addEventListener('click', function() {
+                form.submit();
+            });
+            
+            const modal = new bootstrap.Modal(confirmModal);
+            modal.show();
+        } else {
+            // Se não precisa de confirmação especial, submeter diretamente
+            form.submit();
+        }
+    }
+    
     statusRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
@@ -320,6 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Contador de caracteres
     if (observacoesInput && charCounter) {
         observacoesInput.addEventListener('input', function() {
             const currentLength = this.value.length;
@@ -335,25 +449,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
+    // Interceptar clique no botão de salvar
+    btnSalvar.addEventListener('click', function(e) {
+        e.preventDefault();
         const selectedStatus = document.querySelector('input[name="{{ form.status.name }}"]:checked');
         
-        if (selectedStatus) {
-            const criticalStatuses = ['cancelado', 'nao_compareceu', 'concluido'];
+        if (!selectedStatus) {
+            // Mostrar modal de erro se nenhum status foi selecionado
+            const infoModal = document.getElementById('infoStatusModal');
+            const infoModalHeader = document.getElementById('infoStatusModalHeader');
+            const infoModalMessage = document.getElementById('infoStatusModalMessage');
             
-            if (criticalStatuses.includes(selectedStatus.value)) {
-                const confirmMessages = {
-                    'cancelado': 'Confirma o cancelamento?',
-                    'nao_compareceu': 'Cliente não compareceu?',
-                    'concluido': 'Atendimento concluído?'
-                };
-                
-                if (!confirm(confirmMessages[selectedStatus.value])) {
-                    e.preventDefault();
-                    return false;
-                }
-            }
+            infoModalHeader.className = 'modal-header bg-warning text-dark';
+            infoModalMessage.textContent = 'Por favor, selecione um status antes de continuar.';
+            
+            const modal = new bootstrap.Modal(infoModal);
+            modal.show();
+            return;
+        }
+        
+        // Verificar se precisa de confirmação
+        const criticalStatuses = ['cancelado', 'nao_compareceu', 'concluido'];
+        
+        if (criticalStatuses.includes(selectedStatus.value)) {
+            showConfirmModal(selectedStatus.value);
+        } else {
+            // Se não precisa de confirmação, submeter diretamente
+            form.submit();
         }
     });
 });

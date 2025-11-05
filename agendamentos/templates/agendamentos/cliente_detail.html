@@ -78,8 +78,10 @@
   <div class="col-md-3">
     <div class="card stat-card">
       <div class="card-body">
-        <i class="fas fa-calendar-check text-primary"></i>
-        <h4 class="text-primary">{{ total_agendamentos }}</h4>
+        <div class="d-flex align-items-center justify-content-between">
+          <i class="fas fa-calendar-check text-primary fa-2x"></i>
+          <h4 class="text-primary">{{ total_agendamentos }}</h4>
+        </div>
         <small>Total de Agendamentos</small>
       </div>
     </div>
@@ -87,8 +89,10 @@
   <div class="col-md-3">
     <div class="card stat-card">
       <div class="card-body">
-        <i class="fas fa-check-circle text-success"></i>
-        <h4 class="text-success">{{ agendamentos_concluidos }}</h4>
+        <div class="d-flex align-items-center justify-content-between">
+          <i class="fas fa-check-circle text-success fa-2x"></i>
+          <h4 class="text-success">{{ agendamentos_concluidos }}</h4>
+        </div>
         <small>Agendamentos Concluídos</small>
       </div>
     </div>
@@ -96,8 +100,10 @@
   <div class="col-md-3">
     <div class="card stat-card">
       <div class="card-body">
-        <i class="fas fa-times-circle text-danger"></i>
-        <h4 class="text-danger">{{ agendamentos_cancelados }}</h4>
+        <div class="d-flex align-items-center justify-content-between">
+          <i class="fas fa-times-circle text-danger fa-2x"></i>
+          <h4 class="text-danger">{{ agendamentos_cancelados }}</h4>
+        </div>
         <small>Cancelados/Faltas</small>
       </div>
     </div>
@@ -105,8 +111,10 @@
   <div class="col-md-3">
     <div class="card stat-card">
       <div class="card-body">
-        <i class="fas fa-percentage text-info"></i>
-        <h4 class="text-info">{{ taxa_comparecimento }}%</h4>
+        <div class="d-flex align-items-center justify-content-between">
+          <i class="fas fa-percentage text-info fa-2x"></i>
+          <h4 class="text-info">{{ taxa_comparecimento }}%</h4>
+        </div>
         <small>Taxa de Comparecimento</small>
       </div>
     </div>

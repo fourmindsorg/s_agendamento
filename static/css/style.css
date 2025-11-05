@@ -355,9 +355,9 @@ body {
     background-color: transparent !important;
 }
 
-.table * {
+/* .table * {
     color: var(--text-color) !important;
-}
+} */
 
 .table th,
 .table td {
