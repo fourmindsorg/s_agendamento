@@ -464,6 +464,7 @@ class AsaasClient:
         status: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
+        extra_params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Lista pagamentos com filtros opcionais.
@@ -485,6 +486,8 @@ class AsaasClient:
             params["subscription"] = subscription
         if status:
             params["status"] = status
+        if extra_params:
+            params.update(extra_params)
 
         response = self._request("GET", "payments", params=params, timeout=15)
         return response.json()
