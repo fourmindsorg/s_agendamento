@@ -6,7 +6,29 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import AssinaturaUsuario, UserActivityLog
-from .utils import get_client_ip, get_user_agent
+
+try:
+    from .utils import get_client_ip, get_user_agent
+except ImportError:  # pragma: no cover - fallback para ambientes antigos sem utils.py
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        "Fallback local de get_client_ip/get_user_agent em authentication.middleware"
+    )
+
+    def get_client_ip(request):
+        if not request:
+            return None
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            return x_forwarded_for.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR")
+
+    def get_user_agent(request):
+        if not request:
+            return ""
+        return (request.META.get("HTTP_USER_AGENT") or "")[:512]
 
 
 def safe_add_message(request, level, message):
