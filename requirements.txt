@@ -11,7 +11,7 @@ tzdata==2025.2
 psycopg2-binary==2.9.9
 
 # Servidor WSGI para Produção
-gunicorn==21.2.0
+gunicorn==23.0.0
 
 # Arquivos Estáticos em Produção
 whitenoise==6.6.0
