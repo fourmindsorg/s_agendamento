@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
         if extend_days > 0:
             # Atualizar date_joined para estender período
-            nova_data = timezone.now() - timedelta(days=14 - extend_days)
+            nova_data = timezone.now() - timedelta(days=30 - extend_days)
             usuario.date_joined = nova_data
             self.stdout.write(
                 f'⏰ Nova data de cadastro: {nova_data.strftime("%d/%m/%Y %H:%M")}'

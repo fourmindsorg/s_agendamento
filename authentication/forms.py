@@ -28,6 +28,13 @@ class CustomUserCreationForm(UserCreationForm):
             attrs={"class": "form-control", "placeholder": "Digite seu sobrenome"}
         ),
     )
+    accept_terms = forms.BooleanField(
+        required=True,
+        label=(
+            "Li e concordo com os Termos de Uso, Política de Privacidade e Contrato de Adesão."
+        ),
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
 
     class Meta:
         model = User
@@ -164,23 +171,60 @@ class CustomUserCreationForm(UserCreationForm):
             if not cleaned_data.get(field):
                 raise ValidationError(f"O campo {field} é obrigatório.")
 
+        # Validar aceite dos termos
+        if not cleaned_data.get("accept_terms"):
+            raise ValidationError(
+                "É necessário aceitar os Termos de Uso, Política de Privacidade e Contrato de Adesão para prosseguir."
+            )
+
         return cleaned_data
 
     def save(self, commit=True):
-        """Salva o usuário com validações adicionais"""
-        try:
-            user = super().save(commit=False)
-            user.email = self.cleaned_data["email"]
-            user.first_name = self.cleaned_data["first_name"]
-            user.last_name = self.cleaned_data["last_name"]
-            user.is_active = True  # Ativar usuário por padrão
+        """Salva o usuário com validações adicionais e registra aceite legal."""
+        from django.db import transaction
+        from .models import LegalDocument, UserLegalAcceptance
+        from .utils import get_client_ip, get_user_agent
+        from django.utils import timezone
 
-            if commit:
-                user.save()
-            return user
+        try:
+            with transaction.atomic():
+                user = super().save(commit=False)
+                user.email = self.cleaned_data["email"]
+                user.first_name = self.cleaned_data["first_name"]
+                user.last_name = self.cleaned_data["last_name"]
+                user.is_active = True  # Ativar usuário por padrão
+
+                if commit:
+                    user.save()
+
+                # Registrar aceite legal
+                request = self.initial.get("request")
+                if request:
+                    documents = LegalDocument.objects.filter(
+                        slug__in=[
+                            "termos-de-uso",
+                            "politica-de-privacidade",
+                            "contrato-de-adesao",
+                        ],
+                        is_active=True,
+                    )
+                    for document in documents:
+                        UserLegalAcceptance.objects.get_or_create(
+                            user=user,
+                            document=document,
+                            version=document.version,
+                            defaults={
+                                "ip_address": get_client_ip(request),
+                                "user_agent": get_user_agent(request),
+                                "record_source": "cadastro_web",
+                            },
+                        )
+
+                return user
+        except ValidationError:
+            raise
         except Exception as e:
             raise ValidationError(f"Erro ao salvar usuário: {str(e)}")
-
 
 class CustomUserChangeForm(UserChangeForm):
     """Form personalizado para edição de usuários"""

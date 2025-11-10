@@ -1,0 +1,177 @@
+{% extends 'authentication/auth_base.html' %}
+
+{% block title %}{{ page_title|default:"Documento Legal" }}{% endblock %}
+
+{% block header_title %}{{ page_title|default:"Documento Legal" }}{% endblock %}
+{% block header_subtitle %}Consulte abaixo a versão vigente dos termos contratuais do Sistema de Agendamentos FourMindsTech.{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if document %}
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <span class="badge bg-primary">Versão {{ document.version }}</span>
+                <span class="badge bg-secondary">Atualizado em {{ document.updated_at|date:"d/m/Y" }}</span>
+            </div>
+            <h2 class="mb-4">{{ document.title }}</h2>
+            <div class="legal-content">
+                {{ document.content|safe }}
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-4">
+                A versão em vigor do contrato está em fase de publicação no painel administrativo. Enquanto isso, os termos abaixo devem ser considerados válidos.
+            </div>
+
+            <article class="legal-content">
+                <h2>1. Termos de Uso</h2>
+
+                <h3>1.1 Aceitação dos Termos</h3>
+                <p>
+                    Ao criar uma conta no Sistema de Agendamentos FourMindsTech, o usuário declara que leu, compreendeu e concorda integralmente com estes Termos de Uso, com a Política de Privacidade e com o Contrato de Adesão. O aceite é requisito indispensável para utilização da plataforma.
+                </p>
+
+                <h3>1.2 Objeto</h3>
+                <p>
+                    O sistema disponibiliza uma solução SaaS (Software como Serviço) para organização de agendas, cadastros de clientes e serviços, permitindo o acompanhamento de horários, informações comerciais e histórico de atendimentos de maneira digital e segura.
+                </p>
+
+                <h3>1.3 Cadastro e Responsabilidade</h3>
+                <ul>
+                    <li>O usuário deve fornecer informações verídicas, completas e atualizadas no momento do cadastro.</li>
+                    <li>É vedado o uso de dados falsos, de terceiros ou que violem a legislação aplicável.</li>
+                    <li>Cada conta é pessoal, individual e intransferível.</li>
+                </ul>
+
+                <h3>1.4 Uso da Plataforma</h3>
+                <ul>
+                    <li>O sistema deve ser utilizado apenas para fins legítimos e compatíveis com sua finalidade operacional.</li>
+                    <li>É proibida qualquer tentativa de exploração, engenharia reversa, violação de segurança ou uso indevido.</li>
+                    <li>O descumprimento poderá acarretar suspensão ou cancelamento imediato da conta de acesso.</li>
+                </ul>
+
+                <h3>1.5 Propriedade Intelectual</h3>
+                <p>
+                    Todos os componentes do sistema, incluindo interface, design, marca, código-fonte, textos e bancos de dados pertencem à FourMindsTech. É proibida qualquer reprodução, cópia, redistribuição ou engenharia reversa sem autorização expressa.
+                </p>
+
+                <h3>1.6 Limitação de Responsabilidade</h3>
+                <p>A FourMindsTech não se responsabiliza por:</p>
+                <ul>
+                    <li>falhas de conexão à internet, instabilidades de rede ou interrupções causadas por terceiros;</li>
+                    <li>dados incorretos ou incompletos inseridos pelos usuários;</li>
+                    <li>quaisquer danos indiretos, lucros cessantes ou prejuízos decorrentes de uso inadequado da plataforma.</li>
+                </ul>
+
+                <h3>1.7 Alterações</h3>
+                <p>
+                    A FourMindsTech poderá atualizar estes Termos mediante aviso prévio na própria plataforma. Ao continuar utilizando o sistema após as alterações, o usuário concorda com a versão vigente.
+                </p>
+
+                <h2 class="mt-5">2. Política de Privacidade</h2>
+
+                <h3>2.1 Coleta de Dados</h3>
+                <p>Durante o uso do sistema, podem ser coletadas as seguintes informações:</p>
+                <ul>
+                    <li>dados cadastrais (nome, e-mail, telefone e credenciais de acesso);</li>
+                    <li>dados operacionais (agendamentos, horários, serviços prestados, histórico de utilização);</li>
+                    <li>informações técnicas (endereço IP, dispositivo, navegador e cookies).</li>
+                </ul>
+
+                <h3>2.2 Finalidade</h3>
+                <p>Os dados são utilizados para:</p>
+                <ul>
+                    <li>identificar, autenticar e autorizar o usuário;</li>
+                    <li>garantir o funcionamento, a melhoria contínua e a segurança da plataforma;</li>
+                    <li>cumprir obrigações legais e regulatórias, inclusive relacionadas à proteção de dados.</li>
+                </ul>
+
+                <h3>2.3 Armazenamento e Segurança</h3>
+                <p>
+                    Os dados são armazenados em ambientes controlados, seguindo práticas de segurança técnicas e administrativas adequadas, alinhadas à Lei Geral de Proteção de Dados (Lei nº 13.709/2018 – LGPD).
+                </p>
+
+                <h3>2.4 Compartilhamento</h3>
+                <p>
+                    Os dados não são vendidos ou compartilhados com terceiros, exceto quando:
+                </p>
+                <ul>
+                    <li>seja necessário para cumprir obrigação legal, regulatória ou ordem judicial;</li>
+                    <li>for indispensável à prestação do serviço (por exemplo, provedores de infraestrutura em nuvem ou gateways de pagamento).</li>
+                </ul>
+
+                <h3>2.5 Direitos do Usuário</h3>
+                <p>O usuário poderá, a qualquer momento:</p>
+                <ul>
+                    <li>solicitar acesso, correção, portabilidade ou exclusão de seus dados pessoais;</li>
+                    <li>revogar o consentimento para tratamento de dados, observadas as limitações legais;</li>
+                    <li>encerrar a conta mediante solicitação formal aos canais de suporte.</li>
+                </ul>
+
+                <h3>2.6 Retenção</h3>
+                <p>
+                    Os dados serão mantidos enquanto a conta estiver ativa ou pelo período necessário ao cumprimento de obrigações legais, regulatórias ou para defesa de direitos em processos judiciais e administrativos.
+                </p>
+
+                <h2 class="mt-5">3. Contrato de Adesão – Prestação de Serviços SaaS</h2>
+
+                <h3>3.1 Partes</h3>
+                <ul>
+                    <li><strong>Contratante (Usuário):</strong> pessoa física ou jurídica que realiza cadastro e utiliza o sistema.</li>
+                    <li><strong>Contratada:</strong> FourMindsTech, responsável pelo desenvolvimento, manutenção e operação do Sistema de Agendamentos online.</li>
+                </ul>
+
+                <h3>3.2 Objeto</h3>
+                <p>
+                    Este contrato regula a disponibilização, pela FourMindsTech, de uma solução SaaS destinada à gestão digital de agendamentos, clientes, serviços e indicadores operacionais do negócio do Contratante.
+                </p>
+
+                <h3>3.3 Obrigações da Contratada</h3>
+                <p>A FourMindsTech compromete-se a:</p>
+                <ul>
+                    <li>manter o sistema disponível de forma contínua, ressalvados períodos de manutenção preventiva ou corretiva;</li>
+                    <li>adotar as melhores práticas de segurança da informação e confidencialidade dos dados armazenados;</li>
+                    <li>oferecer suporte técnico pelos canais de atendimento disponibilizados na plataforma.</li>
+                </ul>
+
+                <h3>3.4 Obrigações do Contratante</h3>
+                <p>O usuário obriga-se a:</p>
+                <ul>
+                    <li>utilizar o sistema de forma ética, dentro dos limites legais e conforme os objetivos da plataforma;</li>
+                    <li>não compartilhar credenciais de acesso ou permitir o uso por terceiros não autorizados;</li>
+                    <li>obedecer às políticas internas de uso e aos direitos autorais relacionados ao sistema.</li>
+                </ul>
+
+                <h3>3.5 Vigência e Rescisão</h3>
+                <p>
+                    O contrato vigora por prazo indeterminado a partir da data de cadastro. Poderá ser rescindido:
+                </p>
+                <ul>
+                    <li>pelo usuário, mediante solicitação de encerramento da conta;</li>
+                    <li>pela FourMindsTech, em caso de violação dos Termos de Uso ou inobservância das obrigações contratuais;</li>
+                    <li>por decisão da FourMindsTech de encerrar a oferta do serviço, mediante aviso prévio razoável.</li>
+                </ul>
+
+                <h3>3.6 Foro</h3>
+                <p>
+                    Fica eleito o foro da comarca da sede da FourMindsTech, situado em São Paulo/SP, com renúncia a qualquer outro, para dirimir controvérsias decorrentes deste contrato.
+                </p>
+
+                <h2 class="mt-5">4. Orientações para Implementação Técnica</h2>
+
+                <h3>4.1 Página de Cadastro</h3>
+                <ul>
+                    <li>Incluir, no formulário de registro de usuários, checkbox obrigatório com o texto: “Li e concordo com os Termos de Uso, Política de Privacidade e Contrato de Adesão”.</li>
+                    <li>O campo deve ser marcado como <code>required</code> e conter links para consulta prévia dos documentos.</li>
+                </ul>
+
+                <h3>4.2 Perfil do Usuário</h3>
+                <ul>
+                    <li>Apresentar link discreto “Ver Contrato de Adesão” na área de perfil.</li>
+                    <li>O link deve abrir modal ou página contendo a íntegra do contrato aceito no momento do cadastro, incluindo versão e data.</li>
+                </ul>
+            </article>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -490,6 +490,8 @@
   </div>
 </div>
 
+{% if total_tutoriais_disponiveis %}
+
 <!-- Estatísticas dos Tutoriais -->
 {% if user.is_authenticated %}
 <div class="stats-section">
@@ -691,7 +693,6 @@
 {% endif %}
 
 <!-- Call to Action -->
-{% if tutoriais %}
 <div class="row mt-5">
   <div class="col-12">
     <div class="card" style="background: var(--gradient-bg); color: white;">
@@ -715,7 +716,6 @@
     </div>
   </div>
 </div>
-{% endif %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -793,4 +793,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+{% else %}
+<div class="alert alert-info text-center py-5 fs-4">
+  Em construção
+</div>
+{% endif %}
 {% endblock %}

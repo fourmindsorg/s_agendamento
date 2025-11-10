@@ -37,7 +37,7 @@ Digite: nome de usuário, email (opcional), senha
 
 7. Popular Dados Iniciais
 python manage.py popular_info
-Este comando cria os planos disponíveis (Período Gratuito de 14 dias, Mensal, Semestral e Anual) e popula dados de tutoriais e FAQs.
+Este comando cria os planos disponíveis (Período Gratuito de 30 dias, Mensal, Semestral e Anual) e popula dados de tutoriais e FAQs.
 
 
 8. Executar Sistema
@@ -84,7 +84,7 @@ Digite: nome de usuário, email (opcional), senha
 
 7. Popular Dados Iniciais
 python manage.py popular_info
-Este comando cria os planos disponíveis (Período Gratuito de 14 dias, Mensal, Semestral e Anual) e popula dados de tutoriais e FAQs.
+Este comando cria os planos disponíveis (Período Gratuito de 30 dias, Mensal, Semestral e Anual) e popula dados de tutoriais e FAQs.
 
 
 8. Executar Sistema

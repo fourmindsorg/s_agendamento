@@ -1,9 +1,14 @@
+from typing import Optional
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, ListView, DetailView
 from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
+
+from authentication.models import LegalDocument
+
 from .models import CategoriaInfo, Tutorial, FAQ, ProgressoTutorial, Dica
 
 class InfoHomeView(TemplateView):
@@ -29,6 +34,47 @@ class InfoHomeView(TemplateView):
         
         return context
 
+
+class LegalDocumentBaseView(TemplateView):
+    """View base para exibição de documentos legais ativos."""
+
+    document_slug: Optional[str] = None
+    page_title: str = "Documento Legal"
+    template_name = "info/legal_document.html"
+
+    def get_document(self):
+        if not self.document_slug:
+            return None
+        return (
+            LegalDocument.objects.filter(
+                slug=self.document_slug,
+                is_active=True,
+            )
+            .order_by("-published_at")
+            .first()
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["document"] = self.get_document()
+        context["page_title"] = self.page_title
+        return context
+
+
+class LegalTermsView(LegalDocumentBaseView):
+    document_slug = "termos-de-uso"
+    page_title = "Termos de Uso"
+
+
+class LegalPrivacyView(LegalDocumentBaseView):
+    document_slug = "politica-de-privacidade"
+    page_title = "Política de Privacidade"
+
+
+class LegalContractView(LegalDocumentBaseView):
+    document_slug = "contrato-de-adesao"
+    page_title = "Contrato de Adesão"
+
 class TutoriaisView(ListView):
     """Lista de tutoriais por categoria"""
     model = Tutorial
@@ -53,6 +99,7 @@ class TutoriaisView(ListView):
         context['categorias'] = CategoriaInfo.objects.filter(ativo=True)
         context['categoria_selecionada'] = self.request.GET.get('categoria')
         context['tipo_selecionado'] = self.request.GET.get('tipo')
+        context['total_tutoriais_disponiveis'] = Tutorial.objects.filter(ativo=True).count()
         
         if self.request.user.is_authenticated:
             # Tutoriais concluídos pelo usuário

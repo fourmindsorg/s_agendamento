@@ -274,6 +274,7 @@ class RegisterView(CreateView):
 
     def form_valid(self, form):
         """Processa o formulário válido com tratamento de erros"""
+        form.initial["request"] = self.request
         try:
             # Salvar o usuário
             user = form.save()

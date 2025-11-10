@@ -46,15 +46,18 @@ class Cliente(models.Model):
     @property
     def idade(self):
         """Calcula a idade do cliente"""
+        if not self.data_nascimento:
+            return None
+
         hoje = timezone.now().date()
-        return (
-            hoje.year
-            - self.data_nascimento.year
-            - (
-                (hoje.month, hoje.day)
-                < (self.data_nascimento.month, self.data_nascimento.day)
-            )
+        aniversario_ja_passou = (hoje.month, hoje.day) >= (
+            self.data_nascimento.month,
+            self.data_nascimento.day,
         )
+        idade = hoje.year - self.data_nascimento.year
+        if not aniversario_ja_passou:
+            idade -= 1
+        return max(idade, 0)
 
 
 class TipoServico(models.Model):

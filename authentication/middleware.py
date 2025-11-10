@@ -1,9 +1,12 @@
-from django.shortcuts import redirect
+import logging
+
 from django.contrib import messages
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
-from .models import AssinaturaUsuario
-import logging
+
+from .models import AssinaturaUsuario, UserActivityLog
+from .utils import get_client_ip, get_user_agent
 
 
 def safe_add_message(request, level, message):
@@ -119,4 +122,40 @@ class SubscriptionExpirationMiddleware:
 
         # Se chegou até aqui, a assinatura está ativa - continuar normalmente
         response = self.get_response(request)
+        return response
+
+
+class UserActivityTrackingMiddleware:
+    """
+    Middleware para registrar métricas básicas de uso dos usuários.
+    Executa após a view para capturar status final da requisição.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.logger = logging.getLogger(__name__)
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        try:
+            user = getattr(request, "user", None)
+            if user and user.is_authenticated:
+                if not user.is_active:
+                    return response
+
+                # Ignorar requisições internas estáticas para evitar ruído
+                if request.path.startswith(("/static/", "/media/")):
+                    return response
+
+                activity, _ = UserActivityLog.objects.get_or_create(user=user)
+                activity.increment_request(
+                    method=request.method,
+                    path=request.path,
+                    user_agent=get_user_agent(request),
+                    ip=get_client_ip(request),
+                )
+        except Exception as exc:
+            self.logger.exception("Falha ao registrar atividade do usuário: %s", exc)
+
         return response

@@ -95,6 +95,20 @@
         {% endif %}
     </div>
 
+    <div class="mb-3 form-check">
+        {{ form.accept_terms }}
+        <label class="form-check-label" for="{{ form.accept_terms.id_for_label }}">
+            Li e concordo com os <a href="{% url 'info:legal_terms' %}" target="_blank" class="text-decoration-none">Termos de Uso</a>, <a href="{% url 'info:legal_privacy' %}" target="_blank" class="text-decoration-none">Política de Privacidade</a> e <a href="{% url 'info:legal_contract' %}" target="_blank" class="text-decoration-none">Contrato de Adesão</a>.
+        </label>
+        {% if form.accept_terms.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.accept_terms.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
     {% if form.non_field_errors %}
         <div class="alert alert-danger" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>

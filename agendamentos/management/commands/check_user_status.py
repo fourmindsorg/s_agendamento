@@ -28,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--expiring-soon",
             action="store_true",
-            help="Mostrar apenas usuários próximos do vencimento (10-14 dias)",
+            help="Mostrar apenas usuários próximos do vencimento (10-30 dias)",
         )
         parser.add_argument(
             "--days",

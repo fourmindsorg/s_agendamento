@@ -1,5 +1,5 @@
 """
-Comando Django para desativar usuários após 14 dias de cadastro
+Comando Django para desativar usuários após 30 dias de cadastro
 Sistema de Agendamento - 4Minds
 
 Uso:
@@ -18,7 +18,7 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = "Desativa usuários que completaram 14 dias de cadastro (período de teste)"
+    help = "Desativa usuários que completaram 30 dias de cadastro (período de teste)"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -142,10 +142,10 @@ class Command(BaseCommand):
 
     def get_help_text(self):
         return """
-Este comando desativa usuários que completaram o período de teste de 14 dias.
+Este comando desativa usuários que completaram o período de teste de 30 dias.
 
 Funcionalidades:
-- Desativa usuários cadastrados há mais de 14 dias (configurável)
+- Desativa usuários cadastrados há mais de 30 dias (configurável)
 - Protege superusers por padrão (use --force para incluir)
 - Modo dry-run para simular sem alterar dados
 - Confirmação de segurança antes de executar
