@@ -14,7 +14,7 @@ psycopg2-binary==2.9.9
 gunicorn==21.2.0
 
 # Arquivos Estáticos em Produção
-whitenoise==6.6.0
+whitenoise==6.11.0
 
 # Variáveis de Ambiente
 python-dotenv==1.0.0
