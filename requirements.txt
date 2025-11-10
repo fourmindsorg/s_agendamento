@@ -23,7 +23,7 @@ python-dotenv==1.0.0
 requests==2.31.0
 
 # QR Code Generation
-qrcode[pil]==7.4.2
+qrcode[pil]==8.2
 
 # Segurança - Rate Limiting
 django-ratelimit==4.1.0
