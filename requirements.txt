@@ -30,7 +30,7 @@ django-ratelimit==4.1.0
 
 # AWS SDK (opcional)
 boto3==1.34.0
-django-storages==1.14.2
+django-storages==1.14.6
 
 # Performance - Redis Cache (opcional)
 django-redis==5.4.0
