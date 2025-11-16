@@ -223,15 +223,9 @@ resource "aws_db_instance" "main" {
 }
 
 # Elastic IP
-resource "aws_eip" "main" {
-  domain = "vpc"
-
-  tags = {
-    Name        = "${var.project_name}-eip"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
+## REMOVIDO EIP para evitar cobrança quando não associado
+# Em free tier, preferimos usar o IP público associado automaticamente à EC2
+# (EIP pode gerar custos quando a instância estiver parada/desassociada)
 
 # EC2 Instance
 resource "aws_instance" "django_server" {
@@ -260,10 +254,7 @@ resource "aws_instance" "django_server" {
 }
 
 # EIP Association
-resource "aws_eip_association" "django_eip" {
-  instance_id   = aws_instance.django_server.id
-  allocation_id = aws_eip.main.id
-}
+## Sem associação de EIP – a instância usará o IP público padrão
 
 # S3 Bucket para arquivos estáticos
 resource "aws_s3_bucket" "static" {
@@ -311,19 +302,20 @@ resource "aws_s3_bucket_public_access_block" "media" {
 # Versionamento dos buckets
 # ATENÇÃO: Versioning pode gerar custos de armazenamento (cada versão ocupa espaço)
 # Para minimizar custos, considere desabilitar ou implementar lifecycle policies
-resource "aws_s3_bucket_versioning" "static" {
-  bucket = aws_s3_bucket.static.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_versioning" "media" {
-  bucket = aws_s3_bucket.media.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
+## Desabilitado o versionamento para evitar consumo de armazenamento com múltiplas versões
+# resource "aws_s3_bucket_versioning" "static" {
+#   bucket = aws_s3_bucket.static.id
+#   versioning_configuration {
+#     status = "Suspended"
+#   }
+# }
+#
+# resource "aws_s3_bucket_versioning" "media" {
+#   bucket = aws_s3_bucket.media.id
+#   versioning_configuration {
+#     status = "Suspended"
+#   }
+# }
 
 # Criptografia dos buckets
 resource "aws_s3_bucket_server_side_encryption_configuration" "static" {
@@ -347,37 +339,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
 }
 
 # Lifecycle policies para S3 - deleta versões antigas para evitar custos de armazenamento
-resource "aws_s3_bucket_lifecycle_configuration" "static" {
-  bucket = aws_s3_bucket.static.id
-
-  rule {
-    id     = "delete-old-versions"
-    status = "Enabled"
-    
-    filter {}
-
-    noncurrent_version_expiration {
-      noncurrent_days = 30  # Deleta versões não atuais após 30 dias
-    }
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "media" {
-  bucket = aws_s3_bucket.media.id
-
-  rule {
-    id     = "delete-old-versions"
-    status = "Enabled"
-    
-    filter {}
-
-    noncurrent_version_expiration {
-      noncurrent_days = 30  # Deleta versões não atuais após 30 dias
-    }
-
-    # Não expira objetos de mídia por padrão (ajuste se necessário)
-  }
-}
+## Lifecycle para versões antigas removido – não há versionamento habilitado
 
 # Data sources
 data "aws_availability_zones" "available" {
