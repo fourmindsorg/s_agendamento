@@ -8,7 +8,7 @@ sqlparse==0.5.3
 tzdata==2025.2
 
 # Banco de Dados PostgreSQL
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.11
 
 # Servidor WSGI para Produção
 gunicorn==21.2.0
